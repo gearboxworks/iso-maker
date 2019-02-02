@@ -2,8 +2,8 @@
 
 
 # Create Docker container.
-`docker build --rm -t pressboxx/iso-maker`
+docker build --rm -t pressboxx/iso-maker
 
 # Create ISO image.
-`docker run --rm -v \`pwd\`/iso/:/iso/ -t -i --privileged pressboxx/iso-maker /bin/bash`
+docker run --rm -v \`pwd\`/iso/:/iso/ -t -i --privileged pressboxx/iso-maker /bin/bash
 
