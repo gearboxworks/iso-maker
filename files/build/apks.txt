@@ -4,7 +4,7 @@ dosfstools
 fakeroot
 git go go-tools grub-efi
 less libc-utils
-make mtools
+make mkinitfs mtools
 openssh-client
 rsync
 squashfs-tools sudo syslinux
