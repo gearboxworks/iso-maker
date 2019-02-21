@@ -1,10 +1,10 @@
 # iso-maker
 
 ## Create Docker container.
-docker build --rm -t pressboxx/alpine-iso
+docker build --rm -t gearbox/iso-maker .
 
 ## Create ISO image.
-docker run --rm -v `pwd`/build/:/build/ -t -i --privileged pressboxx/alpine-iso /bin/bash
+docker run --rm -v `pwd`/build/:/build/ -t -i --privileged gearbox/iso-maker /bin/bash -l
 
 mkdir -p /tmp/rootfs/ && tar zxf /build/rootfs.changes.tar.gz -C /tmp/rootfs/
 
