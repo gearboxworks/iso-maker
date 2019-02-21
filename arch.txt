@@ -1,0 +1,15 @@
+PID   USER     TIME  COMMAND
+    1 root      0:00 /sbin/gearbox
+16168 root      0:00 /bin/bash
+
+gearbox (init)
+	- Polls dynamic loadable directory and load modules, (EG: HTTP rest, cli, OpenSSH, etc).
+
+gearbox (cli)
+	- run through SSH.
+	- box install blah
+
+gearbox (host)
+	- Co-ordinates ISO updates.
+	- Talks to gearbox (API).
+

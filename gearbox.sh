@@ -3,16 +3,16 @@
 case "$1" in
 	'start'|'startup'|'up')
 		# Startup the VM.
-		VBoxManage startvm GearBox --type headless && telnet localhost 2023
+		VBoxManage startvm Gearbox --type headless && telnet localhost 2023
 		;;
 
 	'stop'|'shutdown'|'halt')
 		# Shutting down the VM.
-		VBoxManage controlvm GearBox acpipowerbutton
+		VBoxManage controlvm Gearbox acpipowerbutton
 		;;
 
 	'ssh')
-		# SSH to GearBox.
+		# SSH to Gearbox.
 		ssh -p 2222 root@localhost
 		;;
 
@@ -20,7 +20,7 @@ case "$1" in
 		echo "
 		################
 		# Startup the VM
-		VBoxManage startvm GearBox --type headless
+		VBoxManage startvm Gearbox --type headless
 
 		# You will need to connect to the console for it to boot.
 		telnet localhost 2023
@@ -32,7 +32,7 @@ case "$1" in
 
 		######################
 		# Shutting down the VM
-		VBoxManage controlvm GearBox acpipowerbutton
+		VBoxManage controlvm Gearbox acpipowerbutton
 		"
 esac
 
