@@ -3,8 +3,9 @@
 echo "Setting up rootfs..."
 cd /build
 cp /build/genapkovl-*.sh /build/mkimg.*.sh /build/aports/scripts
-# git clone -b 1.0.0 https://github.com/gearboxworks/box-scripts /tmp/rootfs/opt/gearbox
-# git clone -b 1.0.0 https://github.com/gearboxworks/box-scripts /tmp/rootfs/opt/gearbox-fallback
+rm -rf /tmp/rootfs/opt/gearbox-fallback
+git clone -b 0.5.0 https://github.com/gearboxworks/box-scripts /tmp/rootfs/opt/gearbox-fallback
+
 tar zcf /build/rootfs.changes.tar.gz -C /tmp/rootfs .
 
 echo "Building..."

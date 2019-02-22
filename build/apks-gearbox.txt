@@ -1,8 +1,10 @@
 acpi
 alpine-base
+avahi
 bash
 bash-completion
 coreutils
+dbus
 docker
 docker-bash-completion
 docker-registry

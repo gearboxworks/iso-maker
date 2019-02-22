@@ -29,7 +29,7 @@ cat /build/apks-gearbox.txt > "$rootfs/etc/apk/world"
 rm -f "$rootfs/opt/gearbox-fallback/.cloned"
 
 # Then pull in a specific version for this release.
-# git clone -b 1.0.0 https://github.com/gearboxworks/box-scripts "$rootfs/opt/gearbox"
+# git clone -b 0.5.0 https://github.com/gearboxworks/box-scripts "$rootfs/opt/gearbox"
 rm -f "$rootfs/opt/gearbox/.cloned"
 
 # 3. tar it back up again for the ISO.

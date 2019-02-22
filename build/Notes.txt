@@ -1,0 +1,7 @@
+
+# From VM.
+cd ~/go/src/GearboxAPI
+rsync -HvaxP mick@macpro:go/src/GearboxAPI/ .
+go build
+rsync -HvaxP . mick@macpro:Documents/GitHub/iso-maker/build/go/src/GearboxAPI/
+
