@@ -1,0 +1,42 @@
+# Contributor: Denis Ryabyy <vv1r0x@gmail.com>
+# Maintainer: Denis Ryabyy <vv1r0x@gmail.com>
+pkgname=qt5-qtserialport
+_pkgname=${pkgname/qt5-//}-everywhere-src
+pkgver=5.12.0
+_ver=${pkgver/_p/-}
+_ver=${_ver/_/-}
+_ver=${_ver/beta0/beta}
+_ver=${_ver/rc0/rc}
+_V=${_ver/rc/RC}
+pkgrel=0
+pkgdesc="Qt5 - QtSerialPort module"
+url="http://wiki.qt.io/QtSerialPort"
+arch="all"
+license="LGPL-2.0 with exceptions or GPL-3.0 with exceptions"
+makedepends="qt5-qtbase-dev eudev-dev"
+subpackages="$pkgname-dev"
+
+case $pkgver in
+*_beta*|*_rc*) _rel=development_releases;;
+*) _rel=official_releases;;
+esac
+source="https://download.qt.io/official_releases/qt/${pkgver%.*}/$_ver/submodules/$_pkgname-$_ver.tar.xz"
+
+builddir="$srcdir"/$_pkgname-${_V%-*}
+
+build() {
+	cd "$builddir"
+	qmake-qt5 && make
+}
+
+check() {
+	cd "$builddir"
+	make check
+}
+
+package() {
+	cd "$builddir"
+	make INSTALL_ROOT="$pkgdir" install
+}
+
+sha512sums="b8004e844cab66a50f5c899af74f22e62dbac23493210d579344d4a9337990da9781c3647662e7f31b132b4c60d7e3de640a9a636ae7c63de253858324e11428  qtserialport-everywhere-src-5.12.0.tar.xz"

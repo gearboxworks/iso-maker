@@ -1,0 +1,39 @@
+# Maintainer: Francesco Colista <fcolista@alpinelinux.org>
+pkgname=qt5-qtquickcontrols
+_pkgname=${pkgname/qt5-//}-everywhere-src
+pkgver=5.12.0
+_ver=${pkgver/_/-}
+_ver=${_ver/beta0/beta}
+_ver=${_ver/rc0/rc}
+_V=${_ver/rc/RC}
+pkgrel=0
+pkgdesc="Qt5 - module with set of QtQuick controls"
+url="http://qt-project.org/"
+arch="all"
+license="BSD and (LGPL-2.0 with exceptions or GPL-3.0 with exceptions) and GFDL"
+makedepends="qt5-qtbase-dev qt5-qtdeclarative-dev"
+
+case $pkgver in
+*_beta*|*_rc*) _rel=development_releases;;
+*) _rel=official_releases;;
+esac
+source="http://download.qt-project.org/$_rel/qt/${pkgver%.*}/$_ver/submodules/$_pkgname-$_V.tar.xz"
+
+builddir="$srcdir"/$_pkgname-${_V%-*}
+
+build() {
+	cd "$builddir"
+	qmake-qt5 && make
+}
+
+check() {
+	cd "$builddir"
+	make check
+}
+
+package() {
+	cd "$builddir"
+	make install INSTALL_ROOT="$pkgdir"
+}
+
+sha512sums="a2052398c281e81f8a61afe49f262d4feeb4da2593dbec0cc9971e7de6b169b17c1cf2ee7c213b3d5939cc322d4d715a1ce318b031fd4b8a783fac7bae3e37f9  qtquickcontrols-everywhere-src-5.12.0.tar.xz"

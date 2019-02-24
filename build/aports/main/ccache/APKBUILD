@@ -1,0 +1,55 @@
+# Contributor: Sören Tempel <soeren+alpine@soeren-tempel.net>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=ccache
+pkgver=3.5.1
+_pkgver=${pkgver}a
+pkgrel=0
+pkgdesc="A fast C/C++ compiler cache"
+url="https://ccache.samba.org/"
+arch="all"
+license="GPL-3.0-or-later"
+makedepends="zlib-dev"
+checkdepends="bash perl"
+subpackages="$pkgname-doc"
+source="https://samba.org/ftp/$pkgname/$pkgname-$_pkgver.tar.xz"
+builddir="$srcdir/$pkgname-$pkgver"
+
+prepare() {
+	default_prepare
+
+	cd "$builddir"
+	update_config_sub
+}
+
+build() {
+	cd "$builddir"
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--localstatedir=/var
+	make
+}
+
+check() {
+	cd "$builddir"
+	make test
+}
+
+package() {
+	cd "$builddir"
+	install -Dm 755 ccache "$pkgdir"/usr/bin/ccache
+	install -Dm 644 doc/ccache.1 "$pkgdir"/usr/share/man/man1/ccache.1
+
+	local link=
+	mkdir -p "$pkgdir"/usr/lib/ccache/bin
+
+	for link in cc gcc g++ cpp c++ ${CHOST}-cc ${CHOST}-gcc \
+			${CHOST}-g++ ${CHOST}-cpp ${CHOST}-c++; do
+		ln -sf /usr/bin/ccache "$pkgdir"/usr/lib/ccache/bin/$link
+	done
+}
+
+sha512sums="8a2e9eb06ba21fcf92084afd94fc221168693de545e0448f4da2098bef2bcbfdb017117c325b0bab4931b9e346dd8c1a9d1ebaed0cdc36496d9452985cdd1b43  ccache-3.5.1a.tar.xz"

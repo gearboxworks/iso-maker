@@ -1,0 +1,56 @@
+# Contributor: Andrew Manison <amanison@anselsystems.com>
+# Maintainer: Fabian Affolter <fabian@affolter-engineering.ch>
+pkgname=py-setuptools
+_pkgname=${pkgname#py-}
+pkgver=40.6.3
+pkgrel=0
+pkgdesc="A collection of enhancements to the Python distutils"
+url="https://pypi.python.org/pypi/setuptools"
+arch="noarch"
+license="PSF"
+depends="python2"
+makedepends="python2-dev python3-dev"
+provides="py2-setuptools=$pkgver-r$pkgrel"
+options="!check" #no testsuite
+subpackages="py3-$_pkgname:_py3"
+source="$_pkgname-$pkgver.tar.gz::https://github.com/pypa/$_pkgname/archive/v$pkgver.tar.gz"
+builddir="$srcdir"/$_pkgname-$pkgver
+
+prepare() {
+	cd "$builddir"
+	python2 bootstrap.py
+	python3 bootstrap.py
+}
+
+build() {
+	cd "$builddir"
+	python2 setup.py build
+	python3 setup.py build
+}
+
+package() {
+	cd "$builddir"
+	python2 setup.py install --prefix=/usr --root="$pkgdir"
+	# we don't provide a non-suffixed easy_install
+	rm -f "$pkgdir"/usr/bin/easy_install
+}
+
+_py() {
+	local python="$1"
+	pkgdesc="$pkgdesc (for $python)"
+	depends="$python"
+	install_if="$pkgname=$pkgver-r$pkgrel $python"
+
+	cd "$builddir"
+	$python setup.py install --prefix=/usr --root="$subpkgdir"
+	# we don't provide a non-suffixed easy_install
+	rm -f "$subpkgdir"/usr/bin/easy_install
+}
+
+_py3() {
+	replaces="python3"
+	_py python3
+}
+
+
+sha512sums="6dbe826eca37e8121e2b6f61045b2923a4c5b3e93e5f985d8990f03c9046a01d2f2fbe70f45a1b3106a2a9c755edbfb0953fdf25909bea0a45db9c179bcd1a90  setuptools-40.6.3.tar.gz"

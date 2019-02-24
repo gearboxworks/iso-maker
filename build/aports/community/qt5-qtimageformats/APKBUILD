@@ -1,0 +1,39 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=qt5-qtimageformats
+_pkgname=${pkgname/qt5-//}-everywhere-src
+pkgver=5.12.0
+_ver=${pkgver/_/-}
+_ver=${_ver/beta0/beta}
+_ver=${_ver/rc0/rc}
+_V=${_ver/rc/RC}
+pkgrel=0
+pkgdesc="Qt5 - QtImageFormats component"
+url="http://qt-project.org/"
+arch="all"
+license="LGPL-2.0 with exceptions or GPL-3.0 with exceptions"
+makedepends="qt5-qtbase-dev libmng-dev tiff-dev jasper-dev libwebp-dev"
+
+case $pkgver in
+*_beta*|*_rc*) _rel=development_releases;;
+*) _rel=official_releases;;
+esac
+source="http://download.qt-project.org/$_rel/qt/${pkgver%.*}/$_ver/submodules/$_pkgname-$_V.tar.xz"
+
+builddir="$srcdir"/$_pkgname-${_V%-*}
+
+build() {
+	cd "$builddir"
+	qmake-qt5 && make
+}
+
+check() {
+	cd "$builddir"
+	make check
+}
+
+package() {
+	cd "$builddir"
+	make install INSTALL_ROOT="$pkgdir"
+}
+
+sha512sums="c83cfdb7e2c73c796d57e14c26bcf2b7d7d1b72413d0d0d632747f42748368d3538e2b1b2b896fe9ca2f58dda285b3452db42738911f26bad5413adea36a3f45  qtimageformats-everywhere-src-5.12.0.tar.xz"

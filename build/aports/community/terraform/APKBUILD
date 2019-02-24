@@ -1,0 +1,38 @@
+# Contributor: Thomas Boerger <thomas@webhippie.de>
+# Contributor: Gennady Feldman <gena01@gmail.com>
+# Contributor: Sergii Sadovyi <serg.sadovoi@gmail.com>
+# Maintainer: Thomas Boerger <thomas@webhippie.de>
+pkgname=terraform
+pkgver=0.11.8
+pkgrel=0
+pkgdesc="Building, changing and combining infrastructure safely and efficiently"
+url="https://www.terraform.io/"
+arch="all !armhf !armv7"
+license="MPL-2.0"
+makedepends="go"
+source="${pkgname}-${pkgver}.tar.gz::https://github.com/hashicorp/terraform/archive/v$pkgver.tar.gz"
+builddir="$srcdir/src/github.com/hashicorp/$pkgname"
+
+prepare() {
+	mkdir -p ${builddir%/*}
+	mv $srcdir/$pkgname-$pkgver "$builddir"/
+	default_prepare
+}
+
+build() {
+	cd "$builddir"
+	GOPATH="$srcdir" go build -v -o bin/$pkgname \
+		-ldflags "-X main.GitCommit=v$pkgver -X github.com/hashicorp/terraform/version.Prerelease= -s -w"
+}
+
+check() {
+	cd "$builddir"
+	GOPATH="$srcdir" go test
+	bin/$pkgname -v
+}
+
+package() {
+	install -Dm755 "$builddir"/bin/$pkgname "$pkgdir"/usr/bin/$pkgname
+}
+
+sha512sums="a82be5a2000b5adb417451d87def4ad93a86f63f1a72774f6b181b93e4d95e339eb13d6f30bd887bb89e40fa3f5a859d98303dca9332238450fa18ca8f4e3e99  terraform-0.11.8.tar.gz"

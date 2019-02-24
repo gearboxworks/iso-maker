@@ -1,0 +1,38 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=py-dbus
+_pkgname=dbus-python
+pkgver=1.2.8
+pkgrel=1
+pkgdesc="Python bindings for DBUS"
+url="http://www.freedesktop.org/wiki/Software/DBusBindings"
+arch="all"
+license="MIT X11"
+depends="python2"
+depends_dev="py-dbus"
+makedepends="dbus-glib-dev python2-dev py2-sphinx"
+subpackages="$pkgname-dev $pkgname-doc"
+source="https://dbus.freedesktop.org/releases/dbus-python/$_pkgname-$pkgver.tar.gz"
+
+builddir="$srcdir/$_pkgname-$pkgver"
+
+build() {
+	cd "$builddir"
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--enable-documentation
+	make
+}
+
+check() {
+	cd "$builddir"
+	make test
+}
+
+package() {
+	cd "$builddir"
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="6e486fd560944fc1461a27e6798e2c348c7fdf351602c082a0614c0a6822ff147875212bdcb1f818c0ab12470cffc613c0ffbd292cd9d445d3429bee65765905  dbus-python-1.2.8.tar.gz"

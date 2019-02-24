@@ -1,0 +1,54 @@
+# Contributor: Natanael Copa <ncopa@alpinelinux.org>
+# Maintainer: Francesco Colista <fcolista@alpinelinux.org>
+pkgname=nghttp2
+pkgver=1.35.1
+pkgrel=0
+pkgdesc="Experimental HTTP/2 client, server and proxy"
+url="https://nghttp2.org"
+arch="all"
+license="MIT"
+makedepends="libev-dev openssl-dev zlib-dev c-ares-dev autoconf automake libtool"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-libs"
+source="https://github.com/tatsuhiro-t/$pkgname/releases/download/v$pkgver/nghttp2-$pkgver.tar.xz
+remove-mruby-tests.patch"
+builddir="$srcdir"/$pkgname-$pkgver
+
+check() {
+	cd "$builddir"
+	make check
+	# integration tests require go, which is only available
+	# in community at the moment of writing. Disabling until
+	# go is moved into main
+#	cd "integration-tests"
+#	make itprep
+#	make it
+}
+
+build() {
+	cd "$builddir"
+	autoreconf -vif
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--infodir=/usr/share/info \
+		--localstatedir=/var \
+		--disable-static \
+		--without-libxml2 \
+		--without-spdylay \
+		--without-neverbleed \
+		--without-jemalloc \
+		--disable-python-bindings \
+		--enable-app
+	make
+}
+
+package() {
+	cd "$builddir"
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="fcd3f79f913afbeee1c75003bb39df918e6122bbf728b3ad4192d5849d8fb96705e04f5505465d63f25a565b2f1da6abd8fabdebb6e3347500f7abd31980861d  nghttp2-1.35.1.tar.xz
+d3f6a66ad6522babb5ad2b3721d52c1c2af88e57ed2895cf87037da1032ca42dcb95dacc23ea277b9507b4116cec117b5c9a3313759dc56b48199b687b74dd9a  remove-mruby-tests.patch"

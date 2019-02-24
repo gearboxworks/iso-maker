@@ -1,0 +1,46 @@
+# Contributor: Carlo Landmeter <clandmeter@gmail.com>
+# Maintainer: Francesco Colista <fcolista@alpinelinux.org>
+pkgname=qt5-qtwebsockets
+_pkgname=qtwebsockets-everywhere-src
+pkgver=5.12.0
+_ver=${pkgver/_p/-}
+_ver=${_ver/_/-}
+_ver=${_ver/beta0/beta}
+_ver=${_ver/rc0/rc}
+_V=${_ver/rc/RC}
+pkgrel=1
+pkgdesc="Provides WebSocket communication compliant with RFC 6455"
+url="http://qt-project.org/"
+arch="all"
+license="GPL-3.0"
+makedepends="qt5-qtbase-dev"
+subpackages="$pkgname-dev"
+replaces="qt5-websockets"
+
+case $pkgver in
+*_beta*|*_rc*) _rel=development_releases;;
+*) _rel=official_releases;;
+esac
+options="!check"
+source="https://download.qt.io/official_releases/qt/${pkgver%.*}/$_ver/submodules/$_pkgname-$_ver.tar.xz"
+
+builddir="$srcdir"/$_pkgname-${_V%-*}
+
+prepare() {
+	default_prepare
+	cd "$builddir"
+	mkdir -p build
+}
+
+build() {
+	cd "$builddir"/build
+	qmake-qt5 ..
+	make
+}
+
+package() {
+	cd "$builddir"/build
+	make INSTALL_ROOT="$pkgdir" install
+}
+
+sha512sums="2c176fce2ad92d7c6c23047ea35a7e868d222abaea077f3d1d9e84ff5fccbaa198d1d0583f5686fdc99c71bea9c4a733cf0b718c65262e761e5f07a93452d186  qtwebsockets-everywhere-src-5.12.0.tar.xz"

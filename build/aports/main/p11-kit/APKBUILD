@@ -1,0 +1,69 @@
+# Contributor: Fabian Affolter <fabian@affolter-engineering.ch>
+# Maintainer: Fabian Affolter <fabian@affolter-engineering.ch>
+pkgname=p11-kit
+pkgver=0.23.14
+pkgrel=0
+pkgdesc="Library for loading and sharing PKCS#11 modules"
+url="https://p11-glue.freedesktop.org/"
+arch="all"
+license="BSD"
+depends=""
+depends_dev=""
+makedepends="libtasn1-dev libffi-dev"
+install=""
+subpackages="$pkgname-dev $pkgname-doc $pkgname-trust $pkgname-server"
+source="https://github.com/p11-glue/p11-kit/releases/download/$pkgver/p11-kit-$pkgver.tar.gz"
+builddir="$srcdir"/$pkgname-$pkgver
+
+build() {
+	cd "$builddir"
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--sysconfdir=/etc \
+		--prefix=/usr \
+		--mandir=/usr/share/man \
+		--with-trust-paths=/etc/ssl/certs/ca-certificates.crt
+	make
+}
+
+check() {
+	cd "$builddir"
+	make check
+}
+
+package() {
+	cd "$builddir"
+	make DESTDIR="$pkgdir" install
+	mkdir -p "$pkgdir"/usr/share/doc/$pkgname
+	mv "${pkgdir}"/etc/pkcs11/pkcs11.conf.example "$pkgdir"/usr/share/doc/$pkgname/
+}
+
+trust() {
+	pkgdesc="System trust module from $pkgname"
+	mkdir -p "$subpkgdir"/usr/share/p11-kit/modules \
+		"$subpkgdir"/usr/libexec/p11-kit \
+		"$subpkgdir"/usr/lib/pkcs11 \
+		"$subpkgdir"/usr/bin
+
+	mv "$pkgdir"/usr/libexec/p11-kit/trust-extract-compat \
+		"$subpkgdir"/usr/libexec/p11-kit/
+	mv "$pkgdir"/usr/share/p11-kit/modules/p11-kit-trust.module \
+		"$subpkgdir"/usr/share/p11-kit/modules/
+	mv "$pkgdir"/usr/lib/pkcs11/p11-kit-trust.so \
+		"$subpkgdir"/usr/lib/pkcs11/
+	mv "$pkgdir"/usr/bin/trust "$subpkgdir"/usr/bin/
+}
+
+server() {
+	pkgdesc="Server and client commands for $pkgname"
+	mkdir -p "$subpkgdir"/usr/lib/pkcs11 \
+		"$subpkgdir"/usr/libexec/p11-kit \
+		"$subpkgdir"/etc/init.d
+	mv "$pkgdir"/usr/lib/pkcs11/p11-kit-client.so \
+		"$subpkgdir"/usr/lib/pkcs11
+	mv "$pkgdir"/usr/libexec/p11-kit/p11-kit-server \
+		"$subpkgdir"/usr/libexec/p11-kit
+}
+
+sha512sums="fc7e7e0745d7f8e5d783a1f38bad9bbe65b56d54897b6ba2c3118a0d912451c2d48dd113a875e7f7bfcff8fbd6b4905472fcd120630661c12029a16d2b13add4  p11-kit-0.23.14.tar.gz"

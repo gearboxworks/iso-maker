@@ -1,0 +1,42 @@
+# Contributor: Carlo Landmeter <clandmeter@gmail.com>
+# Maintainer: Carlo Landmeter <clandmeter@gmail.com>
+pkgname=php7-pecl-apcu
+_pkgreal=apcu
+# release 5 is php7+
+pkgver=5.1.16
+pkgrel=0
+pkgdesc="PHP extension APC User Cache - PECL"
+url="https://pecl.php.net/package/apcu"
+arch="all"
+license="PHP-3.01"
+depends="php7-common"
+makedepends="pcre-dev php7-dev autoconf re2c"
+source="https://pecl.php.net/get/$_pkgreal-$pkgver.tgz"
+builddir="$srcdir/$_pkgreal-$pkgver"
+provides="php7-apcu=$pkgver-r$pkgrel" # for backward compatibility
+replaces="php7-apcu" # for backward compatibility
+
+build() {
+	cd "$builddir"
+
+	phpize7
+	./configure --prefix=/usr --with-php-config=php-config7
+	make
+}
+
+check() {
+	cd "$builddir"
+	make NO_INTERACTION=1 REPORT_EXIT_STATUS=1 test
+}
+
+package() {
+	cd "$builddir"
+
+	make INSTALL_ROOT="$pkgdir"/ install
+	install -D -m644 apc.php "$pkgdir"/usr/share/php7/apcu/apc.php
+
+	install -d "$pkgdir"/etc/php7/conf.d
+	echo "extension=$_pkgreal.so" > "$pkgdir"/etc/php7/conf.d/$_pkgreal.ini
+}
+
+sha512sums="cda2b61540b786cdecc09a2c1f77c5bf91cc118ac97fa929f1d4c3c63d29969397cf3ee37691a86e7bd7784411046df5d93efe37b4cc0c1ce903dfa7dc7dce89  apcu-5.1.16.tgz"

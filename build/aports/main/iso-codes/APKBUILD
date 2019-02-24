@@ -1,0 +1,32 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=iso-codes
+pkgver=4.1
+pkgrel=0
+pkgdesc="ISO codes and their translations"
+url="http://pkg-isocodes.alioth.debian.org"
+arch="noarch"
+license="LGPL-2.1-or-later"
+depends=""
+subpackages="$pkgname-lang $pkgname-dev"
+makedepends="python3 gettext"
+source="http://http.debian.net/debian/pool/main/i/$pkgname/${pkgname}_${pkgver}.orig.tar.xz"
+builddir="$srcdir/$pkgname-$pkgver"
+build() {
+	cd "$builddir"
+	./configure \
+		--host=$CHOST \
+		--build=$CBUILD \
+		--prefix=/usr
+	make
+}
+
+check() {
+	make -C "$builddir" check
+}
+
+package() {
+	cd "$builddir"
+	make DESTDIR="$pkgdir" pkgconfigdir=/usr/lib/pkgconfig install
+}
+
+sha512sums="cf02be0cfc43a1fb28334ccae552cac9a7dee70ca3969b6263eca4bd7fee8ddcc437bd23d290643ba2cd7e99b207661d7330daaf452dc59cde36fdd5919b5616  iso-codes_4.1.orig.tar.xz"

@@ -1,0 +1,36 @@
+# Maintainer: Marlus Saraiva <marlus.saraiva@gmail.com>
+pkgname=elixir
+pkgver=1.7.4
+pkgrel=0
+pkgdesc="Elixir is a dynamic, functional language designed for building scalable and maintainable applications"
+url="http://elixir-lang.org"
+arch="noarch"
+license="Apache-2.0"
+depends="erlang erlang-inets erlang-ssl
+	erlang-public-key erlang-asn1 erlang-sasl erlang-erl-interface erlang-dev erlang-dialyzer erlang-erts erlang-hipe"
+makedepends="erlang-crypto erlang-syntax-tools erlang-parsetools erlang-eunit erlang-tools"
+subpackages="$pkgname-doc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/elixir-lang/elixir/archive/v$pkgver.tar.gz"
+builddir="$srcdir/$pkgname-$pkgver"
+
+case "$CARCH" in
+aarch64) options="!check" ;; # FIXME
+esac
+
+build() {
+	cd "$builddir"
+	LANG="en_US.UTF-8" make -j1
+}
+
+check() {
+	cd "$builddir"
+
+	make test
+}
+
+package() {
+	cd "$builddir"
+	make DESTDIR="$pkgdir" PREFIX=/usr install
+}
+
+sha512sums="594e76601e0d6f7eeddfcaa9b76a2e5c66f702a497599fffc5e9255790c18ac5e00b986fc45fd3b90335522f51272bcd4bcf2b9f8951b94eebfb1d56ac7cebc2  elixir-1.7.4.tar.gz"

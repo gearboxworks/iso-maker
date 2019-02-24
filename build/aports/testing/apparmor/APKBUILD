@@ -1,0 +1,226 @@
+# Contributor: Allan Garret <allan.garret@gmail.com>
+# Maintainer: Allan Garret <allan.garret@gmail.com>
+pkgname=apparmor
+pkgver=2.13
+pkgrel=0
+pkgdesc="Linux application security framework - mandatory access control for programs"
+url="https://gitlab.com/apparmor/apparmor/wikis/home"
+arch="all"
+license="GPL"
+depends="bash"
+makedepends="bash sed python3 autoconf automake libtool bison flex perl-dev swig gettext-dev python3-dev linux-pam-dev linux-headers"
+options="!check"
+
+subpackages="
+	libapparmor:_libapparmor
+	libapparmor-doc:_libapparmor_doc
+	libapparmor-dev:_libapparmor_dev
+	py3-$pkgname:_py3_apparmor
+	perl-$pkgname:_perl_apparmor
+	$pkgname-utils:_apparmor_utils
+	$pkgname-utils-doc:_apparmor_utils_doc
+	$pkgname-utils-lang:_apparmor_utils_lang
+	$pkgname-profiles:_apparmor_profiles:noarch
+	$pkgname-pam:_apparmor_pam
+	$pkgname-vim:_apparmor_vim:noarch
+	$pkgname-doc
+	$pkgname-lang
+	"
+source="
+	https://launchpad.net/$pkgname/$pkgver/$pkgver.0/+download/$pkgname-$pkgver.tar.gz
+
+	apparmor.initd
+
+	0001-libapparmor-fix-reallocarray-FTBFS-w-older-glibc.patch
+	0002-libapparmor-make-aa_policy_cache_add_ro_dir-function.patch
+	0003-libapparmor-do-not-honor-LIBAPPARMOR_DEBUG-when-secu.patch
+	0004-parser-provide-typedefs-for-comparison_fn_t-and-__fr.patch
+	0005-libapparmor-fix-scandirat-with-musl-libc.patch
+	0006-Fix-linking-against-gettext-on-musl-libc.patch
+	0007-utils-remove-vim-from-the-default-build.patch
+	0008-parser-remove-specific-tests-for-rttime.patch
+	0009-parser-remove-specific-tests-for-ofile.patch
+	0010-utils-adjust-tests-to-match-the-Alpine-layout.patch
+	0011-utils-adjust-rc-functions-for-aa-remove-unknown.patch
+	"
+
+builddir="$srcdir"/$pkgname-$pkgver
+
+build() {
+	export PYTHON_VERSION=3
+	export PYTHON_VERSIONS=python3
+	export PYTHON=/usr/bin/python3
+
+	cd "$builddir"/libraries/libapparmor
+	msg "Building: libapparmor"
+	./autogen.sh
+	./configure --prefix=/usr --with-python --with-perl
+	make
+
+	cd "$builddir"
+	msg "Building: apparmor parser"
+	make -C parser
+
+	msg "Building: apparmor-binutils"
+	make -C binutils
+
+	msg "Building: apparmor-utils"
+	make -C utils
+
+	msg "Building: apparmor-profiles"
+	make -C profiles
+
+	msg "Building: apparmor-pam"
+	make -C changehat/pam_apparmor
+
+	msg "Building: apparmor-vim"
+	make -C utils/vim
+}
+
+package() {
+	cd "$builddir"
+
+	make -C parser install DESTDIR="$pkgdir"
+	mv "$pkgdir"/lib "$pkgdir"/usr/lib
+	mv "$pkgdir"/sbin "$pkgdir"/usr/sbin
+	mkdir -p "$pkgdir"/usr/libexec/apparmor
+	mv "$pkgdir"/usr/lib/apparmor/rc.apparmor.functions \
+		"$pkgdir"/usr/libexec/apparmor/
+	rmdir "$pkgdir"/usr/lib/apparmor
+	install -Dm755 "$srcdir"/apparmor.initd \
+		"$pkgdir"/etc/init.d/apparmor
+}
+
+_libapparmor() {
+	pkgdesc="AppArmor library"
+	makedepends="swig python3-dev perl-dev"
+	depends="bash sed"
+
+	cd "$builddir"
+	make -C libraries/libapparmor install DESTDIR="$subpkgdir"
+
+	# Move development files
+	mkdir -p "$subpkgdir"-dev/usr
+	mv "$subpkgdir"/usr/include "$subpkgdir"-dev/usr/
+	mkdir -p "$subpkgdir"-dev/usr/lib
+	mv "$subpkgdir"/usr/lib/libapparmor.a "$subpkgdir"-dev/usr/lib/
+	mv "$subpkgdir"/usr/lib/pkgconfig "$subpkgdir"-dev/usr/lib/
+
+	# Move python3 files
+	mkdir -p "$subpkgdir"/../py3-$pkgname/usr/lib
+	mv "$subpkgdir"/usr/lib/python3.* "$subpkgdir"/../py3-$pkgname/usr/lib
+
+	# Move perl files
+	mkdir -p "$subpkgdir"/../perl-$pkgname/usr/lib
+	mv "$subpkgdir"/usr/lib/perl5 "$subpkgdir"/../perl-$pkgname/usr/lib
+
+	# Move doc files
+	mkdir -p "$subpkgdir-doc"/usr/share
+	mv "$subpkgdir"/usr/share/man "$subpkgdir-doc"/usr/share/
+}
+
+_libapparmor_doc() {
+	pkgdesc="AppArmor Library (doc files)"
+
+	cd "$builddir"
+	for i in 2 3; do
+		find "$subpkgdir"/usr/share/man/man"$i" -type f -exec gzip -9v {} +
+	done
+}
+
+_libapparmor_dev() {
+	pkgdesc="AppArmor Library (development files)"
+}
+
+_py3_apparmor() {
+	pkgdesc="Python3 module for apparmor"
+	depends="libapparmor python3"
+}
+
+_perl_apparmor() {
+	pkgdesc="Perl module for apparmor"
+	depends="libapparmor perl"
+}
+
+_apparmor_utils() {
+	pkgdesc="AppArmor userspace utilities"
+	depends="libapparmor perl python3 bash"
+
+	cd "$builddir"
+	make -C utils install DESTDIR="$subpkgdir" BINDIR="$subpkgdir"/usr/bin
+
+	cd "$builddir"
+	make -C binutils install DESTDIR="$subpkgdir" BINDIR="$subpkgdir"/usr/bin
+
+	mkdir -p "$subpkgdir"-doc/usr/share
+	mv "$subpkgdir"/usr/share/man "$subpkgdir"-doc/usr/share/
+
+	mkdir -p "$subpkgdir"-lang/usr/share
+	mv "$subpkgdir"/usr/share/locale "$subpkgdir"-lang/usr/share/
+}
+
+_apparmor_utils_doc() {
+	pkgdesc="AppArmor userspace utilites (doc files)"
+
+	cd "$builddir"
+	for i in 1 5 8; do
+		find "$subpkgdir"/usr/share/man/man"$i" -type f -exec gzip -9v {} +
+	done
+	cd "$subpkgdir"/usr/share/man/man8
+	rm apparmor_status.8
+	ln -s aa-status.8.gz apparmor_status.8.gz
+}
+
+_apparmor_utils_lang() {
+	pkgdesc="Languages for package $subpkgname"
+}
+
+_apparmor_profiles() {
+	pkgdesc="AppArmor sample pre-made profiles"
+	depends="apparmor"
+
+	cd "$builddir"
+	make -C profiles install DESTDIR="$subpkgdir"
+}
+
+_apparmor_pam() {
+	pkgdesc="AppArmor PAM library"
+	depends="libapparmor pam"
+
+	cd "$builddir"
+	make -C changehat/pam_apparmor install DESTDIR="$subpkgdir"/usr
+}
+
+_apparmor_pam_doc() {
+	pkgdesc="AppArmor PAM library (doc files)"
+
+	cd "$builddir"
+	mkdir -p "$subpkgdir"/usr/share/doc/apparmor
+	install -Dm644 changehat/pam_apparmor/README \
+		"$subpkgdir"/usr/share/doc/apparmor/README.pam_apparmor
+}
+
+_apparmor_vim() {
+	pkgdesc="AppArmor VIM support"
+	depends="vim"
+
+	cd "$builddir"/utils/vim
+	install -Dm644 apparmor.vim \
+		"$subpkgdir"/usr/share/vim/vimfiles/syntax/apparmor.vim
+}
+
+
+
+sha512sums="f98914713153d4c823a3ea7e96291cc4528bf7c8d3a139286ae0ecd806613e9c34b0ad81f2b258df2193cf6f3157d3252ef72d32d339427948a3fd8ba5651827  apparmor-2.13.tar.gz
+1a57cc577ba3aedfbe10ef6148c1e8f5d0bbf65c99e60eec80c52409c9dab59ae002024500c6e4fd0e01e8c7aeb0c85e3e6b41cacee08c17fdd869d31bca614e  apparmor.initd
+1707a2b51d354f9c0e9f0212e414ae1c95de13fdb084892ab17a75ca957681c48830db204683e86daa464ed022dc9dbce7fa471dc1abb64c0723a029f146bc29  0001-libapparmor-fix-reallocarray-FTBFS-w-older-glibc.patch
+2f6aa09b0cd93475d498d2d7f7b492849abc115d5ff5046cc565c1c0a6d0cb514cb2e3a5a51ee7d98878a40c7163304f431ffda0af40033666383abb9d8e6533  0002-libapparmor-make-aa_policy_cache_add_ro_dir-function.patch
+20a5c5faa16b42005fc48499c8a270c5e84b5aff47c9be0daf8ba837e9012617a27a0c577a0b777e62c602f355237257f71b4acf07937594a7ca027b8a257f86  0003-libapparmor-do-not-honor-LIBAPPARMOR_DEBUG-when-secu.patch
+8ccc41ef3363b3639f9809607c047e6da0dd1f784fabc9117b14726642c5a9015de95d64cb49f238b56ab80ee699dd8fe978c3265220728e220e90aaccab5ede  0004-parser-provide-typedefs-for-comparison_fn_t-and-__fr.patch
+f86fc232671721f22452496d61b591a651a427d073168f58da29f2134b3dc561815011e182ed1d065c2309bc0200e33410687c666a2063a8b1e5b5f0a8223a2c  0005-libapparmor-fix-scandirat-with-musl-libc.patch
+e3b6193f343cf8c288b914c4f9517117c570a3e3a172a44d8225be09d3215ed4ffd521e63a5dc5ca328179626e9f2f5e8e733943eac4feff5d4825097daca564  0006-Fix-linking-against-gettext-on-musl-libc.patch
+9a273ba5c92c84acfda45d5e177b8bab13a42a6b803b20ac5d55f800d1da95d5fa2fd91312062125b80b20eeb548d5c2d879b072927103d3aeafb90d3530b51f  0007-utils-remove-vim-from-the-default-build.patch
+8970817ef17137f8a2d79e66d778e15184bac45523afeaaed858b49fbfe6a4d1476121ed952c6c0219509212cca5fc87d03bd70ec669a460937723db7582acaf  0008-parser-remove-specific-tests-for-rttime.patch
+ed245911d743eb1bf13cc6cef947c0a82791226068ad91436918f1ddb039173b82ecaa1300e2655d5748af57a3c8cd9b27a1d6a66f411320765683474c8eafb5  0009-parser-remove-specific-tests-for-ofile.patch
+e4d50f89fbdda916af3ea0bc7d574ccba3d252ec1506d07e744fd35b556fb6ae6307f2c856135963f810e10ce8b866e67708cc48e06afbd9f5a7e3e68acea9fc  0010-utils-adjust-tests-to-match-the-Alpine-layout.patch
+4a1477e8c9ac22901809eb95b813ca6a7065dbae25f977cb6e7a819be6e2a450db9432f1b15137dc3b8daf83f4d54f85bbfed9001a891a20aa603ff2a64deeb7  0011-utils-adjust-rc-functions-for-aa-remove-unknown.patch"

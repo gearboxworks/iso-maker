@@ -1,0 +1,53 @@
+# Contributor: André Klitzing <aklitzing@gmail.com>
+# Maintainer: André Klitzing <aklitzing@gmail.com>
+pkgname=flatpak
+pkgver=1.0.6
+pkgrel=0
+pkgdesc="Application deployment framework for desktop apps"
+url="http://flatpak.org"
+arch="all !aarch64"
+license="LGPL-2.1"
+depends="bubblewrap"
+makedepends="glib-dev libarchive-dev libsoup-dev libcap-dev polkit-dev
+             libxau-dev ostree-dev>=2018.08 fuse-dev json-glib-dev
+             libgcab-dev appstream-glib-dev
+             libseccomp-dev libxslt-dev gpgme-dev bubblewrap bison"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-lang"
+source="https://github.com/flatpak/$pkgname/releases/download/$pkgver/$pkgname-$pkgver.tar.xz
+		musl-fixes.patch"
+options="suid"
+builddir="$srcdir/$pkgname-$pkgver"
+
+build() {
+	cd "$builddir"
+
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--localstatedir=/var \
+		--sbindir=/usr/bin \
+		--libexecdir=/usr/lib/$pkgname \
+		--disable-static \
+		--disable-documentation \
+		--with-priv-mode=setuid \
+		--with-system-bubblewrap
+
+	make
+}
+
+check() {
+	cd "$builddir"
+	#make -k check
+	./flatpak --version
+}
+
+package() {
+	cd "$builddir"
+	make DESTDIR="$pkgdir" install
+	install -D -m644 COPYING "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+}
+
+sha512sums="36ead331cceb1ed1543cbbbb60cc75e8f3839bf8fd8ccbfb31ef6c362e52d037cc00ab2f8c4d60df67be11d5e70664658e33878a3f1076e2a4d15f876b2ebc67  flatpak-1.0.6.tar.xz
+9287ed146bf71665aa436a2c2110cc5edc829a7b4a3e3190947580850fe9ecfd2bb6adb015c692af022d425fb5259390fcdcbd402e8b0d12ee5d2c1a1071ed4f  musl-fixes.patch"
