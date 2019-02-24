@@ -1,0 +1,332 @@
+OK: 0 MiB in 0 packages
+fetch https://mirror.aarnet.edu.au/pub/alpine/v3.8/main/x86_64/APKINDEX.tar.gz
+fetch https://mirror.aarnet.edu.au/pub/alpine/v3.8/community/x86_64/APKINDEX.tar.gz
+v3.8.2-56-g4d33ed061d [https://mirror.aarnet.edu.au/pub/alpine/v3.8/main]
+v3.8.2-53-g53558ad6fc [https://mirror.aarnet.edu.au/pub/alpine/v3.8/community]
+OK: 9544 distinct packages available
+>>> mkimage-x86_64: Building gearbox_small
+>>> mkimage-x86_64: --> kernel x86_64 virt 50919356250cd546ff4be6c6122f4914ffdf443c linux-virt linux-firmware
++ update-kernel -v --apk-pubkey /root/.abuild/-5c6f1992.rsa.pub --media --flavor virt --arch x86_64 --package 'linux-virt linux-firmware ' --feature 'ata base bootchart cdrom squashfs ext4 mmc raid scsi usb virtio' --repositories-file /tmp/mkimage.mehmiG/apkroot-x86_64/etc/apk/repositories /tmp/mkimage.mehmiG/kernel_x86_64_virt_50919356250cd546ff4be6c6122f4914ffdf443c_linux_virt_linux_firmware.work
+fetch https://mirror.aarnet.edu.au/pub/alpine/v3.8/main/x86_64/APKINDEX.tar.gz
+fetch https://mirror.aarnet.edu.au/pub/alpine/v3.8/community/x86_64/APKINDEX.tar.gz
+fetch https://mirror.aarnet.edu.au/pub/alpine/edge/community/x86_64/APKINDEX.tar.gz
+(1/1) Installing .tmp-update-kernel (0)
+OK: 547 MiB in 108 packages
+fetch https://mirror.aarnet.edu.au/pub/alpine/v3.8/main/x86_64/APKINDEX.tar.gz
+fetch https://mirror.aarnet.edu.au/pub/alpine/v3.8/community/x86_64/APKINDEX.tar.gz
+OK: 0 MiB in 0 packages
+(1/109) Installing musl (1.1.19-r10)
+(2/109) Installing busybox (1.28.4-r3)
+(3/109) Installing alpine-baselayout (3.1.0-r0)
+(4/109) Installing openrc (0.35.5-r5)
+(5/109) Installing alpine-conf (3.8.0-r0)
+(6/109) Installing libressl2.7-libcrypto (2.7.5-r0)
+(7/109) Installing libressl2.7-libssl (2.7.5-r0)
+(8/109) Installing libressl2.7-libtls (2.7.5-r0)
+(9/109) Installing ssl_client (1.28.4-r3)
+(10/109) Installing zlib (1.2.11-r1)
+(11/109) Installing apk-tools (2.10.1-r0)
+(12/109) Installing busybox-suid (1.28.4-r3)
+(13/109) Installing busybox-initscripts (3.1-r4)
+(14/109) Installing scanelf (1.2.3-r0)
+(15/109) Installing musl-utils (1.1.19-r10)
+(16/109) Installing libc-utils (0.7.1-r0)
+(17/109) Installing alpine-keys (2.1-r1)
+(18/109) Installing alpine-base (3.8.2-r0)
+(19/109) Installing linux-firmware-yamaha (20180615-r2)
+(20/109) Installing linux-firmware-yam (20180615-r2)
+(21/109) Installing linux-firmware-vxge (20180615-r2)
+(22/109) Installing linux-firmware-vicam (20180615-r2)
+(23/109) Installing linux-firmware-ueagle-atm (20180615-r2)
+(24/109) Installing linux-firmware-ttusb-budget (20180615-r2)
+(25/109) Installing linux-firmware-tigon (20180615-r2)
+(26/109) Installing linux-firmware-ti-keystone (20180615-r2)
+(27/109) Installing linux-firmware-ti-connectivity (20180615-r2)
+(28/109) Installing linux-firmware-tehuti (20180615-r2)
+(29/109) Installing linux-firmware-sxg (20180615-r2)
+(30/109) Installing linux-firmware-sun (20180615-r2)
+(31/109) Installing linux-firmware-slicoss (20180615-r2)
+(32/109) Installing linux-firmware-sb16 (20180615-r2)
+(33/109) Installing linux-firmware-rtlwifi (20180615-r2)
+(34/109) Installing linux-firmware-rtl_nic (20180615-r2)
+(35/109) Installing linux-firmware-rtl_bt (20180615-r2)
+(36/109) Installing linux-firmware-rtl8192e (20180615-r2)
+(37/109) Installing linux-firmware-rsi (20180615-r2)
+(38/109) Installing linux-firmware-rockchip (20180615-r2)
+(39/109) Installing linux-firmware-radeon (20180615-r2)
+(40/109) Installing linux-firmware-r128 (20180615-r2)
+(41/109) Installing linux-firmware-qlogic (20180615-r2)
+(42/109) Installing linux-firmware-qed (20180615-r2)
+(43/109) Installing linux-firmware-qcom (20180615-r2)
+(44/109) Installing linux-firmware-qca (20180615-r2)
+(45/109) Installing linux-firmware-ositech (20180615-r2)
+(46/109) Installing linux-firmware-nvidia (20180615-r2)
+(47/109) Installing linux-firmware-netronome (20180615-r2)
+(48/109) Installing linux-firmware-myricom (20180615-r2)
+(49/109) Installing linux-firmware-mwlwifi (20180615-r2)
+(50/109) Installing linux-firmware-mwl8k (20180615-r2)
+(51/109) Installing linux-firmware-mrvl (20180615-r2)
+(52/109) Installing linux-firmware-moxa (20180615-r2)
+(53/109) Installing linux-firmware-mellanox (20180615-r2)
+(54/109) Installing linux-firmware-matrox (20180615-r2)
+(55/109) Installing linux-firmware-liquidio (20180615-r2)
+(56/109) Installing linux-firmware-libertas (20180615-r2)
+(57/109) Installing linux-firmware-korg (20180615-r2)
+(58/109) Installing linux-firmware-keyspan_pda (20180615-r2)
+(59/109) Installing linux-firmware-keyspan (20180615-r2)
+(60/109) Installing linux-firmware-kaweth (20180615-r2)
+(61/109) Installing linux-firmware-isci (20180615-r2)
+(62/109) Installing linux-firmware-intel (20180615-r2)
+(63/109) Installing linux-firmware-imx (20180615-r2)
+(64/109) Installing linux-firmware-i915 (20180615-r2)
+(65/109) Installing linux-firmware-go7007 (20180615-r2)
+(66/109) Installing linux-firmware-ess (20180615-r2)
+(67/109) Installing linux-firmware-ene-ub6250 (20180615-r2)
+(68/109) Installing linux-firmware-emi62 (20180615-r2)
+(69/109) Installing linux-firmware-emi26 (20180615-r2)
+(70/109) Installing linux-firmware-edgeport (20180615-r2)
+(71/109) Installing linux-firmware-e100 (20180615-r2)
+(72/109) Installing linux-firmware-dsp56k (20180615-r2)
+(73/109) Installing linux-firmware-dabusb (20180615-r2)
+(74/109) Installing linux-firmware-cxgb4 (20180615-r2)
+(75/109) Installing linux-firmware-cxgb3 (20180615-r2)
+(76/109) Installing linux-firmware-cpia2 (20180615-r2)
+(77/109) Installing linux-firmware-cis (20180615-r2)
+(78/109) Installing linux-firmware-cavium (20180615-r2)
+(79/109) Installing linux-firmware-carl9170fw (20180615-r2)
+(80/109) Installing linux-firmware-brcm (20180615-r2)
+(81/109) Installing linux-firmware-bnx2x (20180615-r2)
+(82/109) Installing linux-firmware-bnx2 (20180615-r2)
+(83/109) Installing linux-firmware-av7110 (20180615-r2)
+(84/109) Installing linux-firmware-atusb (20180615-r2)
+(85/109) Installing linux-firmware-atmel (20180615-r2)
+(86/109) Installing linux-firmware-ath9k_htc (20180615-r2)
+(87/109) Installing linux-firmware-ath6k (20180615-r2)
+(88/109) Installing linux-firmware-ath10k (20180615-r2)
+(89/109) Installing linux-firmware-ar3k (20180615-r2)
+(90/109) Installing linux-firmware-amdgpu (20180615-r2)
+(91/109) Installing linux-firmware-amd-ucode (20180615-r2)
+(92/109) Installing linux-firmware-advansys (20180615-r2)
+(93/109) Installing linux-firmware-adaptec (20180615-r2)
+(94/109) Installing linux-firmware-acenic (20180615-r2)
+(95/109) Installing linux-firmware-3com (20180615-r2)
+(96/109) Installing linux-firmware-other (20180615-r2)
+(97/109) Installing linux-firmware (20180615-r2)
+(98/109) Installing lddtree (1.26-r1)
+(99/109) Installing libuuid (2.32-r0)
+(100/109) Installing libblkid (2.32-r0)
+(101/109) Installing argon2-libs (20171227-r1)
+(102/109) Installing device-mapper-libs (2.02.178-r0)
+(103/109) Installing json-c (0.13.1-r0)
+(104/109) Installing cryptsetup-libs (2.0.2-r3)
+(105/109) Installing xz-libs (5.2.4-r0)
+(106/109) Installing kmod (24-r1)
+(107/109) Installing kmod-openrc (24-r1)
+(108/109) Installing mkinitfs (3.3.0-r1)
+(109/109) Installing linux-virt (4.14.89-r0)
+OK: 361 MiB in 109 packages
+Parallel mksquashfs: Using 2 processors
+Creating 4.0 filesystem on /tmp/update-kernel.aNoLLj/boot/modloop-virt, block size 131072.
+[=============================================================-] 1132/1132 100%
+
+Exportable Squashfs 4.0 filesystem, xz compressed, data block size 131072
+	compressed data, compressed metadata, compressed fragments, compressed xattrs
+	duplicates are removed
+Filesystem size 9635.81 Kbytes (9.41 Mbytes)
+	19.93% of uncompressed filesystem size (48340.17 Kbytes)
+Inode table size 9086 bytes (8.87 Kbytes)
+	24.12% of uncompressed inode table size (37670 bytes)
+Directory table size 10781 bytes (10.53 Kbytes)
+	43.53% of uncompressed directory table size (24765 bytes)
+Number of duplicate files found 0
+Number of inodes 1143
+Number of files 934
+Number of fragments 183
+Number of symbolic links  0
+Number of device nodes 0
+Number of fifo nodes 0
+Number of socket nodes 0
+Number of directories 209
+Number of ids (unique uids + gids) 1
+Number of uids 1
+	root (0)
+Number of gids 1
+	root (0)
+(1/1) Purging .tmp-update-kernel (0)
+OK: 547 MiB in 107 packages
++ set +x
+>>> mkimage-x86_64: --> apks x86_64 5ca4a8b9818a8718b6b6dbe915804694eb420729
+Downloading openssh-client-7.7_p1-r3
+Downloading ssl_client-1.28.4-r3
+Downloading rpcbind-0.2.4-r1
+Downloading libcurl-7.61.1-r1
+Downloading binutils-2.30-r5
+Downloading chrony-3.3-r0
+Downloading wpa_supplicant-openrc-2.6-r14
+Downloading libseccomp-2.3.3-r1
+Downloading shadow-4.5-r0
+Downloading avahi-0.7-r1
+Downloading docker-registry-2.6.2-r0
+Downloading json-c-0.13.1-r0
+Downloading blkid-2.32-r0
+Downloading ncurses-libs-6.1_p20180818-r1
+Downloading libressl-2.7.5-r0
+Downloading rsync-3.1.3-r1
+Downloading bonding-2.6-r3
+Downloading ppp-minconn-2.4.7-r5
+Downloading ncurses-terminfo-base-6.1_p20180818-r1
+Downloading e2fsprogs-libs-1.44.2-r0
+Downloading zlib-1.2.11-r1
+Downloading libcap-2.25-r1
+Downloading keyutils-libs-1.5.10-r0
+Downloading openssh-sftp-server-7.7_p1-r3
+Downloading acpi-1.7-r2
+Downloading ppp-atm-2.4.7-r5
+Downloading krb5-libs-1.15.4-r0
+Downloading libnl3-3.2.28-r1
+Downloading nfs-utils-openrc-2.3.1-r4
+Downloading mtools-4.0.18-r2
+Downloading readline-7.0.003-r0
+Downloading kmod-24-r1
+Downloading libattr-2.4.47-r7
+Downloading libressl2.7-libtls-2.7.5-r0
+Downloading docker-bash-completion-18.06.1-r0
+Downloading musl-dev-1.1.19-r10
+Downloading libfdisk-2.32-r0
+Downloading libuuid-2.32-r0
+Downloading docker-vim-18.06.1-r0
+Downloading openssh-7.7_p1-r3
+Downloading libsmartcols-2.32-r0
+Downloading virtualbox-guest-modules-vanilla-4.14.89-r0
+Downloading mpc1-1.0.3-r1
+Downloading go-tools-1.10.8-r0
+Downloading libatomic-6.4.0-r9
+Downloading apk-tools-2.10.1-r0
+Downloading rsync-openrc-3.1.3-r1
+Downloading libssh2-1.8.0-r3
+Downloading busybox-1.28.4-r3
+Downloading git-2.18.1-r0
+Downloading alpine-conf-3.8.0-r0
+Downloading libltdl-2.4.6-r5
+Downloading alpine-base-3.8.2-r0
+Downloading libmnl-1.0.4-r0
+Downloading argon2-libs-20171227-r1
+Downloading libacl-2.2.52-r5
+Downloading alpine-mirrors-3.5.9-r0
+Downloading grub-2.02-r6
+Downloading jq-1.6_rc1-r1
+Downloading git-bash-completion-2.18.1-r0
+Downloading pcsc-lite-libs-1.8.23-r1
+Downloading dbus-libs-1.10.24-r1
+Downloading popt-1.16-r7
+Downloading ca-certificates-20171114-r3
+Downloading kmod-bash-completion-24-r1
+Downloading ppp-daemon-2.4.7-r5
+Downloading xz-libs-5.2.4-r0
+Downloading coreutils-8.29-r2
+Downloading busybox-suid-1.28.4-r3
+Downloading libnfsidmap-2.3.1-r4
+Downloading libressl2.7-libssl-2.7.5-r0
+Downloading libgcc-6.4.0-r9
+Downloading libcom_err-1.44.2-r0
+Downloading mkinitfs-3.3.0-r1
+Downloading libevent-2.1.8-r5
+Downloading gcc-6.4.0-r9
+Downloading linux-pam-1.3.0-r0
+Downloading ppp-l2tp-2.4.7-r5
+Downloading tzdata-2018f-r0
+Downloading libnftnl-libs-1.1.1-r0
+Downloading wpa_supplicant-2.6-r14
+Downloading busybox-initscripts-3.1-r4
+Downloading libpng-1.6.34-r1
+Downloading bash-completion-2.8-r0
+Downloading musl-1.1.19-r10
+Downloading docker-18.06.1-r0
+Downloading openssh-keygen-7.7_p1-r3
+Downloading e2fsprogs-1.44.2-r0
+Downloading kmod-openrc-24-r1
+Downloading nfs-utils-2.3.1-r4
+Downloading device-mapper-libs-2.02.178-r0
+Downloading gmp-6.1.2-r1
+Downloading ppp-chat-2.4.7-r5
+Downloading libgomp-6.4.0-r9
+Downloading lddtree-1.26-r1
+Downloading libstdc++-6.4.0-r9
+Downloading libressl2.7-libcrypto-2.7.5-r0
+Downloading libtirpc-1.0.3-r0
+Downloading lua5.3-libs-5.3.5-r1
+Downloading go-1.10.8-r0
+Downloading libintl-0.19.8.1-r2
+Downloading unionfs-fuse-1.0-r0
+Downloading jansson-2.11-r0
+Downloading libdaemon-0.14-r2
+Downloading cryptsetup-libs-2.0.2-r3
+Downloading kbd-bkeymaps-2.0.4-r3
+Downloading ppp-winbind-2.4.7-r5
+Downloading openssh-server-7.7_p1-r3
+Downloading pkgconf-1.5.3-r0
+Downloading grub-efi-2.02-r6
+Downloading ppp-passprompt-2.4.7-r5
+Downloading libc-utils-0.7.1-r0
+Downloading libmount-2.32-r0
+Downloading alpine-baselayout-3.1.0-r0
+Downloading avahi-libs-0.7-r1
+Downloading isl-0.18-r0
+Downloading sqlite-libs-3.25.3-r0
+Downloading sudo-1.8.23-r2
+Downloading ppp-pppoe-2.4.7-r5
+Downloading libblkid-2.32-r0
+Downloading oniguruma-6.8.2-r0
+Downloading expat-2.2.5-r0
+Downloading network-extras-1.2-r0
+Downloading alpine-keys-2.1-r1
+Downloading bash-4.4.19-r1
+Downloading docker-openrc-18.06.1-r0
+Downloading vlan-2.2-r0
+Downloading pcre2-10.31-r0
+Downloading wget-1.20.1-r0
+Downloading musl-utils-1.1.19-r10
+Downloading ncurses-terminfo-6.1_p20180818-r1
+Downloading less-530-r0
+Downloading scanelf-1.2.3-r0
+Downloading libusb-1.0.22-r0
+Downloading bridge-1.5-r3
+Downloading nghttp2-libs-1.32.0-r0
+Downloading virtualbox-guest-additions-5.1.30-r0
+Downloading ppp-passwordfd-2.4.7-r5
+Downloading fuse-2.9.8-r0
+Downloading util-linux-bash-completion-2.32-r0
+Downloading libbz2-1.0.6-r6
+Downloading wireless-tools-30_pre9-r0
+Downloading ppp-radius-2.4.7-r5
+Downloading openssh-server-common-7.7_p1-r3
+Downloading util-linux-2.32-r0
+Downloading findmnt-2.32-r0
+Downloading freetype-2.9.1-r1
+Downloading usb-modeswitch-2.5.2-r0
+Downloading krb5-conf-1.0-r1
+Downloading iptables-1.6.2-r0
+Downloading mpfr3-3.1.5-r1
+Downloading syslinux-6.04_pre1-r1
+Downloading openrc-0.35.5-r5
+Downloading dbus-1.10.24-r1
+Downloading libverto-0.3.0-r1
+Downloading vim-8.1.0115-r0
+Downloading ncurses-6.1_p20180818-r1
+Index has 157 packages (of which 157 are new)
+>>> Signed /tmp/mkimage.mehmiG/apks_x86_64_5ca4a8b9818a8718b6b6dbe915804694eb420729.work/apks/x86_64/APKINDEX.tar.gz
+>>> mkimage-x86_64: --> apkovl alpine 793091b419d1f877769cf1d7931935fd93915886
+>>> mkimage-x86_64: Generating alpine.apkovl.tar.gz
+======= CONFIG /tmp/mkimage.mehmiG/apkovl_alpine_793091b419d1f877769cf1d7931935fd93915886.work ==============
+alpine
+=================================
+tar: ./root/go/src/GearboxAPI/GearboxAPI: time stamp 2019-02-23 03:10:09 is 30612.792063283 s in the future
+tar: ./root/go/src/GearboxAPI: time stamp 2019-02-23 03:10:09 is 30612.790648895 s in the future
+>>> mkimage-x86_64: --> syslinux 456cbe69354e8b9bfaa45d66ef0a8340ed174fc3
+>>> mkimage-x86_64: --> syslinux_cfg boot/syslinux/syslinux.cfg 317df362dae5d52de648a0ad31a916f7dec08036
+>>> mkimage-x86_64: --> grub_cfg boot/grub/grub.cfg 3850891fa9a1e2610847e962fab9cd4db3ac7759
+>>> mkimage-x86_64: --> grub_efi x86_64-efi bootx64.efi 51289d4981550e3c387f63cd7fe7de29dade7c20
+>>> mkimage-x86_64: Creating alpine-gearbox_small-1.0-x86_64.iso
+xorriso 1.4.8 : RockRidge filesystem manipulator, libburnia project.
+
+Images generated in /build/iso
