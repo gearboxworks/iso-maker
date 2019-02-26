@@ -1,18 +1,18 @@
 ##
-# Name:		pressboxx/alpine-iso
-# Build:	docker build --rm -t pressboxx/alpine-iso .
-# Run:		docker run --rm -v `pwd`/iso/:/iso/ -t -i --privileged pressboxx/alpine-iso
+# Name:		gearbox/alpine-iso
+# Build:	docker build --rm -t gearbox/alpine-iso .
+# Run:		docker run --rm -v `pwd`/iso/:/iso/ -t -i --privileged gearbox/alpine-iso
 ##
 
 FROM alpine:latest
 
 LABEL maintainer="Mick Hellstrom, mick@newclarity.net" \
-    decription="pressboxx" \
+    decription="gearbox" \
     version="${PRESSBOXX_VERSION}" \
-    org.label-schema.name="pressboxx" \
+    org.label-schema.name="gearbox" \
     org.label-schema.build-date=$BUILD_DATE \
     org.label-schema.vcs-ref=$VCS_REF \
-    org.label-schema.vcs-url="https://github.com/pressboxx/pressboxx" \
+    org.label-schema.vcs-url="https://github.com/gearbox/iso-maker" \
     org.label-schema.schema-version="0.5.0-rc1"
 
 
