@@ -40,9 +40,13 @@ do
 	echo "# ${iso}"
 	if [ "${MD5SUM}" != "" ]
 	then
-		$MD5SUM "${iso}" > "${iso}.md5sum"
-		ls -lh "${iso}" "${iso}.md5sum" 2>/dev/null
-		cat "${iso}.md5sum" 2>/dev/null
+		if [ ! -f "${iso}.md5sum" ]
+		then
+			$MD5SUM "${iso}" > "${iso}.md5sum"
+		fi
+
+		ls -lh "${iso}" "${iso}.md5sum"
+		cat "${iso}.md5sum"
 	else
 		ls -lh "${iso}"
 	fi
