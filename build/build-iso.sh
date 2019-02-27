@@ -34,6 +34,7 @@ then
 		cat "/build/${REPO}"
 		echo ""
 		cp "/build/${REPO}" /tmp/rootfs/etc/apk/repositories
+		cp "/build/${REPO}" /etc/apk/repositories
 	fi
 fi
 
@@ -60,9 +61,9 @@ cd /build/aports/scripts
 ./mkimage.sh --tag 0.5.0 \
 	--outdir /build/iso \
 	--arch x86_64 \
-	--repository https://mirror.aarnet.edu.au/pub/alpine/v3.8/main \
-	--extra-repository https://mirror.aarnet.edu.au/pub/alpine/v3.8/community \
 	--profile gearbox_small >& /build/iso/output.log
+#	--repository https://mirror.aarnet.edu.au/pub/alpine/v3.8/main
+#	--extra-repository https://mirror.aarnet.edu.au/pub/alpine/v3.8/community
 
 echo "# Completed."
 
