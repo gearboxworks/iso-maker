@@ -5,6 +5,9 @@
 
 # set -x
 
+REPO="$1"
+
+
 if [ ! -d /tmp/rootfs ]
 then
 	echo "# ERROR: We don't have a /tmp/rootfs. Something is wrong!"
@@ -22,6 +25,16 @@ echo "# Pull /opt/gearbox-fallback from GitHub."
 rm -rf /tmp/rootfs/opt/gearbox-fallback
 git clone -b 0.5.0 https://github.com/gearboxworks/box-scripts /tmp/rootfs/opt/gearbox-fallback
 
+if [ "${REPO}" != "" ]
+then
+	if [ -f "/build/${REPO}" ]
+	then
+		echo "# Override /tmp/rootfs/etc/apk/repositories file with:"
+		cat "/build/${REPO}"
+		echo ""
+		cp "/build/${REPO}" /tmp/rootfs/etc/apk/repositories
+	fi
+fi
 
 echo "# Save rootfs - Tarball /tmp/rootfs to /build/rootfs.changes.tar.gz"
 tar zcf /build/rootfs.changes.tar.gz -C /tmp/rootfs .
