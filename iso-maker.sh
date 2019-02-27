@@ -12,7 +12,7 @@ clean_container() {
 
 create_iso() {
 	echo "# Creating Gearbox ISO."
-	docker run --rm -v `pwd`/build/:/build/ -t -i --privileged gearbox/iso-maker
+	docker run --rm -v `pwd`/build/:/build/ -t -i --privileged gearbox/iso-maker /build/build-iso.sh "$@"
 }
 
 shell_out() {
@@ -52,7 +52,8 @@ case "$1" in
 		;;
 
 	'create'|'iso')
-		create_iso
+		shift
+		create_iso "$@"
 		;;
 
 	'ls'|'list'|'show')
