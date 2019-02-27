@@ -5,24 +5,42 @@
 
 # set -x
 
-echo "# Setting up rootfs..."
+if [ ! -d /tmp/rootfs ]
+then
+	echo "# ERROR: We don't have a /tmp/rootfs. Something is wrong!"
+	exit
+fi
+
 cd /build
+
+
+echo "# Copy ISO build scripts."
 cp /build/genapkovl-*.sh /build/mkimg.*.sh /build/aports/scripts
+
+
+echo "# Pull /opt/gearbox-fallback from GitHub."
 rm -rf /tmp/rootfs/opt/gearbox-fallback
 git clone -b 0.5.0 https://github.com/gearboxworks/box-scripts /tmp/rootfs/opt/gearbox-fallback
 
-if [ -d /tmp/rootfs ]
+
+echo "# Save rootfs - Tarball /tmp/rootfs to /build/rootfs.changes.tar.gz"
+tar zcf /build/rootfs.changes.tar.gz -C /tmp/rootfs .
+if [ ! -s /build/rootfs.changes.tar.gz ]
 then
-	echo "# Tarballing /tmp/rootfs to /build/rootfs.changes.tar.gz"
-	tar zcf /build/rootfs.changes.tar.gz -C /tmp/rootfs .
+	echo "# ERROR: /build/rootfs.changes.tar.gz is zero size. Something is wrong!"
+	ls -l /build
+	exit
 fi
+
 
 if [ ! -d /build/iso ]
 then
+	echo "# Creating ISO directory..."
 	mkdir -p /build/iso
 fi
 
-echo "# Building..."
+
+echo "# Creating ISO..."
 cd /build/aports/scripts
 ./mkimage.sh --tag 0.5.0 \
 	--outdir /build/iso \
@@ -33,9 +51,11 @@ cd /build/aports/scripts
 
 echo "# Completed."
 
+
 echo ""
 echo "# Tail build/iso/output.log"
 tail /build/iso/output.log
+
 
 echo ""
 echo "# Show ISOs"
