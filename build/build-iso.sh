@@ -17,6 +17,11 @@ then
 	tar zcf /build/rootfs.changes.tar.gz -C /tmp/rootfs .
 fi
 
+if [ ! -d /build/iso ]
+then
+	mkdir -p /build/iso
+fi
+
 echo "# Building..."
 cd /build/aports/scripts
 ./mkimage.sh --tag 0.5.0 \
