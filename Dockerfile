@@ -8,7 +8,7 @@ FROM alpine:latest
 
 LABEL maintainer="Mick Hellstrom, mick@newclarity.net" \
     decription="gearbox" \
-    version="${PRESSBOXX_VERSION}" \
+    version="${GEARBOX_VERSION}" \
     org.label-schema.name="gearbox" \
     org.label-schema.build-date=$BUILD_DATE \
     org.label-schema.vcs-ref=$VCS_REF \
