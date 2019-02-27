@@ -63,7 +63,7 @@ case "$1" in
 	'build')
 		clean_container
 		create_container
-		create_iso
+		create_iso "$@"
 		;;
 
 	*)
