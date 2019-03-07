@@ -1,13 +1,13 @@
 ##
-# Name:		gearbox/alpine-iso
-# Build:	docker build --rm -t gearbox/alpine-iso .
-# Run:		docker run --rm -v `pwd`/iso/:/iso/ -t -i --privileged gearbox/alpine-iso
+# Name:		gearboxworks/alpine-iso
+# Build:	docker build --rm -t gearboxworks/alpine-iso .
+# Run:		docker run --rm -v `pwd`/iso/:/iso/ -t -i --privileged gearboxworks/alpine-iso
 ##
 
 FROM alpine:latest
 
 LABEL maintainer="Mick Hellstrom, mick@newclarity.net" \
-    decription="gearbox" \
+    decription="Gearbox ISO maker" \
     version="${GEARBOX_VERSION}" \
     org.label-schema.name="gearbox" \
     org.label-schema.build-date=$BUILD_DATE \
@@ -16,7 +16,7 @@ LABEL maintainer="Mick Hellstrom, mick@newclarity.net" \
     org.label-schema.schema-version="0.5.0-rc1"
 
 
-COPY files/build /build
+COPY docker_files/build /build
 
 WORKDIR /build
 ENV PROFILENAME base

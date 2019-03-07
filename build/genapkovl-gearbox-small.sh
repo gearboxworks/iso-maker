@@ -24,14 +24,11 @@ tar zxf /build/rootfs.changes.tar.gz -C "$rootfs"
 echo "${HOSTNAME}" > "$rootfs/etc/hostname"
 cat /build/apks-gearbox-small.txt > "$rootfs/etc/apk/world"
 
-# Clone current tree and bake it in as a fallback.
-# git clone https://github.com/gearboxworks/box-scripts "$rootfs/opt/gearbox-fallback"
-rm -f "$rootfs/opt/gearbox-fallback/.cloned"
+# 3. Clone current tree and bake it in as a fallback.
+#FALLBACK="$rootfs/var/lib/cache/fallback"
+#git clone https://github.com/gearboxworks/box-scripts "${FALLBACK}/opt/gearbox"
+#rm -f "${FALLBACK}/opt/gearbox/.cloned"
 
-# Then pull in a specific version for this release.
-# git clone -b 0.5.0 https://github.com/gearboxworks/box-scripts "$rootfs/opt/gearbox"
-rm -f "$rootfs/opt/gearbox/.cloned"
-
-# 3. tar it back up again for the ISO.
+# 4. tar it back up again for the ISO.
 tar -c -C "$rootfs" . | gzip -9n > $HOSTNAME.apkovl.tar.gz
 

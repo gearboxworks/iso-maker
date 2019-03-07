@@ -2,22 +2,24 @@
 
 create_container() {
 	echo "# Create Docker container to build a Gearbox ISO."
-	docker build --rm -t gearbox/iso-maker .
+	docker build --rm -t gearboxworks/iso-maker .
 }
 
 clean_container() {
 	echo "# Removing Gearbox iso-maker Docker container."
-	docker image rm gearbox/iso-maker
+	docker image rm gearboxworks/iso-maker
+	echo "# Cleaning up log files and ISOs."
+	rm -f build/iso/*.log build/iso/*.iso build/iso/*.md5sum
 }
 
 create_iso() {
 	echo "# Creating Gearbox ISO."
-	docker run --rm -v `pwd`/build/:/build/ -t -i --privileged gearbox/iso-maker /build/build-iso.sh "$@"
+	docker run --rm -v `pwd`/build/:/build/ -t -i --privileged gearboxworks/iso-maker /build/build-iso.sh "$@"
 }
 
 shell_out() {
 	echo "# Shelling out to Gearbox iso-maker."
-	docker run --rm -v `pwd`/build/:/build/ -t -i --privileged gearbox/iso-maker /bin/bash -l
+	docker run --rm -v `pwd`/build/:/build/ -t -i --privileged gearboxworks/iso-maker /bin/bash -l
 }
 
 list_iso() {

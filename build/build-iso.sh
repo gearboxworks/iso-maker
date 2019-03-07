@@ -21,9 +21,11 @@ echo "# Copy ISO build scripts."
 cp /build/genapkovl-*.sh /build/mkimg.*.sh /build/aports/scripts
 
 
-echo "# Pull /opt/gearbox-fallback from GitHub."
-rm -rf /tmp/rootfs/opt/gearbox-fallback
-git clone -b 0.5.0 https://github.com/gearboxworks/box-scripts /tmp/rootfs/opt/gearbox-fallback
+FALLBACK="$rootfs/var/lib/cache/fallback"
+echo "# Pull ${FALLBACK}/opt/gearbox from GitHub."
+rm -rf "${FALLBACK}/opt/gearbox"
+git clone https://github.com/gearboxworks/box-scripts "${FALLBACK}/opt/gearbox"
+rm -f "${FALLBACK}/opt/gearbox/.cloned"
 
 
 if [ "${REPO}" != "" ]
