@@ -1,0 +1,3 @@
+root ALL=(ALL) NOPASSWD: ALL
+gearbox ALL=(ALL) NOPASSWD: ALL
+build ALL=(ALL) NOPASSWD: ALL

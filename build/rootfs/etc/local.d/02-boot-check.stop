@@ -1,0 +1,12 @@
+#!/bin/bash
+
+echo ""
+echo "################################################################################"
+echo "# Stopping GearBoxOS."
+echo "# $(date)"
+
+/etc/init.d/gearbox-check stop
+
+box shutdown
+
+/etc/init.d/docker-check stop

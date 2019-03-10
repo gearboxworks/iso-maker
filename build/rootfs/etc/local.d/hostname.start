@@ -1,0 +1,5 @@
+#!/bin/sh
+
+HOSTNAME=$(cat /sys/devices/virtual/dmi/id/board_serial)
+sed -i -e "s/alpine/$HOSTNAME/g" /etc/hostname /etc/hosts
+hostname gearbox

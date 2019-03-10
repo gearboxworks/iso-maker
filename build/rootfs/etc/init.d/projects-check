@@ -1,0 +1,29 @@
+#!/bin/bash
+
+exit
+################################################################################
+# WARNING! This is a "chicken and egg" issue.
+# This script cannot depend on anything else other than basic system bins.
+################################################################################
+IS_PROJECTS_MOUNTED=""
+
+
+################################################################################
+IS_PROJECTS_MOUNTED="$(awk '$2~/^\/projects/{print"OK"}' /proc/mounts)"
+if [ "${IS_PROJECTS_MOUNTED}" != "OK" ]
+then
+	echo "Mounting /projects"
+	mount /projects
+fi
+
+IS_PROJECTS_MOUNTED="$(awk '$2~/^\/projects/{print"OK"}' /proc/mounts)"
+if [ "${IS_PROJECTS_MOUNTED}" == "OK" ]
+then
+	COUNT_FILES="$(find /projects -type f | wc -l)"
+	if [ "${COUNT_FILES}" -lt 8 ]
+	then
+		echo "Setting up /projects"
+		rsync -HvaxP /projects-fallback/ /projects/ >& /tmp/projects-check.log
+	fi
+fi
+

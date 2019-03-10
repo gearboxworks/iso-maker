@@ -1,0 +1,67 @@
+#!/bin/bash
+
+
+################################################################################
+# WARNING! This is a "chicken and egg" issue.
+# This script cannot depend on anything else other than basic system bins.
+################################################################################
+
+check_mounts()
+{
+	IS_DOCKER_MOUNTED=""
+	IS_DOCKER_MOUNT_EMPTY=""
+
+
+	################################################################################
+	IS_DOCKER_MOUNTED="$(awk '$2~/^\/var\/lib\/docker/ && $1~/^tmpfs$/{print"TMPFS"; next} $2~/^\/var\/lib\/docker/{print"OK"}' /proc/mounts)"
+	if [ "${IS_DOCKER_MOUNTED}" == "TMPFS" ]
+	then
+		echo "Unmounting old TMPFS /var/lib/docker"
+		umount /var/lib/docker
+
+		echo "Mounting /var/lib/docker"
+		mount /var/lib/docker
+	fi
+	if [ "${IS_DOCKER_MOUNTED}" != "OK" ]
+	then
+		echo "Mounting /var/lib/docker"
+		mount /var/lib/docker
+	fi
+
+	IS_DOCKER_MOUNTED="$(awk '$2~/^\/var\/lib\/docker/{print"OK"}' /proc/mounts)"
+	if [ "${IS_DOCKER_MOUNTED}" != "OK" ]
+	then
+		echo "ERROR: Could not mount /var/lib/docker - Will not be able to start GearBox."
+		echo "ERROR: Could not mount /var/lib/docker - Will not be able to start GearBox." > /dev/tty0
+	fi
+}
+
+
+################################################################################
+. /etc/conf.d/docker
+BASEDIR="$(dirname ${DOCKER_LOGFILE})"
+if [ ! -d "${BASEDIR}" ]
+then
+	mkdir -p ${BASEDIR}
+fi
+
+echo "################################################################################" >> ${DOCKER_LOGFILE}
+echo "# docker $1 - $(date)" >> ${DOCKER_LOGFILE}
+echo "# " >> ${DOCKER_LOGFILE}
+
+case "$1" in
+	'start')
+		check_mounts
+		if [ "${IS_DOCKER_MOUNTED}" == "OK" ]
+		then
+			/etc/init.d/docker start
+			sleep 2
+			docker network create --driver bridge --subnet 172.42.0.0/24 gearboxnet	# >& /dev/null
+		fi
+		;;
+
+	'stop')
+		/etc/init.d/docker stop
+		;;
+esac
+

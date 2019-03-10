@@ -1,0 +1,1 @@
+/opt/gearbox/GearboxOS/etc/profile.d/box-profile.sh

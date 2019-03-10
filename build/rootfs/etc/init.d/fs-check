@@ -1,0 +1,96 @@
+#!/bin/bash
+
+FS_APP_DEV="/dev/sda"
+FS_DOCKERSTATIC_DEV="/dev/sdb"
+FS_DATA_DEV="/dev/sdc"
+FS_CONFIG_DEV="/dev/sdd"
+
+isMounted() {
+	DEVICE="$1"
+	LABEL="$2"
+	MOUNTDIR="$3"
+
+	# OUT="$(mount -l -t ext4 | grep "${LABEL}")"
+	OUT="$(grep "${DEVICE}" /proc/mounts)"
+	if [ "${OUT}" == "" ]
+	then
+		RETURN=0
+	else
+		RETURN=1
+	fi
+}
+
+Mount() {
+	DEVICE="$1"
+	LABEL="$2"
+	MOUNTDIR="$3"
+
+	if [ ! -d "${MOUNTDIR}" ]
+	then
+		mkdir -p "${MOUNTDIR}"
+	fi
+
+	echo "# ${DEVICE} - Mounting disk..."
+	mount "${DEVICE}" "${MOUNTDIR}"
+	RETURN="$?"
+}
+
+Unmount() {
+	DEVICE="$1"
+	LABEL="$2"
+	MOUNTDIR="$3"
+
+	echo "# ${DEVICE} - Mounting disk..."
+	umount "${DEVICE}"
+	RETURN="$?"
+}
+
+checkFs() {
+	DEVICE="$1"
+	LABEL="$2"
+	MOUNTDIR="$3"
+
+	if [ -b "${DEVICE}" ]
+	then
+		isMounted "${DEVICE}" "${LABEL}" "${MOUNTDIR}" 
+		if [ "${RETURN}" == "1" ]
+		then
+			Unmount "${DEVICE}" "${LABEL}" "${MOUNTDIR}"
+			if [ "${RETURN}" != "0" ]
+			then
+				return
+			fi
+		fi
+
+		echo "# ${DEVICE} - Checking disk."
+		fsck.ext4 "${DEVICE}" 2>/dev/null
+		RETURN="$?"
+
+		case "$RETURN" in
+			0)
+				Mount "${DEVICE}" "${LABEL}" "${MOUNTDIR}" 
+				;;
+
+			1)
+				Mount "${DEVICE}" "${LABEL}" "${MOUNTDIR}" 
+				;;
+
+			8)
+				echo "# ${DEVICE} - Filesystem needs creating..."
+				mkfs.ext4 -L "${LABEL}" "${DEVICE}"
+				echo "# ${DEVICE} - Disk OK. Mounting..."
+				Mount "${DEVICE}" "${LABEL}" "${MOUNTDIR}" 
+				;;
+		esac
+	else
+		echo "# ${DEVICE} - Disk does not exist."
+	fi
+}
+
+
+checkFs /dev/sda App.vdi "/opt/gearbox"
+checkFs /dev/sdb DockerStatic.vdi "/var/lib/docker"
+checkFs /dev/sdc Data.vdi "/var/lib/gearbox"
+checkFs /dev/sdd Config.vdi "/etc/gearbox"
+
+

@@ -1,0 +1,21 @@
+# /etc/inittab
+
+::sysinit:/sbin/openrc sysinit
+::sysinit:/sbin/openrc boot
+::wait:/sbin/openrc default
+
+# Set up a couple of getty's
+# tty1::respawn:/bin/bash --login
+tty1::respawn:/sbin/agetty -pa gearbox 38400 tty1 linux
+tty2::respawn:/sbin/getty 38400 tty2
+::respawn:/usr/sbin/sshd -D
+::respawn:/usr/bin/rsync --daemon --no-detach --config=/etc/rsyncd.conf
+::respawn:/usr/sbin/crond -f
+::respawn:/sbin/acpid -f
+ttyS0::respawn:/root/bin/StartHB.sh
+
+# Stuff to do for the 3-finger salute
+::ctrlaltdel:/sbin/reboot
+
+# Stuff to do before rebooting
+::shutdown:/sbin/openrc shutdown

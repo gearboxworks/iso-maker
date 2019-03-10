@@ -1,0 +1,1 @@
+/opt/gearbox/GearboxOS/etc/bash_completion.d/box-completion.bash

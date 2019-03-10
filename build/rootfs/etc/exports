@@ -1,0 +1,7 @@
+# use exportfs -arv to reread
+# /projects/gearbox	10.0.0.0/8(rw,all_squash,mountpoint=/projects/gearbox,no_subtree_check,fsid=root,insecure)
+
+/var/lib/cache/fallback		*(insecure,rw,fsid=1,no_subtree_check)
+/home				*(insecure,rw,fsid=1,no_subtree_check)
+/var/lib/gearbox		*(insecure,rw,fsid=1,no_subtree_check)
+

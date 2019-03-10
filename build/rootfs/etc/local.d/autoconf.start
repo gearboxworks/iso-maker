@@ -1,0 +1,12 @@
+#!/bin/sh
+
+URL=$(cat /sys/devices/virtual/dmi/id/board_asset_tag)
+wget -T 2 -O /tmp/autoconf.sh "$URL"
+if [ $? -eq 0 ]
+then
+    chmod +x /tmp/autoconf.sh
+    /tmp/autoconf.sh 2>&1 > /tmp/autoconf.log
+    echo "Autoconf done from $URL
+else
+    echo "Failed to fetch $URL
+fi

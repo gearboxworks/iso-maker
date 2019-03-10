@@ -1,0 +1,8 @@
+/dev/cdrom	/media/cdrom	iso9660	noauto,ro 0 0
+/dev/usbdisk	/media/usb	vfat	noauto,ro 0 0
+
+# Mounting these will be handled within another script.
+/dev/sda	/opt/gearbox		ext4	noauto,defaults	0 0
+/dev/sdb	/var/lib/docker		ext4	noauto,defaults	0 0
+/dev/sdc	/var/lib/gearbox	ext4	noauto,defaults	0 0
+/dev/sdd	/etc/gearbox		ext4	noauto,defaults	0 0

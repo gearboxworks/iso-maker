@@ -1,0 +1,44 @@
+#!/bin/bash
+
+set -x
+
+echo "" | tee /tmp/boot-check.log
+echo "################################################################################" | tee -a /tmp/boot-check.log
+echo "# Starting GearboxOS." | tee -a /tmp/boot-check.log
+echo "# $(date)" | tee -a /tmp/boot-check.log
+
+if [ ! -d /opt/gearbox/GearboxOS/var/etc ]
+then
+	mkdir -p /opt/gearbox/GearboxOS/var/etc
+fi
+/opt/gearbox/GearboxOS/etc/motd.sh > /opt/gearbox/GearboxOS/var/etc/motd
+
+set -x
+echo "####################" | tee -a /tmp/boot-check.log
+echo "# gearbox-check" | tee -a /tmp/boot-check.log
+/etc/init.d/gearbox-check start | tee -a /tmp/boot-check.log
+
+set -x
+echo "####################" | tee -a /tmp/boot-check.log
+echo "# $(date) - docker-check" | tee -a /tmp/boot-check.log
+/etc/init.d/docker-check start | tee -a /tmp/boot-check.log
+
+set -x
+echo "####################" | tee -a /tmp/boot-check.log
+echo "# $(date) - projects-check" | tee -a /tmp/boot-check.log
+/etc/init.d/projects-check start | tee -a /tmp/boot-check.log
+
+set -x
+echo "####################" | tee -a /tmp/boot-check.log
+echo "# $(date) - box startup" | tee -a /tmp/boot-check.log
+(find /opt/gearbox -type f; find /opt/gearbox -type f | xargs ls -ld) > /tmp/debugdebug
+
+set -x
+echo "# DEBUG1" | tee -a /tmp/boot-check.log
+/bin/bash /opt/gearbox/bin/box status | tee -a /tmp/boot-check.log
+echo "# DEBUG2" | tee -a /tmp/boot-check.log
+/bin/bash /opt/gearbox/bin/box startup | tee -a /tmp/boot-check.log
+echo "# DEBUG3" | tee -a /tmp/boot-check.log
+
+cat /tmp/boot-check.log >> /opt/gearbox/GearboxOS/var/log/boot-check.log
+
