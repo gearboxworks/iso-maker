@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+#
+# Watch files in ${BOX_PROJECTS_ROOT}/${BOX_PROJECT_PATH}/www for changes. On change run all scripts in /scripts/guest/watchers
+#
+
+declare="${BOX_WATCHERS_DIR:=}"
+declare="${BOX_INCLUDES_DIR:=}"
+declare="${BOX_LOGS_DIR:=}"
+
+events="--event create,modify,attrib,close_write,move,moved_from,moved_to,move_self,delete,delete_self"
+format="--format {\"path\":\"%w\",\"file\":\"%f\",\"events\":\"%e\",\"timestamp\":\"%t\"}"
+inotifywait ${events} ${format} --recursive --monitor --timefmt '%F %T' --exclude '/.git/' --exclude '/\.[^/]+\.\w{6}' /var/mirror | while read file_event; do
+
+    path=$(echo "${file_event}" | jq --raw-output '.path')
+    file=$(echo "${file_event}" | jq --raw-output '.file')
+    filepath="${path}${file}"
+    event=$(echo "${file_event}" | jq --raw-output '.events')
+
+    if [[ -n "${file}" && "${file}" != "www" ]]; then
+        for watcher in $(sudo find ${BOX_WATCHERS_DIR}/*.sh); do
+            datetime=$(date)
+            echo "${event} ${filepath} [${datetime}]: ${watcher}" >> $BOX_LOGS_DIR/file-watchers.log
+            bash "${BOX_INCLUDES_DIR}/run-watcher" "${watcher}" "${file}" "${file_event}"
+        done
+    fi
+
+done

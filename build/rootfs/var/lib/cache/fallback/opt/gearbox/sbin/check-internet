@@ -1,0 +1,14 @@
+#!/bin/bash
+
+. /opt/gearbox/cli/includes/functions
+
+/bin/ping -q -c1 -w2 google.com >& /dev/null
+
+if [ "$?" == "0" ]
+then
+	echo "OK" > ${BOX_DYN_DIR}/states/internet
+else
+	echo "" > ${BOX_DYN_DIR}/states/internet
+fi
+
+

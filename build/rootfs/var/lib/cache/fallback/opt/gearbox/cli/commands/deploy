@@ -1,0 +1,898 @@
+#!/usr/bin/env bash
+
+declare="${ECHO_PREFIX:=}"
+declare="${GREEN:=}"
+declare="${YELLOW:=}"
+declare="${RED:=}"
+declare="${CYAN:=}"
+declare="${WHITE:=}"
+declare="${RESET:=}"
+declare="${LESS:=}"
+declare="${DEPLOY_LOG:=}"
+declare="${BOX_PROJECT_DIR:=}"
+declare="${BOX_PROJECT_FILE:=}"
+declare="${BOX_DEPLOY_LOCK_SLUG:=}"
+
+declare="${BOX_ERR_NODEPLOYNUM:=}"
+declare="${BOX_ERR_NODEPLOYTAG:=}"
+declare="${BOX_ERR_GITADDFAIL:=}"
+declare="${BOX_ERR_GITCOMMITFAIL:=}"
+declare="${BOX_ERR_GITPULLFAIL:=}"
+declare="${BOX_ERR_GITPUSHFAIL:=}"
+declare="${BOX_ERR_GITTAGSPUSHFAIL:=}"
+declare="${BOX_ERR_NODEPLOYFILE:=}"
+
+declare="${BOX_ERR_GITPULLNOTNEEDED:=}"
+declare="${BOX_ERR_GITPULLNEEDED:=}"
+declare="${BOX_ERR_GITPUSHNEEDED:=}"
+declare="${BOX_ERR_GITDIVERGED:=}"
+
+function deploy_onexit() {
+    if [ "1" == "${is_deploy}" ] ; then
+        deploy_unlock >> $DEPLOY_LOG 2>&1
+    fi
+}
+trap deploy_onexit INT TERM EXIT
+
+function deploy_help() {
+	cat <<EOF
+
+${YELLOW}Gearbox ${GREEN}CLI${RESET} ${GREEN}deploy${RESET} usage:
+
+box ${YELLOW}deploy${RESET}	                - Show this help.
+box ${YELLOW}deploy ${GREEN}help${RESET}		        - Show this help.
+box ${YELLOW}deploy ${RESET}[${CYAN}<host>]${RESET}	        - Deploys the host as defined in ${GREEN}project.json${RESET}.
+
+box ${YELLOW}deploy log${RESET}     	        - Outputs the deploy log using LESS${RESET}
+box ${YELLOW}deploy unlock ${RESET}[${CYAN}<host>]${RESET}	- Unlocks a host locked for deploy ${YELLOW}[CAUTION!]${RESET}
+
+EOF
+}
+
+function deploy_log() {
+    less $DEPLOY_LOG
+}
+
+function init_deploy_log() {
+    sudo rm -rf "${DEPLOY_LOG}"
+    touch "${DEPLOY_LOG}"
+}
+
+function deploy_host() {
+
+    initErrorFile
+
+    local host_id="$1"
+
+    if [ "" == "${host_id}" ]; then
+        output "Hostname required when calling 'deploy'"
+        exit
+    fi
+
+    check_deploy_host "${host_id}"
+    exitOnError
+
+    ensure_no_uncommitted_files
+    exitOnError
+
+    source_url="$(get_source_repo_url)"
+    exitOnError
+
+    source_dir="$(get_raw_repo_cache_dir "${source_url}")"
+    exitOnError
+
+    git_check_repo_status "${source_dir}"
+    exitOnError
+
+    source_branch="$(get_source_repo_branch "${host_id}")"
+    exitOnError
+
+    deploy_url="$(get_raw_host_repo_url "${host_id}")"
+    exitOnError
+
+    deploy_dir="$(get_raw_repo_cache_dir "${deploy_url}")"
+    exitOnError
+
+    deploy_branch="$(get_raw_deploy_host_branch "${host_id}")"
+    exitOnError
+
+    output
+    output "${YELLOW}Preparing to deploy:${RESET}"
+    output
+    output "   ${CYAN}Source branch: ${GREEN}${source_branch}${RESET}"
+    output "   ${CYAN}Source repo:   ${GREEN}${source_url}${RESET}"
+    output
+    output "   ${CYAN}Deploy branch: ${GREEN}${deploy_branch}${RESET}"
+    output "   ${CYAN}Deploy repo:   ${GREEN}${deploy_url}${RESET}"
+    output
+
+    read -p "${CYAN}Do you want to continue this deploy ${RESET}[${YELLOW}yes${RESET}/${GREEN}no${RESET}]? " choice
+
+    if [ "yes" != "${choice}" ] ; then
+        exit
+    fi
+
+    output
+
+    output "   Locking deploy"
+    lock_deploy
+    exitOnError
+
+    output "   Pulling any new commits from origin"
+    trace $LINENO
+    git_pull "${BOX_PROJECT_DIR}"
+    exitOnError
+
+    output "   Updating repository caches"
+
+    cache_repo_locally "${source_url}" "${source_branch}" >> $DEPLOY_LOG 2>&1
+
+    cache_repo_locally "${deploy_url}" "${deploy_branch}" >> $DEPLOY_LOG 2>&1
+
+    output "   Running composer install"
+
+    run_composer_install "${source_dir}" >> $DEPLOY_LOG 2>&1
+    exitOnError
+
+    output "   Syncing updated and/or new source files"
+    local wp_source_core_path="$(get_raw_source_wp_core_path)"
+    local wp_deploy_core_path="$(get_raw_deploy_wp_core_path)"
+
+    #
+    # Sync core root files
+    # Copy *just* the files in www/blog/ and not subdirectories
+    # See: https://askubuntu.com/a/632102/486620
+    #
+    sync_files_shallow \
+        "${source_dir}" \
+        "${deploy_dir}" \
+        "${wp_source_core_path}" \
+        "${wp_deploy_core_path}"  >> $DEPLOY_LOG
+
+    #
+    # Sync core wp-admin path files
+    #
+    sync_files_deep "${source_dir}" "${deploy_dir}" \
+        "${wp_source_core_path}/wp-admin" \
+        "${wp_deploy_core_path}/wp-admin"  >> $DEPLOY_LOG
+
+    #
+    # Sync core wp-includes path files
+    #
+    sync_files_deep "${source_dir}" "${deploy_dir}" \
+        "${wp_source_core_path}/wp-includes" \
+        "${wp_deploy_core_path}/wp-includes"  >> $DEPLOY_LOG
+
+    #
+    # Sync vendor path files
+    #
+    sync_files_deep "${source_dir}" "${deploy_dir}" \
+        "$(get_raw_source_wp_vendor_path)" \
+        "$(get_raw_deploy_wp_vendor_path)"  >> $DEPLOY_LOG
+
+    #
+    # Sync content path files
+    #
+    sync_files_deep "${source_dir}" "${deploy_dir}" \
+        "$(get_raw_source_wp_content_path)" \
+        "$(get_raw_deploy_wp_content_path)"  >> $DEPLOY_LOG
+
+    output "   Removing blacklisted files"
+    remove_deploy_delete_files "${deploy_dir}"  >> $DEPLOY_LOG
+    exitOnError
+
+    output "   Copying whitelisted files"
+    deploy_keep_files "${source_dir}" "${deploy_dir}"  >> $DEPLOY_LOG
+    exitOnError
+
+    #
+    # Write and commit a DEPLOY file with sequential number of latest deploy.
+    #
+    output "   Writing 'DEPLOY' files"
+    add_next_deploy_file  "${host_id}"
+    exitOnError
+
+    #
+    # Copy the deploy lock to source_dir cache to deploy_dir cache
+    #
+    copy_file "$(get_deploy_filename)" "${source_dir}"
+    exitOnError
+
+    copy_file "$(get_deploy_filename)" "${deploy_dir}"
+    exitOnError
+
+    output "   Generating deploy log"
+    deploy_log="$(get_deploy_log_since_prior_deploy "${deploy_dir}")"
+    exitOnError
+
+    output "   Pushing deploy to host: ${host_id}"
+    message="$(git_add_commit_push "${host_id}" "${deploy_dir}" "." "${deploy_log}")"
+    exitOnError
+    output "$(echo "   ${message}" | head -n 1)"
+
+    output "   Tagging deploy"
+    tag_this_deploy "${host_id}" "${BOX_PROJECT_DIR}"  quiet
+    exitOnError
+
+    tag_this_deploy "${host_id}" "${deploy_dir}" quiet
+    exitOnError
+
+    output "   Deploy tagged as $(get_current_deploy_tag)"
+
+    output "   Unlocking deploy"
+
+    deploy_unlock quiet
+    exitOnError
+
+    output "   Deploy complete"
+    output
+
+}
+
+function get_current_deploy_num() {
+    PushDir "${BOX_PROJECT_DIR}"
+    filename="$(get_deploy_filename)"
+    PopDir
+    cat "${filename}"
+}
+
+function git_check_repo_status() {
+    local repo_dir="$1"
+    trace $LINENO
+    output="$(git_raw_check_pull_needed "${repo_dir}")"
+    result="$?"
+    trace $LINENO "Check pull needed: $output"
+    case "${result}" in
+        $BOX_ERR_GITPULLNOTNEEDED|$BOX_ERR_GITPULLNEEDED)
+            # The script will pull later
+            trace $LINENO "Result: $result"
+            #
+            # This function is designed to ignore these "errors"
+            #
+            return 0
+            ;;
+        $BOX_ERR_GITPUSHNEEDED|$BOX_ERR_GITDIVERGED)
+            trace $LINENO "Result: $result"
+            alert
+            alert "$(git_error_message $result)"
+            alert 
+            suggest_help_on_slack
+            return $result
+            ;;
+        *)
+            trace $LINENO "Result: $result"
+            ;;
+    esac
+}
+
+function git_pull() {
+    local repo_dir="$1"
+    trace $LINENO
+    git_raw_pull "${repo_dir}"
+    result="$?"
+    trace $LINENO
+    echo "[${result}]" >> $DEPLOY_LOG
+    trace $LINENO
+    if [ "0" != "${result}" ] ; then
+        alert 
+        alert "$(git_error_message "${result}")"
+        alert 
+        suggest_help_on_slack
+        return $result
+    fi
+    trace $LINENO
+    echo "[${result}]" >> $DEPLOY_LOG
+    trace $LINENO
+    return $result
+}
+
+function git_add_commit_push() {
+    local host_id="$1"
+    local repo_dir="$2"
+    local filename="$3"
+    local deploy_log="$4"
+
+    message="$(git_raw_add_commit_push "${host_id}" "${repo_dir}" "${filename}" "${deploy_log}")"
+    result="$?"
+    trace $LINENO "Message: $message"
+    if [ "0" != "${result}" ] ; then
+        trace $LINENO "Result: $result"
+        if [ "." == "${filename}" ] ; then
+            filename="all files; e.g.: '.'"
+        fi
+        alert 
+        alert "$(git_error_message "${result}" "${filename}")"
+        alert 
+        suggest_help_on_slack
+        return 1
+    fi
+    trace $LINENO
+    echo "${message}"
+
+}
+
+function add_next_deploy_file() {
+    local host_id="$1"
+    PushDir "${BOX_PROJECT_DIR}"
+    local deploy_num="$(get_git_raw_deploy_num)"
+    exitOnError
+    deploy_num="$(( deploy_num + 1 ))"
+    trace $LINENO "Deploy #: $deploy_num"
+    filename="$(get_deploy_filename)"
+    trace $LINENO "Filename: $filename"
+    echo "${deploy_num}" > $filename
+    result="$?"
+    trace $LINENO
+    if [ "0" != "${result}" ] ; then
+        trace $LINENO "Result: $result"
+        alert
+        alert "$(git_error_message "${BOX_ERR_NODEPLOYFILE}" "${filename}")"
+        alert 
+        suggest_help_on_slack
+        PopDir
+        return $BOX_ERR_NODEPLOYFILE
+    fi
+    trace $LINENO
+    output="$(git_raw_add_commit_push "${host_id}" "${BOX_PROJECT_DIR}" "$(basename "${filename}")")"
+    trace $LINENO "Message: $output"
+    result="$?"
+    trace $LINENO
+    if [ "0" != "${result}" ] ; then
+        trace $LINENO "Result: $result"
+        alert
+        alert "$(git_error_message "${result}" "${filename}")"
+        alert 
+        suggest_help_on_slack
+    fi
+    trace $LINENO
+    PopDir
+    return 0
+}
+
+function get_current_deploy_tag() {
+    local deploy_num="$(get_current_deploy_num)"
+    echo "$(get_deploy_tag "${deploy_num}")"
+}
+
+function get_deploy_tag() {
+    local deploy_num="$1"
+    local deploy_tag="deploy-${deploy_num}"
+    echo "${deploy_tag}"
+}
+
+function tag_this_deploy() {
+    local host_id="$1"
+    local repo_dir="$2"
+    local quiet="$3"
+    trace $LINENO
+    local filename="$(get_deploy_filename "${repo_dir}")"
+    trace $LINENO
+    deploy_tag="$(git_raw_tag_deploy "${host_id}" "${repo_dir}" "${filename}")"
+    result="$?"
+    trace $LINENO "Deploy Tag: ${deploy_tag}"
+    if [ "0" != "${result}" ] ; then
+        trace $LINENO "Result: ${result}" >> $DEPLOY_LOG 2>&1
+        alert
+        alert "$(git_error_message "${result}" "${filename}" "${deploy_tag}")"
+        alert
+        suggest_help_on_slack
+    else
+        trace $LINENO
+        if [ "" == "${quiet}" ] ; then
+            trace $LINENO
+            output
+            output "Deploy tagged as ${GREEN}${deploy_tag}${RESET}"
+            output
+        fi
+    fi
+    trace $LINENO "Result: $result"
+    return $result
+}
+
+function get_deploy_filename() {
+    local dir="$1"
+    if [ "" == "${dir}" ] ; then
+        dir="${BOX_PROJECT_DIR}"
+    fi
+    trace $LINENO "Dir: $dir"
+    echo "${dir}/DEPLOY"
+    trace $LINENO "Deploy filename: ${dir}/DEPLOY"
+}
+
+function lock_deploy() {
+    trace $LINENO
+    local user_name="$(get_user_display_name)"
+    if [ "" == "${user_name}" ] ; then
+        box user show
+        exit 1
+    fi
+    output="$(lock_git_deploy)"
+    result="$?"
+    trace $LINENO "Lock git deploy: $output"
+    if [ "0" != "${result}" ] ; then
+        trace $LINENO "Result: $result"
+        alert 
+        alert "${RED}Your current Git repository already has a ${GREEN}deploy lock${RED}. Cannot deploy.${RESET}"
+        alert 
+        alert "If you know this lock to be in error you can delete with this command:"
+        alert 
+        alert "\t${GREEN}box deploy unlock${RESET}"
+        alert 
+        alert "However, ${YELLOW}caution is in order${RESET}. If you attempt to run a deploy while"
+        alert "another is running ${RED}expect the unexpected${RESET}."
+        alert 
+        alert "P.S. A deploy lock is simply a Git 'tag' whose name is:"
+        alert 
+        alert "\t${GREEN}deploy-lock${RESET}"
+        alert 
+        return 2
+    fi
+}
+
+function deploy_unlock() {
+    local quiet="$1"
+    trace $LINENO "Quiet: $quiet"
+    unlock_git_deploy
+    result="$?"
+    if [ "0" != "${result}" ] ; then
+        trace $LINENO "Result: $result"
+        alert
+        alert "Deploy unlock ${RED}FAILED${RESET}."
+        alert "Try these commands and then Google any error messages to diagnose:"
+        alert 
+        alert "\t${GREEN}git push origin :refs/tags/${BOX_DEPLOY_LOCK_SLUG}${RESET}"
+        alert "\t${GREEN}git tag -d ${BOX_DEPLOY_LOCK_SLUG}${RESET}"
+        alert 
+        suggest_help_on_slack
+        return 1
+    fi
+    trace $LINENO
+    if [ "" == "${quiet}" ] ; then
+        trace $LINENO
+        output
+        output "Deploy ${GREEN}unlocked${RESET}."
+        output
+    fi
+}
+
+function deploy_keep_files() {
+    local source_dir="$1"
+    local deploy_dir="$2"
+    checkParam "${deploy_dir}" "You must pass a source directory for 1st argument and a destination directory as 2nd argument to deploy_keep_files()."
+    exitOnError
+
+    local keep_files="$(get_raw_deploy_keep_files)"
+    for file in $keep_files ; do
+        deploy_file="${deploy_dir}${file}"
+        source_paths="$(get_raw_source_wordpress_paths)"
+        deploy_paths="$(get_raw_deploy_wordpress_paths)"
+        path_len="0"
+        for path_name in $(get_raw_deploy_wordpress_path_names); do
+            deploy_path="$(echo $deploy_paths|jqr ".${path_name}")"
+            if ! [[ ${file} =~ ^${deploy_path}/(.+)$ ]] ; then
+                continue
+            fi
+            if [ "${path_len}" -lt "${#deploy_path}" ] ; then
+                path_len="${#deploy_path}"
+                source_path="$(echo $source_paths|jqr ".${path_name}")"
+                source_file="${source_dir}${source_path}/${BASH_REMATCH[1]}"
+            fi
+        done
+        if [ "" == "${source_file}" ]; then
+            source_file=""${source_dir}${file}""
+        fi
+        if [ "" == "$(ls -A ${source_file} 2>/dev/null)" ] ; then
+            if [ "" != "$(ls -A ${deploy_file} 2>/dev/null)" ] ; then
+                # We have it. All is good
+                continue
+            fi
+            alert 
+            alert "${RED}A 'keep' file  could not be found. Cannot deploy.${RESET}"
+            alert 
+            alert "\t${CYAN}Source file: ${GREEN}${source_file}${RESET}"
+            alert "\t${CYAN}Deploy file: ${GREEN}${deploy_file}${RESET}"
+            alert 
+            suggest_help_on_slack
+            exit 1
+        fi
+        echo "Copying ${file} to ${deploy_dir}"
+        cp -R "${source_file}" "${deploy_dir}/${file}"
+    done
+}
+
+function remove_deploy_delete_files() {
+    local deploy_dir="$1"
+    checkParam "${deploy_dir}" "You must pass a destination directory as 1st argument to remove_deploy_delete_files()."
+    exitOnError
+
+    local exclude_files="$(get_raw_deploy_delete_files)"
+    local saveIFS="${IFS}"
+    IFS=$'\n'
+    for file in $exclude_files ; do
+        file="${deploy_dir}${file}"
+        if [ "" == "$(ls -A ${file} 2>/dev/null)" ] ; then
+            echo "Skipping deletion of ${file} [File not found.]"
+            continue
+        fi
+        echo "Deleting ${file}"
+        rm -rf "${file}"
+    done
+    IFS="${saveIFS}"
+}
+
+function copy_file() {
+    local from_file="$1"
+    local to_dir="$2"
+    trace $LINENO
+    output="$(cp "${from_file}" "${to_dir}")"
+    result="$?"
+    trace $LINENO "Copy ${from_file} to ${to_dir}: $output"
+    if [ "0" != "${result}" ] ; then
+        trace $LINENO "Result: $result"
+        alert
+        alert "${RED}Could not copy the DEPLOY market file to the cached repo directory. Cannot deploy.${RESET}"
+        alert 
+        alert "\t${CYAN}Copy: ${GREEN}${from_file}${RESET}"
+        alert "\t${CYAN}To:   ${GREEN}${to_dir}${RESET}"
+        alert 
+        suggest_help_on_slack
+        exit 1
+    fi
+
+}
+
+function sync_files_shallow() {
+
+    local source_dir="$1"
+    checkParam "${source_dir}" "You must pass a source directory as 1st argument to sync_files_shallow()."
+    exitOnError
+
+    local deploy_dir="$2"
+    checkParam "${deploy_dir}" "You must pass a destination directory as 2nd argument to sync_files_shallow()."
+    exitOnError
+
+    local source_path="$3"
+    checkParam "${source_path}" "You must pass a source path as 3rd argument to sync_files_shallow()."
+    exitOnError
+
+    local deploy_path="$4"
+    checkParam "${deploy_path}" "You must pass a destination path as 4th argument to sync_files_shallow()."
+    exitOnError
+
+    local exclude_files_list="$(write_sync_exclude_files_by "path" "${deploy_path}")"
+
+    echo ">>>====================================================================="
+    echo "Rsyncing ${source_dir}${source_path}/ to ${deploy_dir}${deploy_path}"
+    rsync --archive --filter="- */" --filter="+ *" --exclude-from="${exclude_files_list}" \
+        "$(RTrimSlashes "${source_dir}${source_path}")" \
+        "$(RTrimSlashes "${deploy_dir}${deploy_path}")"
+
+    cat "${exclude_files_list}"
+    echo "<<<====================================================================="
+    rm -rf "${exclude_files_list}"
+
+}
+
+function sync_files_deep() {
+    local source_dir="$1"
+    checkParam "${source_dir}" "You must pass a source directory as 1st argument to sync_files_deep()."
+
+    local deploy_dir="$2"
+    checkParam "${deploy_dir}" "You must pass a destination directory as 2nd argument to sync_files_deep()."
+    exitOnError
+
+    local source_path="$3"
+    checkParam "${source_path}" "You must pass a source path as 3rd argument to sync_files_deep()."
+    exitOnError
+
+    local deploy_path="$4"
+    checkParam "${deploy_path}" "You must pass a destination path as 4th argument to sync_files_deep()."
+    exitOnError
+
+    local exclude_files_list="$(write_sync_exclude_files_by "path" "${deploy_path}")"
+
+
+    echo ">>>====================================================================="
+    echo "Rsyncing ${source_dir}${source_path}/ to ${deploy_dir}${deploy_path}"
+    rsync --archive --delete-after --verbose \
+        --exclude ".git" --exclude ".git*" --exclude-from="${exclude_files_list}" \
+        "${source_dir}${source_path}/" \
+        "${deploy_dir}${deploy_path}"
+
+    cat "${exclude_files_list}"
+    echo "<<<====================================================================="
+    rm -rf "${exclude_files_list}"
+
+}
+
+function write_sync_exclude_files_by() {
+    local by="$1"
+    local value="$2"
+
+    mkdir -p /tmp/box-tmp/
+    local exclude_file_list="$(mktemp /tmp/box-tmp/exclude-XXXX.txt)"
+    touch "${exclude_file_list}"
+    local exclude_files=$(get_sync_exclude_files)
+
+    if [ "" != "${value}" ] ; then
+        case "${by}" in
+        'path')
+            for file in $exclude_files ; do
+                if [ "/" != "${file:0:1}" ] ; then
+                    # if not an absolute reference, then file is to be excludes everywhere
+                    echo -e "${file}" >> $exclude_file_list
+                    continue
+                fi
+                if ! [[ ${file} =~ ^${value}/(.+)$ ]] ; then
+                    continue
+                fi
+                echo -e "${BASH_REMATCH[1]}" >> $exclude_file_list
+            done
+            ;;
+
+        *)
+            alert "The criteria [${by}] is not valid for get_sync_exclude_files_by()"
+            exit 1
+            ;;
+
+        esac
+    fi
+    echo "${exclude_file_list}"
+}
+
+function get_sync_exclude_files() {
+    local exclude_files="$(get_raw_deploy_exclude_files)\n$(get_raw_deploy_delete_files)\n$(get_raw_deploy_keep_files)"
+    echo -e "${exclude_files}"
+}
+
+function run_composer_install() {
+    local repo_dir="$1"
+    checkParam "${repo_dir}" "You must pass a repository directory as 1st argument to run_composer_install()."
+    exitOnError
+    output "Running Composer to install externals."
+    PushDir
+    cd "${repo_dir}"
+    composer install
+    exitOnError
+    PopDir
+}
+
+function simplify_pantheon_repo_cache_dir() {
+    local repo_url="$1"
+    checkParam "${repo_url}" "You must pass a repository URL as 1st argument to simplify_pantheon_repo_cache_dir()."
+    exitOnError
+    local provider="$(get_raw_project_file | jq -r '.deploy.provider')"
+    if [ "pantheon" == "${provider}" ] ; then
+        local site_id="$(get_raw_project_file | jq -r '.deploy.site_id')"
+        local site_name="$(get_raw_project_file | jq -r '.deploy.site_name')"
+        repo_url="${repo_url//\.${site_id}/}"    # Replace guid with URL name
+        repo_url="${repo_url//\/2222\/~\/repository/\/${site_name}}"  # Remove goggledegook
+    fi
+    echo "${repo_url}"
+}
+
+function make_cache_dir() {
+    cache_dir="$1"
+    mkdir --parents "${cache_dir}"
+}
+
+function get_raw_repo_cache_dir() {
+    declare=${BOX_CACHE_DIR:=}
+    local repo_url="$1"
+    checkParam "${repo_url}" "You must pass a repository URL as 1st argument to get_raw_repo_cache_dir()."
+    exitOnError
+    local path="${repo_url}"
+    path="${repo_url#*://}"     # Strip leading protocol; ssh://, https://, http://
+    path="${path#*@}"    # Strip leading username, e.g. git@
+    path="${path%.git*}"        # Strip trailing .git extension
+    path="${path/:/\/}"         # Replace ':' with '/'
+    local cache_dir="${BOX_CACHE_DIR}/${path}"
+    cache_dir="$(simplify_pantheon_repo_cache_dir "${cache_dir}")"
+    echo "${cache_dir}"
+}
+
+function check_deploy_host() {
+    local host_id="$1"
+    checkParam "${host_id}" "You must pass a host name/id as 1st argument to check_deploy_host()."
+    exitOnError
+    echo "$(get_deploy_host "${host_id}")" > /dev/null
+}
+
+function get_deploy_host() {
+    local host_id="$1"
+    checkParam "${host_id}" "You must pass a host name/id as 1st argument to get_deploy_host()."
+    exitOnError
+    json="$(cat "${BOX_PROJECT_FILE}" | jq -r ".deploy.hosts.${host_id}?")"
+    if [ "object" != "$(echo "${json}"|jqr 'type')" ]; then
+        alert 
+        alert "ERROR: ${RED}Your ${GREEN}project.json${RED} file does not define a host named ${YELLOW}\"${GREEN}${host_id}${YELLOW}\"${RED}.${RESET}"
+        alert 
+        alert "Please edit your ${GREEN}project.json${RESET} file and add ${YELLOW}\"${GREEN}${host_id}${YELLOW}\"${RESET} as a property of ${GREEN}.hosts.${RESET}"
+        alert 
+        exit 1
+    fi
+    echo -e "${json}"
+}
+
+function get_source_repo_url() {
+    local source_repo_url="$(get_raw_source_repo_url)"
+    local remote_repo_url="$(get_git_origin_remote_repo_url)"
+    if [[ "${source_repo_url}" =~ ^ssh:// ]]; then
+        source_repo_url="${source_repo_url#*//}"
+    fi
+    if [ "${source_repo_url}" != "${remote_repo_url}" ]; then
+        alert 
+        alert "${RED}Your source repo and your git remote repo do not match. Cannot deploy.${RESET}"
+        alert 
+        alert "\t${CYAN}Source: ${GREEN}${source_repo_url}${RESET}"
+        alert "\t${CYAN}Remote: ${GREEN}${remote_repo_url}${RESET}"
+        alert 
+        alert "Your source repo is found in ${GREEN}${BOX_PROJECT_FILE}${RESET} as ${GREEN}.source.repository.url.${RESET}"
+        alert "Your remote is found by running ${GREEN}git remote -v${RESET}. If you are in the correct directory you"
+        alert "can set your remote to match your source with:"
+        alert 
+        alert "\t${GREEN}git remote set-url --push origin ${source_repo_url}${RESET}"
+        alert 
+        alert "However, ${GREEN}caution is in order${RESET}. We can only give you hints about how you can resolve"
+        alert "this issue, but your circumstances might require another solution, and Git can be"
+        alert "a rather unforgiving beast if you do the wrong thing. So measure twice, cut once!${RESET}"
+        alert 
+        exit 1
+    fi
+    echo "${source_repo_url}"
+}
+
+function get_source_repo_branch() {
+    local host_id="$1"
+    trace $LINENO
+    local project_branch="$(get_raw_deploy_branch_by "host" "${host_id}")"
+    result="$?"
+    trace $LINENO "Source branch for host ${host_id}: $project_branch"
+    if [ "0" != "${result}" ]; then
+        trace $LINENO "Result: ${result}"
+        return $result
+    fi
+
+    local current_branch="$(get_current_git_branch)"
+    result="$?"
+    trace $LINENO "Current branch: $current_branch"
+    if [ "0" != "${result}" ]; then
+        trace $LINENO "Result: ${result}"
+        return $result
+    fi
+
+    if [ "null" == "${project_branch}" ] ; then
+        project_branch="n/a"
+    fi
+    if [ "${current_branch}" != "${project_branch}" ]; then
+        alert 
+        alert "${RED}Your current branch does not match the deploy branch for the ${GREEN}${host_id}${RED} host."
+        alert "Cannot deploy.${RESET}"
+        alert 
+        alert "\t${CYAN}The current Git branch:        ${GREEN}${current_branch}${RESET}"
+        alert "\t${CYAN}Host you specified for deploy: ${GREEN}${host_id}${RESET}"
+        alert "\t${CYAN}Deploy branch in project.json: ${GREEN}${project_branch}${RESET}"
+        alert 
+        if [ "n/a" == "${project_branch}" ] ; then
+            alert "${RED}Review your project.json file to ensure you have a host ${GREEN}${host_id}${RED} defined in"
+            alert "the ${GREEN}.host${RED} section.${RESET}"
+        else
+            alert "You can set switch to the branch for the ${GREEN}${host_id}${RESET} host using:"
+            alert 
+            alert "\t${GREEN}git checkout ${project_branch}${RESET}"
+            alert 
+            alert "The above only works if files in the ${GREEN}${current_branch}${RESET} branch have been committed."
+            alert 
+        fi
+        alert 
+        exit 1
+    fi
+    echo "${current_branch}"
+}
+
+function ensure_no_uncommitted_files() {
+    trace $LINENO
+    local uncommitted_files="$(get_git_uncommitted_files)"
+    trace $LINENO
+    local file
+    if [ "" != "${uncommitted_files}" ]; then
+        alert 
+        alert "${RED}Your current branch has uncommitted files. Cannot deploy.${RESET}"
+        alert 
+        for file in $uncommitted_files ; do
+            alert "\t${GREEN}${file}${RESET}"
+        done
+        alert 
+        exit 1
+    fi
+}
+
+function get_deploy_log_since_prior_deploy() {
+    local repo_dir="$1"
+    PushDir "${repo_dir}"
+    local prior_deploy_num="$(get_git_raw_deploy_num "${repo_dir}")"
+    result="$?"
+    trace $LINENO "Prior deploy#: $prior_deploy_num"
+    if [ "0" != "${result}" ]; then
+        trace $LINENO "Result: $result"
+        PopDir
+        return $result
+    fi
+    PopDir
+    local prior_deploy_tag="$(get_deploy_tag "${prior_deploy_num}")"
+    result="$?"
+    trace $LINENO "Prior deploy tag: $prior_deploy_tag"
+    if [ "0" != "${result}" ] ; then
+        trace $LINENO "Result: $result"
+        alert
+        alert "$(git_error_message "${result}" "" "${deploy_tag}")"
+        alert
+        suggest_help_on_slack
+        return 1
+    fi
+
+    local prior_commit_hash="$(get_git_prior_commit_hash "${prior_deploy_tag}")"
+    result="$?"
+    trace $LINENO "Prior commit hash: $prior_commit_hash"
+    if [ "0" != "${result}" ] ; then
+        trace $LINENO "Result: $result"
+        alert
+        alert "$(git_error_message "${result}" "" "${prior_deploy_tag}")"
+        alert
+        suggest_help_on_slack
+        return 2
+    fi
+
+    local commit_msg="$(get_git_raw_deploy_log "${prior_commit_hash}")"
+    result="$?"
+    trace $LINENO "Commit message: $commit_msg"
+    if [ "0" != "${result}" ] ; then
+        trace $LINENO "Result: $result"
+        alert
+        alert "$(git_error_message "${result}" "" "${prior_commit_hash}")"
+        alert
+        suggest_help_on_slack
+        return 3
+    fi
+    trace $LINENO
+    echo "${commit_msg}"
+    return 0
+
+}
+
+
+################################################################################
+CMD="$1"
+trace $LINENO "Command: $CMD"
+shift
+is_deploy=0
+case $CMD in
+    'unlock')
+        trace $LINENO
+        deploy_unlock
+        trace $LINENO
+        ;;
+
+    'log')
+        trace $LINENO
+        deploy_log
+        trace $LINENO
+        ;;
+
+	*|'help')
+        trace $LINENO
+        if [ "" == "${CMD}" ] ; then
+            trace $LINENO
+            deploy_help
+            trace $LINENO
+            exit 1
+        fi
+        trace $LINENO
+        is_deploy=1
+        init_deploy_log
+        trace $LINENO
+        deploy_host "${CMD}"
+        trace $LINENO
+		;;
+esac
+

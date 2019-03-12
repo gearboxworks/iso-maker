@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+
+function setup() {
+    # Do test group-specific setup (test-group=one Bash file.)
+    echo
+}
+
+function tests() {
+    # A group of simple tests run here using functions found in
+    # the 'box/cli/tests/includes/assertions' script tile
+
+    # This should succeed
+    testEquals "abc" "abc"
+
+    evalNotEmpty "box version"
+
+}
+
+#
+# Uses containerRunning_Data to provide lines of data
+#
+function containerRunning_Test() {
+    # This is an example test for testing that a container starts
+    if [ -z "$(docker ps --format='{{.Image}}' | grep "$1")" ]; then
+        echo "Docker container $1 not running."
+        return 1
+    fi
+    return 0
+}
+
+function containerRunning_Data() {
+    # This defines a multi-line provider for 'containerRunning_Test()'.
+    # LineData can also provide multiple JSON strings, one per line
+    cat <<EOF
+gearbox/mysql:5.5.60
+gearbox/php-fpm:7.1.17
+gearbox/mysql:5.5.60
+gearbox/php-fpm:7.1.1
+EOF
+}
+
+function teardown() {
+    # Do test group-specific teardown (test-group=one Bash file.)
+    echo
+}
+
+

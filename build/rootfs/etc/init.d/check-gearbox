@@ -1,0 +1,118 @@
+#!/bin/bash
+
+if [ -d "/opt/gearbox/.git" ]
+then
+	echo "check-gearbox: Not required."
+	exit 0
+fi
+
+
+################################################################################
+/bin/ping -q -c1 -w2 8.8.8.8 >& /dev/null
+if [ "$?" == "0" ]
+then
+	# Internet is up & /opt/gearbox mounted & it's empty.
+	echo "check-gearbox: Clone github repo."
+	git clone https://github.com/gearboxworks/box-scripts /tmp/gearbox
+	rsync -HvaxP --delete /tmp/gearbox/ /opt/gearbox/ >& /dev/null
+	rm -rf /tmp/gearbox
+else
+	# Internet is NOT up & /opt/gearbox mounted & it's empty.
+	echo "check-gearbox: Updating /opt/gearbox from local copy."
+	rsync -HvaxP /var/lib/cache/fallback/opt/gearbox/ /opt/gearbox/
+fi
+
+
+
+################################################################################
+exit 0
+################################################################################
+# WARNING! This is a "chicken and egg" issue.
+# This script cannot depend on anything else other than basic system bins.
+################################################################################
+IS_GEARBOX_MOUNTED=""
+IS_GEARBOX_MOUNT_EMPTY=""
+IS_INTERNET_OK=""
+
+
+################################################################################
+IS_GEARBOX_MOUNTED="$(awk '$2~/^\/opt\/gearbox/{print"OK"}' /proc/mounts)"
+if [ "${IS_GEARBOX_MOUNTED}" != "OK" ]
+then
+	echo "Mounting /opt/gearbox"
+	mount /opt/gearbox
+fi
+
+IS_GEARBOX_MOUNTED="$(awk '$2~/^\/opt\/gearbox/{print"OK"}' /proc/mounts)"
+if [ "${IS_GEARBOX_MOUNTED}" != "OK" ]
+then
+	echo "WARNING: Could not mount /opt/gearbox - running on existing RO setup."
+	echo "WARNING: Could not mount /opt/gearbox - running on existing RO setup." > /dev/tty0
+	# We will need to do otyher things here:
+	# 1. Check for disks and mount them up.
+	# 2. If they are empty, then we'll need to auto-determine what disk will be used for what.
+	# 3. Size checks - 1GB = use it for /opt/gearbox.
+
+	# sfdisk -s /dev/sdb - find size of disk.
+	# sfdisk -s /dev/sdb1 - find size of partition - "no file" == no partition.
+	# echo 'type=83' | sfdisk /dev/sdb - create whole disk partition.
+
+	# OR
+
+	# Whole disk FS:
+	# fsck.ext4 -n /dev/sdb - check a FS exists. $? == 8 - nope OR $? != 0
+	# 
+
+	# For now - just leave it as is.
+fi
+
+if [ "${IS_GEARBOX_MOUNTED}" == "OK" ]
+then
+	# IS_GEARBOX_MOUNT_EMPTY="$(find /opt/gearbox -maxdepth 1 -type f | wc -l)"
+	# if [ "${IS_GEARBOX_MOUNT_EMPTY}" -gt 4 ]
+	if [ ! -d /opt/gearbox/.git ]
+	then
+		IS_GEARBOX_MOUNT_EMPTY="OK"
+	else
+		IS_GEARBOX_MOUNT_EMPTY=""
+	fi
+fi
+
+
+################################################################################
+/bin/ping -q -c1 -w2 google.com >& /dev/null
+if [ "$?" == "0" ]
+then
+	IS_INTERNET_OK="OK"
+else
+	IS_INTERNET_OK=""
+fi
+
+
+################################################################################
+if [ "${IS_INTERNET_OK}" == "OK" ] && [ "${IS_GEARBOX_MOUNTED}" == "OK" ]
+then
+	if [ "${IS_GEARBOX_MOUNT_EMPTY}" == "OK" ]
+	then
+		# Internet is up & /opt/gearbox mounted & it's empty.
+		echo "boot-check: Clone github repo."
+		git clone https://github.com/gearboxworks/box-scripts /tmp/gearbox
+		rsync -HvaxP /tmp/gearbox/ /opt/gearbox/ >& /dev/null
+		rm -rf /tmp/gearbox
+	fi
+
+	# Internet is up & /opt/gearbox mounted & it's NOT empty.
+	echo "boot-check: Updating /opt/gearbox."
+	/opt/gearbox/bin/box self-update
+fi
+
+if [ "${IS_INTERNET_OK}" != "OK" ] && [ "${IS_GEARBOX_MOUNTED}" == "OK" ]
+then
+	if [ "${IS_GEARBOX_MOUNT_EMPTY}" == "OK" ]
+	then
+		# Internet is NOT up & /opt/gearbox mounted & it's empty.
+		echo "boot-check: Updating /opt/gearbox from local copy."
+		rsync -HvaxP /var/lib/cache/fallback/opt/gearbox/ /opt/gearbox/
+	fi
+fi
+

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"log"
@@ -212,7 +213,17 @@ func main() {
 	go Worker()
 	for {
 		time.Sleep(time.Second * 2)
-		fmt.Printf("%v;Gearbox Heartbeat;OK;\n", time.Now().Unix());
+
+		var state []byte
+		fn := "/tmp/STATE"
+
+		_, err := os.Stat(fn)
+		if err == nil {
+			file, _ := os.Open(fn)
+			reader := bufio.NewReader(file)
+			state, _, _ = reader.ReadLine()
+		}
+		fmt.Printf("%v;Gearbox Heartbeat;%s;\n", time.Now().Unix(), string(state))
 	}
 
 	fmt.Printf("%v	GearboxHeartbeat - Listener died.\n", time.Now().Unix());

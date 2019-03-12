@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+declare="${IMAGES:=}"
+declare="${BOX_FUNCTIONS_FILE:=}"
+
+source "${BOX_FUNCTIONS_FILE}"
+
+case $1 in
+	'-s'|'--short')
+		# Creates IMAGES and STACK env variables.
+		readJSON
+
+		echo "Components installed:"
+		echo $IMAGES | sed 's/gearbox\//\n/g; s/:/\t/g'
+		;;
+
+	*)
+		box component ls
+		;;
+esac
+

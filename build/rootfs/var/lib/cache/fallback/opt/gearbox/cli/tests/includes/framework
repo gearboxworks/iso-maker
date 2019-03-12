@@ -1,0 +1,211 @@
+#@IgnoreInspection BashAddShebang
+#
+# Test framework script.
+#
+
+declare="${BOX_TESTS_DIR=}"
+declare="${RED=}"
+declare="${GREEN=}"
+declare="${RESET=}"
+
+source "${BOX_TESTS_DIR}/includes/functions"
+source "${BOX_TESTS_DIR}/includes/assertions"
+
+function tests_RunAll() {
+
+    tests_GlobalSetup
+
+    for testFile in $(getTest_Files); do
+        test_FileSetup
+        test_File "${testFile}"
+        test_FileTeardown
+    done
+
+    tests_GlobalTeardown
+
+    tests_ShowResults
+
+}
+
+function tests_RunOne() {
+    testFile="$1"
+
+    tests_GlobalSetup
+
+    test_FileSetup
+    test_File "${testFile}"
+    test_FileTeardown
+
+    tests_GlobalTeardown
+
+    tests_ShowResults
+
+}
+
+declare="${BOX_TESTS_DIR=}"
+
+export _TESTS_TOTAL=0
+export _TESTS_PASSED=0
+export _TESTS_FAILED=0
+export _TESTS_FUNCS=""
+
+function tests_IncrPassed() {
+    (( _TESTS_PASSED++ ))
+    (( _TESTS_TOTAL++ ))
+    echo "P: ${_TESTS_PASSED}, F: ${_TESTS_FAILED}, T: ${_TESTS_TOTAL}, F(): ${_TESTS_FUNCS}" >> /home/gearbox/projects/default/test.log
+}
+function tests_IncrFailed() {
+    (( _TESTS_FAILED++ ))
+    (( _TESTS_TOTAL++ ))
+    echo "P: ${_TESTS_PASSED}, F: ${_TESTS_FAILED}, T: ${_TESTS_TOTAL}, F(): ${_TESTS_FUNCS}" >> /home/gearbox/projects/default/test.log
+}
+
+#
+# `box test` calls this before running ALL test files
+#
+function tests_GlobalSetup() {
+    if [ -f "${BOX_TESTS_DIR}/all-tests/setup" ] ; then
+        source "${BOX_TESTS_DIR}/all-tests/setup"
+    fi
+}
+
+#
+# `box test` calls this before running each test file
+#
+function test_FileSetup() {
+    unset -f setup
+    unset -f teardown
+}
+
+#
+# `box test` calls this before running each test file
+#
+function test_File() {
+    testFile="$1"
+    existingFuncs="$(getTest_Funcs)"
+    source "${testFile}"
+    testFuncs="$(RemoveFrom "${existingFuncs}" "$(getTest_Funcs)")"
+    _TESTS_FUNCS="${testFuncs}"
+    if $(HasFunc setup) ; then
+        setup
+    fi
+    # Run all tests that have their own *_Test function
+    for func in ${testFuncs} ; do
+        test_Run "${func}"
+    done
+    if $(HasFunc tests) ; then
+        # Run all the tests grouped into a simple tests() function
+        tests
+    fi
+    if $(HasFunc teardown) ; then
+        teardown
+    fi
+}
+
+function test_Run() {
+    testFunc="$1"
+    dataFunc="${testFunc/_Test/_Data}"
+    if ! $(HasFunc $dataFunc) ; then
+        output="$($testFunc)"
+        test_PassFail $? "${output}"
+    else
+        IFS=$'\n' lines=($($dataFunc))
+        for line in "${lines[@]}"; do
+            output="$($testFunc "${line}")"
+            test_PassFail $? "${output}"
+        done
+    fi
+}
+
+function test_PassFail() {
+    error="$1"
+    output="$2"
+    if [ "0" == "${error}" ] ; then
+        tests_IncrPassed
+    else
+        recordFailure "${output}" "Unknown error"
+    fi
+}
+
+#
+# `box test` calls this before running each test file
+#
+function test_FileTeardown() {
+    unset -f setup
+    unset -f teardown
+    for func in ${_TESTS_FUNCS} ; do
+        unset -f "${func}"
+    done
+    _TESTS_FUNCS=""
+}
+
+#
+# `box test` calls this before running ALL test files
+#
+function tests_GlobalTeardown() {
+    if [ -f "${BOX_TESTS_DIR}/all-tests/teardown" ] ; then
+        source "${BOX_TESTS_DIR}/all-tests/teardown"
+    fi
+}
+
+#
+# Output all functions that end with _Test on a newline
+#
+function getTest_Funcs() {
+    declare -F | awk '/_Test$/{print $3}'
+}
+
+#
+# Output all files in test directory
+#
+function getTest_Files() {
+    find "${BOX_TESTS_DIR}" -maxdepth 1 -type f
+}
+
+#
+# `box test` calls this after running a test file or multiple test files
+#
+function tests_ShowResults() {
+    if [ 0 -ne "${_TESTS_FAILED}" ] ; then
+        echo "${_TESTS_FAILED} of ${_TESTS_TOTAL} tests ${RED}FAILED${RESET}."
+        echo
+        exit 1
+    fi
+    if [ 0 -ne "${_TESTS_PASSED}" ] ; then
+        echo "${_TESTS_PASSED} of ${_TESTS_TOTAL} tests ${GREEN}passed.${RESET}"
+        echo
+
+        exit 0
+    fi
+
+}
+
+#
+# Call in a test to reports that a failure occurred
+# Designed to be used in *_Test functions that actually perform multiple tests.
+# Used after every failed test except the last.
+# NOTE: Using these IN .test FILES currently results in resetting the counter.
+#       I do not know why.
+#
+function recordFailure() {
+    message="$1"
+    altMessage="$2"
+    tests_IncrFailed
+    if [ "" != "${message}" ] ; then
+        echo -e "FAIL: ${message}"
+    else
+        echo -e "FAIL: ${altMessage}"
+    fi
+}
+
+#
+# Record that a test passed
+# Designed to be used in *_Test functions that actually perform multiple tests.
+# Used after every passed test except the last.
+# NOTE: Using these IN .test FILES currently results in resetting the counter.
+#       I do not know why.
+#
+function recordSuccess() {
+    tests_IncrPassed
+}
+

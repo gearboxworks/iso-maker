@@ -1,0 +1,15 @@
+#!/bin/sh
+
+declare="${BOX_PROJECTS_ROOT:=}"
+declare="${BOX_PROJECT_PATH:=}"
+
+#this file will contain the bash script to execute any files present in the ${BOX_PROJECTS_ROOT}/${BOX_PROJECT_PATH}/scripts/watchers directory
+
+inotifywait --quiet --recursive --monitor --format "%e %w%f" \
+    --event modify --event move --event create --event delete \
+    ${BOX_PROJECTS_ROOT}/${BOX_PROJECT_PATH}/www | while read changed
+do
+
+    echo "$changed"
+
+done

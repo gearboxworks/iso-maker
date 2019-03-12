@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+function setup() {
+    export STATUS_OUTPUT="$(box status)"
+    echo
+}
+
+function boxStatusHasOutput_Test() {
+
+    if [ -z "${STATUS_OUTPUT}" ]; then
+        echo "The command [box status] produced no output."
+        return 1
+    fi
+}
+
+function boxStatusContainsText_Data() {
+    # This defines a multi-line provider for 'containerRunning_Test()'.
+    # LineData can also provide multiple JSON strings, one per line
+    cat <<EOF
+Downloaded components:
+Stopped components:
+Running components:
+EOF
+}
+
+function boxStatusContainsText_Test() {
+    if ! StrContains "${STATUS_OUTPUT}" "$1"; then
+        echo "The output of [box status] did not contain: $1."
+        return 1
+    fi
+}
+
+function teardown() {
+    unset STATUS_OUTPUT
+}
+
+

@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+#
+# Master test script.
+#
+
+declare="${BOX_FUNCTIONS_FILE=}"
+declare="${BOX_CACHE_DIR=}"
+declare="${YELLOW:=}"
+declare="${GREEN:=}"
+declare="${CYAN:=}"
+declare="${RESET:=}"
+
+source "${BOX_FUNCTIONS_FILE}"
+
+cache_help() {
+	cat <<EOF
+
+${YELLOW}Gearbox ${GREEN}CLI${RESET} ${GREEN}cache${RESET} usage:
+
+box ${YELLOW}cache${RESET}       - Show this help.
+box ${YELLOW}cache ${GREEN}help${RESET}	- Show this help.
+
+box ${YELLOW}cache ${GREEN}clear${RESET}	- Clears the box's cache
+
+EOF
+}
+
+cache_clear() {
+    rm -rf "${BOX_CACHE_DIR}"
+    output ""
+    output "Cache ${GREEN}cleared${RESET}."
+    output ""
+}
+
+################################################################################
+
+CMD="$1"
+shift
+
+case $CMD in
+	'clear')
+		cache_clear
+		;;
+	*)
+		cache_help
+		exit 1
+		;;
+esac
+

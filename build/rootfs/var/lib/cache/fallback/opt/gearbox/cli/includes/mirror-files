@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+#
+# Mirror Files from ${BOX_PROJECTS_ROOT}/${BOX_PROJECT_PATH}/www to /var/mirror/www
+#
+declare="${BOX_PROJECTS_ROOT:=}"
+declare="${BOX_PROJECT_PATH:=}"
+
+interval=1
+sudo mkdir -p /var/mirror/www
+while true; do
+    sudo watch --interval "${interval}" --differences --no-title --chgexit ls -lR ${BOX_PROJECTS_ROOT}/${BOX_PROJECT_PATH}/www > /dev/null
+    echo "Changed detected"
+    sudo rsync --archive --bwlimit=1000 --delete --exclude '.git/' ${BOX_PROJECTS_ROOT}/${BOX_PROJECT_PATH}/www /var/mirror
+done

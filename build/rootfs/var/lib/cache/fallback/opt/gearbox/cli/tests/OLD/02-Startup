@@ -1,0 +1,35 @@
+#!/bin/bash
+
+declare="${BOX_CLI_DIR:=}"
+declare="${EXECTMPFILE:=}"
+declare="${BOX_FUNCTIONS_FILE:=}"
+
+source "${BOX_FUNCTIONS_FILE}"
+
+case $1 in
+	'info')
+		echo "`basename $0`	- Test: Startup all containers."
+		exit 42
+		;;
+esac
+
+. ${BOX_CLI_DIR}/commands/test
+
+
+exec_cmd docker container ls -q
+
+exec_cmd box startup
+
+exec_cmd docker container ls -q
+if [ ! -s $EXECTMPFILE ]
+then
+	echo_error "Some containers couldn't startup."
+	echo "$EXECTMPFILE"
+	ls -l $EXECTMPFILE
+	cat $EXECTMPFILE
+	exec_cmd box container ls
+fi
+
+
+exit 0
+

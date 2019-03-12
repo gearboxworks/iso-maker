@@ -1,0 +1,16 @@
+{
+    "interface": "lxmp/mailsender",
+    "description": "An SMTP email capture service such as MailHog or Mail Catcher",
+    "network": "box",
+    "restart": "always",
+    "ports": [
+<<<<<<< HEAD:etc/interfaces/lxmp/mailsink.json
+        { "host": 8025, "container": 8025 },
+        { "host": 1025, "container": 1025 }
+=======
+        { "http": 8025, "optional": true },
+        { "smtp": 1025 }
+>>>>>>> e012cbd4e8ad6eebed4588d7e69d059ee3fad0e9:etc/types/lxmp/mailsender.json
+    ]
+
+}

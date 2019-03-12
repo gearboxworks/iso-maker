@@ -1,0 +1,75 @@
+#!/bin/bash
+
+declare="${GREEN:=}"
+declare="${CYAN:=}"
+declare="${YELLOW:=}"
+declare="${RESET:=}"
+
+
+	cat <<EOF
+
+${YELLOW}Gearbox ${GREEN}Version Launch Checklist${RESET}
+
+${CYAN}BEFORE DEVELOPMENT${RESET}
+ - Decide on a release number.
+
+ - Create a new branch with release number in repo:
+   - https://github.com/gearboxworks/gearbox
+
+ - Create a new milestone for the release:
+   - https://github.com/gearboxworks/gearbox/milestones
+
+ - Ensure there is a project that encompasses the release:
+   - https://github.com/gearboxworks/gearbox/projects
+
+${CYAN}DURING DEVELOPMENT${RESET}
+ - Create a "New Release" ticket like:
+   - https://github.com/gearboxworks/gearbox/issues/533
+
+ - Create a "Changelog" ticket like:
+   - https://github.com/gearboxworks/gearbox/issues/532
+
+ - Whittle down issues until there are none for version:
+   - https://github.com/gearboxworks/gearbox/issues?q=is:open+is:issue+milestone:{version}
+
+${CYAN}AT TIME OF RELEASE CANDIDATE${RESET}
+ - Update existing tests based on changes
+
+ - Write new tests to cover new features, changes.
+
+ - Run iso-maker
+   - https://github.com/gearboxworks/iso-maker
+
+ - Clone box from repo:
+   - https://github.com/gearboxworks/gearbox
+
+ - Checkout new version from clone:
+   - git checkout -b {version} origin/{version}
+
+ - Run Vagrant up and ssh into the box
+   - vagrant up && vagrant ssh
+
+ - Run all tests and ensure they pass:
+   - box self-test run
+
+
+${CYAN}AT TIME OF RELEASE${RESET}
+ - Merge from version branch into master for this repo:
+   - https://github.com/gearboxworks/gearbox
+
+ - Write a CHANGELOG.
+
+ - Update the version milestone with CHANGELOG
+   - https://github.com/gearboxworks/gearbox/milestones/{milestone_id}/edit
+
+ - Update the CHANGELOG in the repo:
+   - https://github.com/gearboxworks/gearbox/blob/master/CHANGELOG.md
+
+ - Add a New Release on GitHub w/CHANGELOG:
+   - https://github.com/gearboxworks/gearbox/releases
+
+ - Update download link:
+   - https://gearbox.github.io/box-docs/download/index.html
+
+
+EOF

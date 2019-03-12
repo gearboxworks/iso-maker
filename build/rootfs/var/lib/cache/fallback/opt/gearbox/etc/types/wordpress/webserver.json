@@ -1,0 +1,5 @@
+{
+    "interface": "wordpress/webserver",
+    "extends": "lxmp/webserver",
+    "description": "A web server for a WordPress stack, e.g. Apache, Ngnix, etc."
+}

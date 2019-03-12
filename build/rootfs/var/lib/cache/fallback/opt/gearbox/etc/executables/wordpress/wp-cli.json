@@ -1,0 +1,9 @@
+{
+    "type": "wordpress/script",
+    "language": "php",
+    "uses": [
+    ],
+    "description": "The WordPress CLI command line tool",
+    "volumes": [
+    ]
+}

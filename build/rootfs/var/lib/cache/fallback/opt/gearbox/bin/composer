@@ -1,0 +1,39 @@
+#!/bin/bash
+
+check_image()
+{
+	VERSION="gearbox/composer:$REQVERS"
+	EXISTS="`docker images -q $VERSION 2>/dev/null`"
+
+	if [ "$EXISTS" == "" ]
+	then
+		wget -q -O /dev/null https://index.docker.io/v1/repositories/gearboxworks/composer/tags/$REQVERS
+		if [ "$?" == "0" ]
+		then
+			echo "GearBox: Need to retrieve $VERSION from repository. Please wait..."
+			/usr/bin/docker pull $VERSION
+		else
+			echo "GearBox: ERROR: Version $VERSION doesn't exist in repository."
+			exit
+		fi
+	fi
+}
+
+
+SCRIPT="`basename $0`"
+REQVERS="`echo $SCRIPT | sed -r 's/composer-([0-9]*\.[0-9]*)/\1/'`"
+EXEC="/opt/gearbox/bin/composer-$REQVERS"
+
+
+if [ -x "$EXEC" ]
+then
+	check_image
+elif [ "$SCRIPT" == "$REQVERS" ]
+then
+	REQVERS="latest"
+	check_image
+fi
+
+exec /usr/bin/docker run --rm -it --name "composer-$REQVERS" --user gearbox:gearbox --volume $PWD:/app $VERSION "$@"
+# --network gearboxnet
+

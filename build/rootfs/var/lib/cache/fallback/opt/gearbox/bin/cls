@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# This is added because Mike needs his clear screen.  
+
+LINES="$(tput lines)"
+LIMIT=$(expr "${LINES}" - 2)
+clear
+clear
+
+# Make sure the window still exists.
+tput csr 0 $LIMIT
+

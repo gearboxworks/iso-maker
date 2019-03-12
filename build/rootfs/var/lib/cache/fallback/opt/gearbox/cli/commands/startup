@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+declare="${IMAGES:=}"
+declare="${BOX_FUNCTIONS_FILE:=}"
+
+source "${BOX_FUNCTIONS_FILE}"
+
+# Creates IMAGES and STACK env variables.
+readJSON
+
+case $1 in
+	'-s'|'--short')
+		box component start ${IMAGES} &>/dev/null
+		box status --short
+		;;
+
+	*)
+		box component start ${IMAGES}
+		;;
+esac
+

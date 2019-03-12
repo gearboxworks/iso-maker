@@ -1,0 +1,17 @@
+{
+    "interface": "lxmp/processvm",
+    "type": "container",
+    "description": "A ProcessVM for a LXMP stack, specifically PHP-FPM.",
+    "network": "box",
+    "restart": "no",
+    "ports": [
+        { "host": 9000, "container": 9000 }
+    ],
+    "volumes": [
+        { "host": "${BOX_PROJECTS_ROOT}/${BOX_PROJECT_PATH}/www", "container": "/var/www" },
+        { "host": "/srv/sites", "container": "/srv/sites" }
+    ],
+    "hosts": [
+        [ "pressbox/mailhog" ]
+    ]
+}

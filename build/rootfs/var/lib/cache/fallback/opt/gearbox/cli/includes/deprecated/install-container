@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+
+declare="${BOX_PROJECTS_ROOT:=}"
+declare="${BOX_PROJECT_PATH:=}"
+declare="${BOX_COMMANDS_DIR:=}"
+
+if [ -f "$1" ]; then
+    name=$(jq -r ".name" ${1})
+    containername=$(jq -r ".containername" ${1})
+    container=$(jq -r ".download" ${1})
+    version=$(jq -r ".version" ${1})
+    type=$(jq -r ".type" ${1})
+    working=$(jq -r ".working_directory" ${1})
+    port=$(jq -r ".port" ${1})
+    subtype=${type#*\/}
+
+    case "${subtype}" in
+      webserver)
+        if [ -n "${working}" ]; then
+            working=""
+        fi
+        if [ -n "${port}" ]; then
+            port=""
+        fi
+        volume="-v ${BOX_PROJECTS_ROOT}/${BOX_PROJECT_PATH}/www:${working}"
+        ports="-p 8080:${port}"
+        ;;
+    esac
+
+    # Replace spaces in name with _
+    containername=${name// /_}
+    # Convert to lower case
+    containername=${containername,,}_${version//./_}
+    
+    # Create the docker container
+    echo "Creating container ${containername} from ${container}"
+    options="${volume} ${ports}"
+    docker create ${options} --name ${containername} ${container}:${version}
+
+    # Add the commands to the scripts directory
+    sudo cp "${1%*\/installable.json}/commands"/* ${BOX_COMMANDS_DIR}
+
+    activate="y"
+    read -p "Set ${name} to be default ${subtype}(Y/n)?: " input
+    activate="${input:-$activate}"
+
+    if [ "y" = ${activate} ] || [ "Y" = ${activate} ]; then
+        current=$(jq -r --arg subtype ${subtype} '.stack[$subtype]' < ${BOX_PROJECTS_ROOT}/${BOX_PROJECT_PATH}/project.json)
+        echo "Stopping ${current}..." \
+        && docker stop $current 2>&1 > /dev/null \
+        && echo "Starting ${containername}..." \
+        && docker start ${containername} 2>&1 > /dev/null \
+        && echo "Updating box configuration" \
+        && jq --arg name ${containername} --arg subtype ${subtype} '.stack[$subtype] = $name' ${BOX_PROJECTS_ROOT}/${BOX_PROJECT_PATH}/project.json > /tmp/new.json && mv /tmp/new.json ${BOX_PROJECTS_ROOT}/${BOX_PROJECT_PATH}/project.json
+    fi
+fi

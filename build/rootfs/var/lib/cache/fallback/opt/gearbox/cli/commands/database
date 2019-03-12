@@ -1,0 +1,556 @@
+#!/bin/bash
+#
+# Script for handling database related functionality.
+#
+# Usage: box database {sub-command} [{command-options}] [--dryrun] [--quiet]
+#
+declare="${ECHO_PREFIX:=}"
+declare="${GREEN:=}"
+declare="${YELLOW:=}"
+declare="${RESET:=}"
+declare="${BOX_PROJECTS_ROOT:=}"
+declare="${BOX_PROJECT_PATH:=}"
+declare="${BOX_PROJECT_FILE:=}"
+declare="${BOX_SQL_DIR:=}"
+declare="${STACK:=}"
+
+
+
+DEFAULT_PROJECT="gearbox"
+
+DB_HOST_IP="172.42.0.1"
+
+
+trap ctrl_c INT
+
+function ctrl_c()
+{
+	tput sgr0
+	echo ""
+	echo "$ECHO_PREFIX Aborting script"
+	exit
+}
+
+#
+# Unchunk a SQL file that has been chunked
+#
+# Usage: box database import [{dump_file}] [{global-options}]
+#
+#   Result ==> Imports from ${BOX_PROJECTS_ROOT}/${BOX_PROJECT_PATH}/sql/{dump_file}.sql
+#
+function database_unchunk() {
+
+    local chunked_file="$1"
+    local basefile="${chunked_file%%.*}"
+    local ext="${chunked_file##*.}"
+    if [ 'sql' != "$(to_lowercase "${ext}")" ]; then
+        #
+        # If no .sql extension, add one.
+        #
+        ext="sql"
+    fi
+
+    #
+    # First change to the SQL dir
+    #
+    cd "${BOX_SQL_DIR}"
+
+    #
+    # Force import from  ${BOX_PROJECTS_ROOT}/${BOX_PROJECT_PATH}/sql/
+    #
+    chunked_file="${BOX_SQL_DIR}/${basefile}.${ext}"
+
+    #
+    # Check to see if we the chunked_file exists
+    #
+    if [ ! -e "${chunked_file}" ]; then
+        alert "No ${chunked_file} exists"
+        return 1
+    fi
+
+    if [ ! -d "${chunked_file}" ]; then
+        alert "${chunked_file} is not a directory"
+        return 2
+    fi
+
+    temp_dir="$(mktemp "${BOX_SQL_DIR}/${basefile}-XXXXX.${ext}")"
+    if [ $? -ne 0 ]; then
+        output "Cannot create temp directory ${temp_dir}"
+        return 3
+    fi
+
+    rm "${temp_dir}"
+    if [ $? -ne 0 ]; then
+        output "Cannot remove temp directory ${temp_dir}"
+    fi
+
+    mv "${chunked_file}" "${temp_dir}"
+    if [ $? -ne 0 ]; then
+        output "Cannot rename ${chunked_file} directory ${temp_dir}"
+        return 4
+    fi
+
+    cat "${temp_dir}/${basefile}"-???."${ext}.chunk" > $chunked_file
+    if [ $? -ne 0 ]; then
+        output "Could not generate unchunked file ${chunked_file}"
+        return 5
+    fi
+
+    rm -rf "${temp_dir}"
+    if [ $? -ne 0 ]; then
+        output "Could not remove the chunked directory ${temp_dir}"
+    fi
+
+    output "SQL file ${chunked_file} unchunked"
+
+}
+
+#
+# Import a database from ${BOX_PROJECTS_ROOT}/${BOX_PROJECT_PATH}/sql/$1.sql
+#
+# Usage: box database import [{dump_file}] [{global-options}]
+#
+#   Result ==> Imports from ${BOX_PROJECTS_ROOT}/${BOX_PROJECT_PATH}/sql/{dump_file}.sql
+#
+function database_import() {
+
+    local importfile="$1"
+
+    local ext="$(file_extension "${importfile}")"
+
+    if [ 'sql' != "$(to_lowercase "${ext}")" ]; then
+        #
+        # If no .sql extension, add one.
+        #
+        ext="sql"
+        importfile="${importfile}.${ext}"
+    fi
+
+    #
+    # Grab the basefile name to use later
+    #
+    basefile="${importfile%%.*}"
+
+    #
+    # Force import from  ${BOX_PROJECTS_ROOT}/${BOX_PROJECT_PATH}/sql/
+    #
+    importfilepath="${BOX_SQL_DIR}/${importfile}"
+
+    #
+    # Check to see if we the importfilepath exists
+    #
+    if [ ! -e "${importfilepath}" ]; then
+
+        output "No ${importfilepath} exists"
+        return 1
+
+    fi
+
+    if [ ! -d "${importfilepath}" ]; then
+        tempfile=""
+    else
+
+        tempfile="$(mktemp "${BOX_SQL_DIR}/${basefile}-XXXXX.${ext}")"
+        if [ $? -ne 0 ]; then
+            output "Cannot create temp file ${tempfile}"
+            return 2
+        fi
+
+        output "Unchunking ${importfile}"
+        cat "${importfilepath}/${basefile}"-???."${ext}.chunk" > $tempfile
+        if [ $? -ne 0 ]; then
+            output "Could not generate unchunked file ${importfile}"
+            return 3
+        fi
+
+        importfilepath="${tempfile}"
+
+    fi
+
+    if [ ! $(has_arg --no-backup) ]; then
+        database_backup
+        if [ $? -ne 0 ]; then
+            output "Error when backing up to ${basefile}.bak"
+            return 4
+        fi
+    fi
+
+    if [ ! $(has_arg --no-droptables) ]; then
+
+        output "Dropping any prior tables"
+
+        if [ ! $(has_arg --dryrun) ]; then
+            box component exec ${database} mysql -h ${DB_HOST_IP} -u wordpress -pwordpress -Nse "show tables;" wordpress 2>&1 | grep -v "Warning:" > /tmp/mysql-table-list.txt
+            cat /tmp/mysql-table-list.txt | while read table
+        do
+		box component exec ${database} mysql -h ${DB_HOST_IP} -u wordpress -pwordpress -e "drop table $table" wordpress 2>&1 | grep -v "Warning:"
+        done
+            rm /tmp/mysql-table-list.txt
+        fi
+        output "Tables dropped"
+
+    fi
+
+    if [ "" != "$(cat "${importfilepath}" | grep "utf8mb4_unicode_520_ci")" ]; then
+        #
+        # MariaDB does not support 'utf8mb4_unicode_520_ci' but does support 'utf8mb4_unicode_ci'
+        # This should become a lot more intelligent but for now it should suffice.
+        #
+        output "Stripping '520' from 'utf8mb4_unicode_520_ci' in ${importfilepath}"
+        if [ ! $(has_arg --dryrun) ]; then
+            sed -i -e 's/utf8mb4_unicode_520_ci/utf8mb4_unicode_ci/g' "${importfilepath}"
+        fi
+        output "520 stripped"
+    fi
+
+    #
+    # Import the database is not a dry run
+    #
+    output "Importing database from ${importfile}"
+    if [ ! $(has_arg --dryrun) ]; then
+        box component exec ${database} mysql -h ${DB_HOST_IP} -u wordpress -pwordpress wordpress -e "source ${importfilepath}"  2>&1 | grep -v "Warning:"
+    fi
+
+    if [ "" != "${tempfile}" ]; then
+        rm "${tempfile}"
+    fi
+
+    output "Database imported"
+
+}
+
+#
+# Converts a SQL file into a collection of `.sql.chunk` files
+# in a directory of the same name as the file:
+#
+# Usage: box database chunk {sql_file} [{global-options}]
+#
+#   Result ==> Generates ${BOX_PROJECTS_ROOT}/${BOX_PROJECT_PATH}/sql/{sql_file}.sql/{sql_file}-??.sql.chunk
+#
+#   --quiet - Omits output
+function database_chunk() {
+
+    #
+    # First change to the SQL dir
+    #
+    cd "${BOX_SQL_DIR}"
+
+    #
+    # Split file up into chunks of 25Mb or smaller
+    #
+    CHUNK_SIZE=25M
+
+    #
+    # Grab the filename, without extension, then add extension
+    #
+    sql_filename="$1"
+
+    #
+    # Check to see if arg was passed
+    #
+    if [ "" == "${sql_filename}" ]; then
+        alert "No <sql_file> passed"
+        return 1
+    fi
+
+    #
+    # Grab the base file name
+    #
+    sql_basename="${sql_filename%%.*}"
+
+    #
+    # Fix the filename
+    #
+    sql_filename="${sql_basename}.sql"
+
+    #
+    # Calculate the SQL filepath from  ${BOX_PROJECTS_ROOT}/${BOX_PROJECT_PATH}/sql/
+    #
+    sql_filepath="${BOX_SQL_DIR}/${sql_filename}"
+
+    #
+    # Check to see if we need to modify exists
+    #
+    if [ ! -f "${sql_filepath}" ]  ; then
+        alert "No ${sql_filepath} exists"
+        return 2
+    fi
+
+    #
+    # Create temp dir and move our SQL file to temp dir
+    #
+    backup_file="$(mktemp "${BOX_SQL_DIR}/${sql_basename}.XXXXX.sql.bak")"
+    rm -f "${backup_file}"
+    if [ $? -ne 0 ]; then
+        alert "Could not make backup sql file ${backup_file}"
+        return 3
+    fi
+
+    #
+    # Backing up of the file
+    #
+    mv "${sql_filepath}" "${backup_file}"
+    if [ $? -ne 0 ]; then
+        alert "Could not backup ${sql_filepath}"
+        return 4
+    fi
+
+    #
+    # Making a directory the same name as the previous SQL file
+    #
+    mkdir -p "${sql_filepath}"
+    if [ $? -ne 0 ]; then
+        alert "Could not create directory ${sql_filepath}/"
+        return 5
+    fi
+
+    #
+    # Making a directory the same name as the previous SQL file
+    #
+    split \
+        --line-bytes="${CHUNK_SIZE}" \
+        --numeric-suffixes="1" \
+        --additional-suffix=".sql.chunk" \
+        --suffix-length=3 \
+        "${backup_file}" \
+        "${sql_filename}/${sql_basename}-"
+    if [ $? -ne 0 ]; then
+        alert "Could not chunk ${backup_file} into ${sql_filepath}"
+        rm -rf "${sql_filepath}"
+        mv "${backup_file}" "${sql_filepath}"
+        return 6
+    fi
+
+    chunk_list_file="$(mktemp --tmpdir=/tmp chunk-list-XXXX.txt)"
+    if [ $? -ne 0 ]; then
+        alert "Could not generate chunk list filename"
+        return 8
+    fi
+
+    ls -1 "${sql_filename}/"*.chunk > $chunk_list_file
+    if [ $? -ne 0 ]; then
+        alert "Could not generate chunk list file"
+        return 9
+    fi
+
+    chunk_count="$(cat "${chunk_list_file}" | wc -l)"
+    if [ $? -ne 0 ]; then
+        alert "Could not count chunks generated into ${sql_filepath}/"
+        return 10
+    fi
+
+    saveIFS="${IFS}" && IFS=$'\n'
+    chunk_list="$(cat "${chunk_list_file}")"
+    rm "${chunk_list_file}"
+    for file in $chunk_list
+    do
+        echo -e "\t\t\t\"$(md5sum $file|cut -d " " -f1)\"," >> $chunk_list_file
+        if [ $? -ne 0 ]; then
+            alert "Could not generate checksum of ${file}"
+            return 11
+        fi
+    done
+    IFS="${saveIFS}"
+    checksums="$(cat "${chunk_list_file}")"
+
+    cat << JSON > ${sql_filepath}/$sql_basename.chunks.json
+{
+        "schema": "1.0",
+        "chunk_count": ${chunk_count},
+        "max_chunk_size": "${CHUNK_SIZE}",
+        "checksums": [
+${checksums: : -1}
+        ]
+}
+JSON
+
+    if [ $? -ne 0 ]; then
+        alert "Could not generate ${sql_filepath}/${sql_basename}.chunks.json"
+        return 12
+    fi
+
+    rm "${chunk_list_file}"
+    if [ $? -ne 0 ]; then
+        alert "Could not delete the chunk list file ${chunk_list_file}"
+    fi
+
+    cat << EOF > $sql_filepath/$sql_basename.README
+File Chunk Packaging Scheme (FCPS)
+----------------------------------
+This directory should contain ${chunk_count} chunks of the original file ${sql_filename}.
+If was generated with the 'box database chunk "${sql_filename}"' command from the CLI[1]
+for Gearbox[2].
+
+You can reconstitute the orginal file ${sql_filename} if the chuncks are located in
+${BOX_PROJECTS_ROOT}/${BOX_PROJECT_PATH}/sql/ as ${BOX_PROJECTS_ROOT}/${BOX_PROJECT_PATH}/sql/${sql_filename}/ and the files have not been modified
+since they were generated using the 'box database unchunk "${sql_filename}"' command
+when inside of Gearbox which you can acccess from your host computer using the
+bash or batch/Powershell command 'gearbox ssh'.
+
+In the case you do not have Gearbox and cannot install it you can reconstitute the
+original SQL file in Bash (e.g. Mac and Linux) using this command when run from the
+directory with contains the XXX subdirectory containing the chunks:
+
+    mv "${sql_filename}/" "${sql_filename}.tmp/"
+    cat "${sql_filename}/${sql_basename}"-???."${ext}.chunk" > $sql_filename
+
+On Windows this is what (WE THINK) you will need to do, though we have not tested it
+yet (contact us here https://github.com/gearboxworks/box-scripts/issues if these commands
+do not work for you, please):
+
+    ren "${sql_filename}/" "${sql_filename}.tmp/"
+    copy "${sql_filename}/${sql_basename}-*.${ext}.chunk" ../$sql_filename
+
+FCPS is licensed via GPLv3: https://www.gnu.org/licenses/gpl-3.0.en.html
+Copyright (C) 2018 NewClarity Consulting LLC; All rights reserved worldwide
+
+[1] https://github.com/gearboxworks/box-scripts
+[2] https://github.com/gearboxworks/
+EOF
+
+    if [ $? -ne 0 ]; then
+        alert "Could not generate ${sql_filepath}/${sql_basename}.README.fcps"
+        return 13
+    fi
+
+    rm "${backup_file}"
+    if [ $? -ne 0 ]; then
+        alert "Could not delete the backup file ${backup_file}"
+    fi
+
+    output "SQL file ${sql_filepath} chunked"
+
+}
+
+#
+# Backup the database to ${BOX_PROJECTS_ROOT}/${BOX_PROJECT_PATH}/sql/backup.sql
+#
+# Usage: box database backup [{backup_file}] [{global-options}]
+#
+#   Result ==> Backs up to ${BOX_PROJECTS_ROOT}/${BOX_PROJECT_PATH}/sql/{backup_file}.sql
+#
+#   --quiet - Omits status messages
+#   --dryrun - Do everything except actually run it
+#
+#   Rolls forward existing files per shift_files() logic.
+#
+function database_backup() {
+
+    bakfile="${BOX_SQL_DIR}/backup.sql"
+
+    #
+    # Check to see if we need to save a prior backup
+    #
+    if [[ -f "${bakfile}" || -d "${bakfile}" ]]  ; then
+
+        output "Saving prior backups"
+
+        #
+        # Shift the files forward backup.sql becomes backup1.sql, etc. 
+        #
+        shift_files "${bakfile}"
+
+    fi
+
+    output "Backing up database to ${bakfile}"
+
+    if [ ! $(has_arg --dryrun) ]; then
+
+        mkdir -p "${BOX_SQL_DIR}/"
+
+        box component exec ${database} mysqldump -h "${DB_HOST_IP}" -u wordpress -pwordpress wordpress 2>&1 | grep -v "Warning: Using a password on the command line interface can be insecure." > ${bakfile}
+        result="$?"
+
+        if [ "${result}" != "0" ]; then
+
+            output "mysqldump error (${result})"
+            return 1
+
+        fi
+
+    fi
+
+    output "Database backed up"
+
+}
+
+function database_help() {
+	cat <<EOF
+box database ${GREEN}backup${RESET} [<sql_file>] - Backup current database to <sql_file> or backup.sql.
+box database ${GREEN}import${RESET} [<sql_file>] - Import <sql_file> or provision.sql into current database.
+box database ${GREEN}chunk${RESET} <sql_file>    - Split <sql_file> into chunks ~25Mb in size.
+box database ${GREEN}unchunk${RESET} <sql_file>  - Unsplit <sql_file> back into a complete file.
+
+box database ${GREEN}credentials${RESET}         - This will output host, username and password
+box database ${GREEN}dbname${RESET}              - This will output database name
+box database ${GREEN}username${RESET}            - This will output database login username
+box database ${GREEN}password${RESET}            - This will output database login password
+EOF
+
+}
+
+################################################################################
+declare="${IMAGES:=}"
+declare="${BOX_FUNCTIONS_FILE:=}"
+
+source "${BOX_FUNCTIONS_FILE}"
+
+# Creates IMAGES and STACK env variables.
+readJSON
+
+CMD="$1"
+shift
+
+if [ "${STACK["wordpress/dbserver"]}" == "" ]
+then
+	echo "WARNING: Cannot find database component in JSON file."
+	exit
+fi
+database="${STACK["wordpress/dbserver"]}"
+
+case $CMD in
+    'help')
+        database_help
+        ;;
+
+    'dbname'|'name'|'username'|'user'|'password'|'pw')
+        echo wordpress
+		;;
+
+    'host'|'hostname'|'server'|'hostip'|'host-ip')
+        echo "${DB_HOST_IP}"
+		;;
+
+    'credentials'|'creds'|'login')
+        echo "Host:     ${GREEN}${DB_HOST_IP}${RESET}"
+        echo "Database: ${GREEN}wordpress${RESET}"
+        echo "Username: ${GREEN}wordpress${RESET}"
+        echo "Password: ${GREEN}wordpress${RESET}"
+		;;
+
+    'backup'|'dump'|'save')
+        database_backup
+		;;
+
+    'import'|'restore'|'undump')
+        database_import "$1"
+		;;
+
+    'chunk'|'split')
+        database_chunk "$1"
+		;;
+
+    'unchunk'|'join')
+        database_unchunk "$1"
+		;;
+
+	*)
+		if [ "$1" == "" ]
+		then
+			echo "$ECHO_PREFIX ${YELLOW}Warning: No database command provided.${RESET}"
+			database_help
+			exit 1
+		fi
+		;;
+esac
+

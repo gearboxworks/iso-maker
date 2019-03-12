@@ -1,0 +1,17 @@
+#Intended to be sourced
+
+GRAY="[30m"
+RED="(B[m[31m"
+GREEN="(B[m[32m"
+YELLOW="(B[m[33m"
+BLUE="(B[m[34m"
+PURPLE="(B[m[35m"
+CYAN="(B[m[36m"
+DIRTYSNOW="(B[m[37m"
+WHITE="(B[m[38m"
+RESET="(B[m"
+
+ECHO_PREFIX="${YELLOW}# Gearbox:${RESET}"
+
+export GRAY RED GREEN YELLOW BLUE PURPLE CYAN DIRTYSNOW WHITE RESET ECHO_PREFIX
+

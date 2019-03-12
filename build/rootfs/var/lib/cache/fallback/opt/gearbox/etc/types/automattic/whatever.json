@@ -1,0 +1,5 @@
+{
+    "interface": "automattic/whatever",
+    "description": "An example interface for use with automattic/wordpress-developer when developing and testing WordPress core",
+    "comments": "This is an example, and hopefully a placeholder for future use"
+}

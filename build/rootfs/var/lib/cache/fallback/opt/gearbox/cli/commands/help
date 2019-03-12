@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+
+declare="${GREEN:=}"
+declare="${CYAN:=}"
+declare="${YELLOW:=}"
+declare="${RESET:=}"
+
+cat <<EOF
+
+${YELLOW}Gearbox ${GREEN}CLI${RESET} usage:
+
+box ${GREEN}help${RESET}		- Output this list of commands.
+box ${GREEN}status${RESET}		- Output status of Gearbox's standard service components.
+box ${GREEN}version${RESET}		- Output the current version of this Gearbox VM.
+box ${GREEN}user${RESET}		- Output and update user information in user.json
+
+box ${GREEN}component${RESET}	        - Manage Gearbox components
+box ${GREEN}database${RESET} 	        - Manage databases.
+
+box ${GREEN}startup${RESET}		- Start service components found in project.json's stack object.
+box ${GREEN}restart${RESET}		- Restart service components found in project.json's stack object.
+box ${GREEN}shutdown${RESET}		- Shutdown all Docker containers.
+
+box ${GREEN}self-update${RESET}		- Update this CLI tool to the latest version for this Box version.
+box ${GREEN}sync${RESET}                - Update box scripts in guest:/opt/gearbox from host:/{project}/gearbox/box
+
+box ${GREEN}deploy${RESET}              - Deploy the current Git repo using information in your project.json file
+box ${GREEN}cache${RESET}               - Clear the cache used by the 'box deploy' command.
+
+box ${GREEN}self-test${RESET}	        - Run tests for Gearbox itself (We have many yet to write. Wanna help?)
+box ${GREEN}launch-checklist${RESET} 	- Our launch checklist for new versions of Gearbox (we eat our own dog food.)
+
+EOF
+

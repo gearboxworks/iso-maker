@@ -1,0 +1,2 @@
+0 * * * * /opt/gearbox/bin/box database backup
+0 * * * * /opt/gearbox/bin/box component update

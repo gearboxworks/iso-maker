@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+#
+# @todo: http://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
+#
+
+declare="${BOX_FUNCTIONS_FILE:=/opt/gearbox/cli/includes/functions}"
+source "${BOX_FUNCTIONS_FILE}"
+
+declare="${error:=}"
+declare="${BOX_COLORS_FILE:=}"
+declare="${BOX_COMMANDS_DIR:=}"
+declare="${BOX_INCLUDES_DIR:=}"
+
+source "${BOX_COLORS_FILE}"
+
+
+if [ "" == "${error}" ];then
+
+    if [ "$1" == "" ]; then
+        export BOX_COMMAND="help"
+    else
+        export BOX_COMMAND="$1"
+    fi
+
+    command_file="${BOX_COMMANDS_DIR}/${BOX_COMMAND}"
+
+    if [ "${BOX_COMMAND}" == "help" ]; then
+        source "${command_file}"
+        #check_updates_available "$*"
+        echo 1>&2
+        exit
+    fi
+
+    if [ -f "${command_file}" ]; then
+        command_type="bash"
+    else
+        if [ -f "${command_file}.php" ]; then
+            command_type="php"
+        else
+            echo 1>&2
+            echo -e "\tCommand not found: $1" 1>&2
+            echo 1>&2
+            exit
+        fi
+    fi
+
+    initial_dir=$(pwd)
+    error=0
+    case "${command_type}" in
+       "bash")
+		shift
+            "${command_file}" "$@"
+            error=$?
+            ;;
+       "php")
+		shift
+
+            /usr/bin/php7.0 "${BOX_INCLUDES_DIR}/run-command.php" --args "${BOX_COMMAND}" "$@"
+            error=$?
+            ;;
+    esac
+    cd "${initial_dir}"
+
+fi
+
+if [[ $error -ne 0 ]]; then
+    exit 1
+fi
+
+

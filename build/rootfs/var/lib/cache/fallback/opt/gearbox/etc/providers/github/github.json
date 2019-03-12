@@ -1,0 +1,14 @@
+{
+	"provider": "github",
+	"type": "git",
+	"$args": [
+		"org_name",
+		"repo_name",
+		"protocol"
+	],
+	"prefix(_)": {
+		"ssh": "ssh://git@github.com:",
+		"https": "https://github.com/"
+	},
+	"url": "{prefix(protocol)}{$args.orgname}/{$args.username}"
+}

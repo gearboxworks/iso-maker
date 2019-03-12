@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+
+declare="${BOX_PROJECT_FILE:=}"
+declare="${BOX_ETC_DIR:=}"
+
+
+function get_deploy_provider_filepath() {
+    local provider="$(get_deploy_provider)"
+    local filepath="$(get_provider_filepath "${provider}")"
+    echo "${filepath}"
+}
+
+function get_provider_filepath() {
+    local provider="$1"
+    filepath="${BOX_ETC_DIR}/providers/${provider}/${provider}.json"
+    echo "${filepath}"
+}
+
+#
+# Returns 'pantheon' or 'wpengine', etc.
+#
+function get_deploy_provider() {
+    local deploy="$(cat "${BOX_PROJECT_FILE}" | jq -r ".deploy")"
+    local provider="$(echo "${deploy}" | jq -r ".provider")"
+    echo "${provider}"
+}
+
+function get_deploy_provider_object() {
+    local provider="$1"
+    local filepath="$(get_provider_filepath "${provider}")"
+    if [ -f "${filepath}" ] ; then
+        echo "$(cat "${filepath}")"
+    fi
+}
+

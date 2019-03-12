@@ -1,0 +1,10 @@
+{
+	"@schema_type": "repository",
+	"hostname": "string",
+	"domain": "string",
+	"username": "string",
+	"protocol": "enum: ssh,http,https",
+	"port": "int",
+	"path": "string",
+	"url": "string"
+}

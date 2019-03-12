@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+#
+# @see https://www.computerhope.com/unix/rsync.htm
+#
+
+declare="${BOX_FUNCTIONS_FILE:=}"
+declare="${YELLOW:=}"
+declare="${GREEN:=}"
+declare="${RESET:=}"
+
+source "${BOX_FUNCTIONS_FILE}"
+
+if [ ! -f /home/gearbox/projects/default/SYNCED ] ; then
+    mkdir /home/gearbox/projects/default
+    rsync --archive --hard-links --perms --one-file-system /opt/gearbox/ /home/gearbox/projects/default
+    sudo touch /home/gearbox/projects/default/SYNCED
+fi
+trap "exit 0" SIGINT SIGTERM
+
+sync_help() {
+	cat <<EOF
+
+${YELLOW}Gearbox ${GREEN}CLI${RESET} ${GREEN}sync${RESET} usage:
+
+box ${YELLOW}sync${RESET}	        - Show this help.
+
+box ${YELLOW}sync ${GREEN}help${RESET}		- Show this help.
+
+box ${YELLOW}sync ${GREEN}once${RESET}		- Synchronize to /box directory in your project, once.
+box ${YELLOW}sync ${GREEN}non-stop${RESET}   	- Synchronize to /box directory in your project, non-stop.
+
+EOF
+}
+
+sync_run_once() {
+    local startMessage="$1"
+    local endMessage="$2"
+    if [ "" == "${startMessage}" ] ; then
+        startMessage="Syncing..."
+        endMessage="Done."
+    fi
+    printf "${startMessage}"
+    rsync --dry-run --archive --hard-links --perms --recursive --links --safe-links --keep-dirlinks --times --delete-after /home/gearbox/projects/default/ /opt/gearbox
+    rsync --archive --hard-links --perms --recursive --links --safe-links --keep-dirlinks --times --delete-after /home/gearbox/projects/default/ /opt/gearbox
+    if ! [ -z "${endMessage}" ] ; then
+        echo -e "${endMessage}"
+    fi
+}
+
+sync_run_nonstop() {
+    local counter=0
+    while true; do
+        counter=$(( counter+1 ))
+        sync_run_once "\rSyncing [${counter}]..."
+        sleep 1
+    done
+}
+
+################################################################################
+
+CMD="$1"
+shift
+
+case $CMD in
+	'once')
+		sync_run_once
+		;;
+
+	'nonstop'|'non-stop')
+		sync_run_nonstop
+		;;
+
+	*)
+		sync_help
+		exit 1
+		;;
+
+esac

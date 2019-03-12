@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+#
+# Functions to support tests
+#
+
+#
+# Test if a function exists, by name
+#
+function HasFunc() {
+    func="$1"
+    if [ "" == "$(declare -F ${func})" ] ; then
+        return 1
+    fi
+    return 0
+}
+
+#
+# Remove the first string from the second string
+#
+function RemoveFrom() {
+    subset="$1"
+    superset="$2"
+    for x in ${subset} ; do
+        superset="$(StrReplace "${superset}" "${x}")"
+    done
+    echo -e "$(TrimSpace "${superset}")"
+}
+
+#
+# Replace 2nd param with 3rd param in 1st param, defaulting 3rd to ' '.
+#
+function StrReplace() {
+    [[ "" == "$3" ]] && replace=" " || replace="$3"
+    echo "$1" | sed "s/$2/$3/"
+}
+
+#
+# Remove leading and trailing whitespace
+#
+function TrimSpace() {
+    echo "$1" | xargs
+}
+
+#
+# Return true if first string contains the second string.
+#
+function StrContains() {
+    if [[ "$1" == *"$2"* ]] ; then
+        return 0
+    fi
+    return 1
+}
+

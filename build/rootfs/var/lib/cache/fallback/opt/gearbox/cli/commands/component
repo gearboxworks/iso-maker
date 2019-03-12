@@ -1,0 +1,246 @@
+#!/bin/bash
+#
+# Provisioning and management script for all containers.
+#
+# This is a low level script that will:
+#	Pull the complete list of gearbox container components from Docker Hub into local JSON files.
+#	Manage containers - stop/start and most importantly creating containers using the embedded JSON string in the image.
+
+declare="${ECHO_PREFIX:=}"
+declare="${GREEN:=}"
+declare="${CYAN:=}"
+declare="${RED:=}"
+declare="${RESET:=}"
+declare="${BOX_PROJECT_FILE:=}"
+declare="${RETURN_ALREADY_STOPPED:=}"
+declare="${RETURN_NO_CONTAINER:=}"
+declare="${RETURN_OK:=}"
+
+
+declare="${BOX_FUNCTIONS_FILE:=}"
+source "${BOX_FUNCTIONS_FILE}"
+
+
+ctrl_c()
+{
+        tput sgr0
+	echo ""
+	echo "$ECHO_PREFIX Aborting script."
+	exit
+}
+
+trap ctrl_c INT
+
+
+HelpMe()
+{
+	cat <<EOF
+${GREEN}Component control${RESET}
+box component ${GREEN}install${RESET} <component>	- Install and configure a component.
+box component ${GREEN}uninstall${RESET} <component>	- Uninstall a component.
+box component ${GREEN}activate${RESET} <component>	- Activate a component.
+box component ${GREEN}deactivate${RESET} <component>	- Activate a component.
+box component ${GREEN}start${RESET} <component>		- Start a component.
+box component ${GREEN}stop${RESET} <component>		- Stop a component.
+box component ${GREEN}list${RESET} [component]		- List currently installed components.
+box component ${GREEN}upgrade${RESET} <component>	- Upgrade an existing component.
+
+${GREEN}Component management${RESET}
+box component ${GREEN}update${RESET}			- Download latest list of available components.
+box component ${GREEN}available${RESET}			- Show the list of available components.
+box component ${GREEN}shutdown${RESET}			- Shutdown all Gearbox related components.
+box component ${GREEN}clean${RESET}			- Remove all Gearbox related components.
+box component ${GREEN}inspect${RESET} <component>	- Provide detailed info on a components.
+box component ${GREEN}log${RESET} <component>		- Show log files from components.
+box component ${GREEN}pull${RESET} <component>		- Just pull a component image. No install.
+
+If <component> is set to ${GREEN}all${RESET}, then all components will be used in the file:
+${BOX_PROJECT_FILE}
+EOF
+}
+
+
+################################################################################
+DOCKERBIN="$(which docker)"
+if [ "${DOCKERBIN}" == "" ]
+then
+	echo "$ECHO_PREFIX ${RED}ERROR: docker command does not exist.${RESET}"
+	echo "Look for possible fixes here: ${CYAN}http://gearbox.github.io/errors/W022/${RESET}"
+	exit 1
+fi
+
+
+CMD="$1"
+shift
+IMAGES="$@"
+
+case $CMD in
+	'list'|'ls')
+		# Only the 'ls' command can accept no image.
+		#echo "$@"
+		if [ "$1" == "" ]
+		then
+			component_list
+		fi
+		;;
+
+	'available')
+		available_components
+		exit $?
+		;;
+
+	'update')
+		update_components
+		exit $?
+		;;
+
+	'reallyclean')
+		reallyclean
+		exit $?
+		;;
+
+	'shutdown')
+		shutdown
+		exit $?
+		;;
+
+	'shell')
+		IMAGE="$1"
+		shift
+		component_shell $IMAGE "$@"
+		exit $?
+		;;
+
+	'exec')
+		IMAGE="$1"
+		shift
+		component_exec $IMAGE "$@"
+		exit $?
+		;;
+
+	''|'help')
+		HelpMe
+		;;
+
+	*)
+		if [ "$1" == "" ]
+		then
+			error_nip
+			HelpMe
+			exit 1
+		fi
+		;;
+esac
+
+
+# Magic keyword to specify all.
+if [ "$1" == "all" ]
+then
+	# Creates IMAGES and STACK env variables.
+	readJSON
+fi
+
+
+for IMAGE in $IMAGES
+do
+	IMAGE="$(get_image_name ${IMAGE})"
+	case $CMD in
+		'refresh'|'upgrade')
+			echo "$ECHO_PREFIX ${GREEN}Refreshing container: ${CYAN}${IMAGE}${RESET}"
+			component_stop $IMAGE
+			RETURN="$?"
+			case $RETURN in
+				$RETURN_ALREADY_STOPPED|$RETURN_NO_CONTAINER|$RETURN_OK)
+					component_remove $IMAGE
+					RETURN="$?"
+					case $RETURN in
+						$RETURN_ALREADY_STOPPED|$RETURN_NO_CONTAINER|$RETURN_OK)
+							image_remove $IMAGE
+							RETURN="$?"
+							if [ "$RETURN" == "$RETURN_OK" ]
+							then
+								component_provision $IMAGE
+								RETURN="$?"
+							fi
+							;;
+					esac
+					;;
+			esac
+			;;
+
+		'pull')
+			component_image_pull $IMAGE
+			RETURN="$?"
+			;;
+
+		'install')
+			# echo "$ECHO_PREFIX ${GREEN}Installing ${CYAN}${IMAGE}${RESET}"
+			component_install $IMAGE
+			RETURN="$?"
+			;;
+
+		'uninstall')
+			# echo "$ECHO_PREFIX ${GREEN}Uninstalling: ${CYAN}${IMAGE}${RESET}"
+			component_stop $IMAGE
+			RETURN="$?"
+			case $RETURN in
+				$RETURN_ALREADY_STOPPED|$RETURN_NO_CONTAINER|$RETURN_OK)
+					component_remove $IMAGE
+					RETURN="$?"
+					case $RETURN in
+						$RETURN_ALREADY_STOPPED|$RETURN_NO_CONTAINER|$RETURN_OK)
+							image_remove $IMAGE
+							RETURN="$?"
+							;;
+					esac
+					;;
+			esac
+			;;
+
+		'activate')
+			echo "$ECHO_PREFIX ${GREEN}Activating ${CYAN}${IMAGE}.${RESET}"
+			component_install $IMAGE
+			RETURN="$?"
+			case $RETURN in
+				$RETURN_OK)
+					component_create_container $IMAGE
+					;;
+			esac
+			RETURN="$?"
+			;;
+
+		'deactivate')
+			echo "$ECHO_PREFIX ${GREEN}Deactivating ${CYAN}${IMAGE}.${RESET}"
+			component_remove $IMAGE
+			RETURN="$?"
+			;;
+
+		'start')
+			component_start $IMAGE
+			RETURN="$?"
+			;;
+
+		'stop')
+			component_stop $IMAGE
+			RETURN="$?"
+			;;
+
+		'list'|'ls')
+			component_list $IMAGE
+			RETURN="$?"
+			;;
+
+		'inspect'|'info')
+			component_inspect $IMAGE
+			RETURN="$?"
+			;;
+
+		'log')
+			component_log $IMAGE
+			RETURN="$?"
+			;;
+	esac
+done
+
+exit 0
+

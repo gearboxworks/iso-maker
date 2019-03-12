@@ -1,0 +1,7 @@
+{
+    "type": "box/script",
+    "language": "php",
+    "description": "PHPUnit",
+    "network": "box",
+    "other": "to-be-determined"
+}

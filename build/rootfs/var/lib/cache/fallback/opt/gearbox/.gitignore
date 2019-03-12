@@ -1,0 +1,11 @@
+.DS_Store
+.idea/
+.*.swp
+*.OLD
+etc/vm_box_build_time
+SYNCED
+GearBoxOS/var/
+var/
+lost+found/
+last-commit-date
+last-commit-epoch

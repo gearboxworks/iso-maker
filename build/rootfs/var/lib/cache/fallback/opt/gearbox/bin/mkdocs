@@ -1,0 +1,12 @@
+#!/bin/bash
+declare="${STACK:=}"
+
+source /opt/gearbox/cli/includes/functions
+
+# Creates IMAGES and STACK env variables.
+readJSON
+
+MKDOCS="${STACK["mkdocs/webserver"]}"
+
+box component shell ${MKDOCS} interactive "$@"
+

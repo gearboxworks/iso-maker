@@ -1,0 +1,61 @@
+{
+	"provider": "pantheon",
+	"method": "git-push",
+	"$": [
+		"site_id",
+		"site_name",
+		"host_id"
+	],
+	"ROOT": "{.frameworks.wordpress.root_path}",
+	"CONTENT": "{.frameworks.wordpress.content_path}",
+	"HOSTNAME": "{.hosts.{$host_id}.name}",
+	"DOMAIN": "codeserver.{.HOSTNAME}.{$site_id}.drush.in",
+	"USERNAME": "codeserver.{.HOSTNAME}.{$site_id}",
+	"repository": {
+		"hostname": "{.HOSTNAME}",
+		"domain": "{.DOMAIN}",
+		"username": "{.USERNAME}",
+		"protocol": "ssh",
+		"port": 2222,
+		"path": "/~/repository.git",
+		"url": "{.repository.protocol}://{.USERNAME}@{.DOMAIN}:{.repository.port}{.repository.path}"
+	},
+	"frameworks": {
+		"wordpress": {
+			"root_path": "",
+			"core_path": "",
+			"content_path": "wp_content",
+			"vendor_path": "vendor",
+			"files": {
+				"omit": [
+					"{.ROOT}/readme.html",
+					"{.ROOT}/license.txt",
+					"{.ROOT}/wp-config.php",
+					"{.ROOT}/wp-config-{.site_name}.local.php",
+					"{.ROOT}/wp-config-sample.php",
+					"{.CONTENT}/plugins/hello.php",
+					"{.CONTENT}/themes/twentyseventeen"
+				]
+			}
+		}
+	},
+	"hosts": {
+		"testing": {
+			"name": "dev",
+			"label": "Testing (Pantheon's 'DEV')",
+			"branch": "master"
+		},
+		"staging": {
+			"name": "test",
+			"label": "Staging (Pantheon's 'TEST')",
+			"branch": "master",
+			"after": "deploy_dev_to_test"
+		},
+		"production": {
+			"name": "live",
+			"label": "Staging (Pantheon's 'LIVE')",
+			"branch": "master",
+			"after": "deploy_test_to_live"
+		}
+	}
+}

@@ -1,0 +1,18 @@
+{
+	"interface": "lxmp/webserver",
+	"type": "container",
+	"description": "A web server for a LXMP stack, e.g. Apache, Ngnix, etc.",
+	"network": "box",
+	"restart": "no",
+	"ports": [
+		{ "name": "http", "port": 8080, "default": 80 },
+		{ "name": "https", "port": 8443, "default": 443 },
+		{ "name": "debug", "port": 9999, "default": 9999, "optional": true }
+	],
+	"volumes": [
+		{ "name": "webroot", "path": "/var/www" }
+	],
+	"hosts": [
+		[ "pressbox/mailhog" ]
+	]
+}

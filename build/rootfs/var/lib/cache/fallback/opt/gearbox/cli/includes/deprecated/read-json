@@ -1,0 +1,162 @@
+#!/usr/bin/env bash
+
+#
+# These 4 vars are a really bad code smell
+#
+declare="${mail:=}"
+declare="${proxy:=}"
+declare="${sqladmin:=}"
+declare="${webadmin:=}"
+
+declare="${BOX_PROJECTS_ROOT:=}"
+declare="${BOX_PROJECT_PATH:=}"
+
+DEFAULT_PROJECT="gearbox"
+BOX_PROJECT_DIR=${BOX_PROJECTS_ROOT}/${BOX_PROJECT_PATH}
+BOX_BASE_DIR=/opt/gearbox
+
+# Colour codes.
+GRAY="[30m"
+RED="(B[m[31m"
+GREEN="(B[m[32m"
+YELLOW="(B[m[33m"
+BLUE="(B[m[34m"
+PURPLE="(B[m[35m"
+CYAN="(B[m[36m"
+DIRTYSNOW="(B[m[37m"
+WHITE="(B[m[38m"
+RESET="(B[m"
+
+# Prefix used by all echo lines.
+ECHO_PREFIX="$WHITE# Gearbox:$RESET"
+
+# Return codes from functions.
+RETURN_OK="0"
+RETURN_NO_IMAGE_NAME="1"
+RETURN_NO_LOCAL_IMAGE="2"
+RETURN_NO_IMAGE_JSON="3"
+RETURN_INVALID_PROJECT="4"
+
+
+VERSION="`cat ${BOX_BASE_DIR}/version`"
+DEFAULTS_FILE="${BOX_BASE_DIR}/etc/releases/$VERSION/project.json"
+if [ ! -f $DEFAULTS_FILE ]
+then
+	echo "$ECHO_PREFIX ${RED}Error: Unknown release ${CYAN}${VERSION}${RESET}."
+	exit 1
+fi
+
+# Setup defaults.
+d_database="$(jq -r '.stack.database' $DEFAULTS_FILE)"
+d_webserver="$(jq -r '.stack.webserver' $DEFAULTS_FILE)"
+d_processvm="$(jq -r '.stack.processvm' $DEFAULTS_FILE)"
+d_kvstore="$(jq -r '.stack.kvstore' $DEFAULTS_FILE)"
+d_mail="$(jq -r '.stack.mail' $DEFAULTS_FILE)"
+d_proxy="$(jq -r '.stack.proxy' $DEFAULTS_FILE)"
+d_cache="$(jq -r '.stack.cache' $DEFAULTS_FILE)"
+d_sqladmin="$(jq -r '.stack.sqladmin' $DEFAULTS_FILE)"
+d_webadmin="$(jq -r '.stack.webadmin' $DEFAULTS_FILE)"
+
+# Pull in user defined JSON file.
+if [ -f "${BOX_PROJECT_DIR}/project.json" ]
+then
+    database="$(jq -r '.stack.database' ${BOX_PROJECT_DIR}/project.json)"
+    webserver="$(jq -r '.stack.webserver' ${BOX_PROJECT_DIR}/project.json)"
+    processvm="$(jq -r '.stack.processvm' ${BOX_PROJECT_DIR}/project.json)"
+    kvstore="$(jq -r '.stack.kvstore' ${BOX_PROJECT_DIR}/project.json)"
+fi
+
+
+# Backwards compatibility.
+case $database in
+	'mysql'|'')
+		database=$d_database
+		;;
+
+	'mariadb')
+		database="${DEFAULT_PROJECT}/mariadb:5.5.59"
+		;;
+
+	*-*)
+		IFS='-' read -r -a state_array <<< "$database"
+		database="${DEFAULT_PROJECT}/${state_array[0]}:${state_array[1]}"
+		;;
+esac
+
+case $webserver in
+	'nginx'|'')
+		webserver=$d_webserver
+		;;
+
+	'apache'|'apache2')
+		webserver="${DEFAULT_PROJECT}/apache:2.4.29"
+		;;
+
+	*-*)
+		IFS='-' read -r -a state_array <<< "$webserver"
+		webserver="${DEFAULT_PROJECT}/${state_array[0]}:${state_array[1]}"
+		;;
+esac
+
+case $processvm in
+	'php-fpm'|php7*|'')
+		processvm=$d_processvm
+		;;
+
+	php5*)
+		processvm="${DEFAULT_PROJECT}/php-fpm:5.6.35"
+		;;
+
+	*5.6.30|*5.6.32|*5.6.33)
+		processvm="${DEFAULT_PROJECT}/php-fpm:5.6.35"
+		;;
+
+	*7.0.16|*7.0.25|*7.0.27)
+		processvm="${DEFAULT_PROJECT}/php-fpm:7.0.29"
+		;;
+
+	*7.1.9|*7.1.14)
+		processvm="${DEFAULT_PROJECT}/php-fpm:7.1.16"
+		;;
+
+	php-fpm-*)
+		IFS='-' read -r -a state_array <<< "$processvm"
+		processvm="${DEFAULT_PROJECT}/${state_array[0]}-${state_array[1]}:${state_array[2]}"
+		;;
+esac
+
+case $kvstore in
+	'redis'|'')
+		kvstore=$d_kvstore
+		;;
+
+	redis-*)
+		IFS='-' read -r -a state_array <<< "$kvstore"
+		kvstore="${DEFAULT_PROJECT}/${state_array[0]}:${state_array[1]}"
+		;;
+esac
+
+case $mail in
+	'mailhog'|'')
+		mail=$d_mail
+		;;
+esac
+
+case $proxy in
+	'proxy'|'')
+		proxy=$d_proxy
+		;;
+esac
+
+case $sqladmin in
+	'adminer'|'')
+		sqladmin=$d_sqladmin
+		;;
+esac
+
+case $webadmin in
+	'wp-cli'|'')
+		webadmin=$d_webadmin
+		;;
+esac
+

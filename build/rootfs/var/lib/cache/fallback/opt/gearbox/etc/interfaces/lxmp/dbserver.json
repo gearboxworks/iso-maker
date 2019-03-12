@@ -1,0 +1,31 @@
+{
+	"interface": "lxmp/dbserver",
+	"description": "A MySQL or clone database server for aLXMP stack",
+	"network": "box",
+	"restart": "no",
+	"ports": [
+		{
+			"host": 3306,
+			"container": 3306
+		}
+	],
+	"volumes": [
+		{
+			"host": "/sql",
+			"container": "/vagrant/sql"
+		},
+		{
+			"host": "/provision",
+			"container": "/docker-entrypoint-initdb.d"
+		},
+		{
+			"host": "mysql-5.5",
+			"container": "/var/lib/mysql"
+		}
+	],
+	"hosts": [
+		[
+			"pressbox/mailhog"
+		]
+	]
+}

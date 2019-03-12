@@ -1,0 +1,32 @@
+#!/bin/bash
+
+declare="${BOX_CLI_DIR:=}"
+declare="${BOX_PROJECTS_ROOT:=}"
+declare="${BOX_PROJECT_PATH:=}"
+declare="${BOX_FUNCTIONS_FILE:=}"
+
+source "${BOX_FUNCTIONS_FILE}"
+
+case $1 in
+	'info')
+		echo "`basename $0`	- Test: Startup all containers."
+		exit 42
+		;;
+esac
+
+. ${BOX_CLI_DIR}/commands/test
+
+echo_info "Check ${BOX_PROJECTS_ROOT}/${BOX_PROJECT_PATH}/www mountpoints."
+exec_cmd ${BOX_CLI_DIR}/commands/check-mounts
+
+
+echo_info "Check Docker can stop and start."
+if [ -e /var/run/docker.sock ]
+then
+	exec_cmd service docker stop
+fi
+
+exec_cmd service docker start
+exec_cmd docker info
+
+

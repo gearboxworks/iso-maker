@@ -1,0 +1,642 @@
+#!/usr/bin/env bash
+
+
+declare="${DEPLOY_LOG:=}"
+declare="${ECHO_PREFIX:=}"
+declare="${YELLOW:=}"
+declare="${RED:=}"
+declare="${CYAN:=}"
+declare="${GREEN:=}"
+declare="${RESET:=}"
+declare="${BOX_CLI_DIR:=}"
+declare="${BOX_WEB_ROOT_DIR:=}"
+declare="${BOX_CONTENT_DIR:=}"
+declare="${BOX_LOGS_DIR:=}"
+declare="${BOX_PROJECT_DIR:=}"
+declare="${BOX_ARGS_ALL:=}"
+declare="${BOX_ERROR_FILE:=}"
+
+#
+# Checks if the Virtualbox gearbox mount point is there.
+# Return: [ /home/gearbox/projects | /var/www | "" ]
+#
+function check_mount()
+{
+	MOUNT_DIR="$(mount -v | awk '$3~/^(\/home\/gearbox\/projects\/default|\/var\/www)$/{print$3}')"
+	echo ${MOUNT_DIR}
+}
+
+
+#
+# Creates a symlink to a file, with checks for directory. Will also update a symlink if it's different.
+#
+function link_file()
+{
+	local SRC DST TEMP
+	SRC="$1"
+	DST="$2"
+
+	TEMP="$(dirname ${DST})"
+	create_dir ${TEMP}
+
+	TEMP="$(readlink ${DST})"
+	if [ "${TEMP}" != "${SRC}" ]
+	then
+		if [ "${TEMP}" == "" ]
+		then
+			echo "$ECHO_PREFIX ${YELLOW}Adding symlink: ${GREEN}${SRC} -> ${DST}${RESET}"
+			rm ${DST} &>/dev/null
+			ln -s ${SRC} ${DST}
+		else
+			echo "$ECHO_PREFIX ${YELLOW}Updating symlink: ${GREEN}${SRC} -> ${DST}${RESET}"
+			rm ${DST} &>/dev/null
+			ln -s ${SRC} ${DST}
+		fi
+	fi
+}
+
+
+#
+# Creates a directory, if it doesn't exist.
+#
+function create_dir()
+{
+	local DIR TEMP
+	DIR="$1"
+
+	# TEMP="$(dirname ${DIR})"
+	if [ ! -d "${DIR}" ]
+	then
+		echo "$ECHO_PREFIX ${YELLOW}Creating directory: ${GREEN}${DIR}${RESET}"
+		mkdir -p $DIR
+	fi
+}
+
+
+#
+# Checks to see if there is a new commit available for this Box Script repo.
+#
+function check_updates_available() {
+
+    if [[ "$1" != *"--ignore-update"* ]];then
+
+        local save_dir=$(pwd)
+        cd "${BOX_CLI_DIR}"
+        local latest_local=$(git log -1 | grep commit | cut -d" " -f2)
+        local remote_url=$(git remote -v show | grep "(fetch)" | cut -f 2 | cut -d" " -f1)
+        local latest_remote=$(git ls-remote --heads "${remote_url}" | grep "refs/heads/master" | cut --fields 1)
+        if [[ "${latest_local}" != "${latest_remote}" ]]; then
+            echo
+            echo -e "\tNOTICE: Your box scripts needs updating."
+            echo -e "\tTo update simply run box self-update"
+        fi
+        cd "${save_dir}"
+
+    fi
+
+}
+
+#
+# Usage
+#   $1 String Space separated list of numbers
+#
+# Echos
+#   Maximum number
+#
+# See:
+#   http://stackoverflow.com/a/16854326/102699
+#
+function max() {
+    local max=0
+    local num
+    while read num; do
+        ((num > max)) && max=$num
+    done <<< "$(echo -e "$1")"
+    echo $max
+}
+
+#
+# First clone the site from our repo on Pantheon
+#
+# Usage:
+#
+#       $1 - String Git URL to clone
+#       $1 - String Directory to clone into
+#
+#
+function ensure_git_clone() {
+    local git_url="$1"
+    local clone_dir="$2"
+
+    if [ "" == "$1" ]; then
+        echo
+        echo -e "\tERROR: You must specify a Git URL to clone as 1st parameter of ensure_git_clone()."
+        echo
+        return 1
+    fi
+
+    if [ "" == "$2" ]; then
+        echo
+        echo -e "\tERROR: You must specify a directory to clone into as 2nd parameter of ensure_git_clone()."
+        echo
+        return 2
+    fi
+
+    if [[ -d "$2" && ! -d "$2/.git" ]]; then
+        echo
+        echo -e "\tERROR: $2"
+        echo -e "\t       exists but does not contain a Git repo. Cannot continue."
+        echo
+        return 3
+    fi
+
+    echo_if_not_quiet "$*" "=Cloning "${git_url}" to ${clone_dir}..."
+
+    if [ ! -d "${clone_dir}" ]; then
+
+        quiet_git clone "${git_url}" "${clone_dir}" || return $?
+
+    else
+
+        cd "${clone_dir}"
+
+        # Set repo to match remote origin/master
+        quiet_git fetch origin || return $?
+        quiet_git reset --hard origin/master > /dev/null || return $?
+
+    fi
+}
+
+#
+# Usage:
+#
+#       $1 - Argument passing in that might be empty, e.g. "$1", "$3", etc.
+#       $1 - Default value to echo if $1 is empty
+#
+# Example
+#
+#       username=$(default "$1", "Luke Skywalker")
+#
+function default() {
+    trace $LINENO "Value: $1, Default: $2"
+
+    if [ "" == "$2" ]; then
+        trace $LINENO "Empty default with value: $1"
+        echo
+        echo "You must specify a default value as the 2nd paramater to default."
+        echo
+        return 1
+    fi
+    if [ "" == "$1" ]; then
+       echo "$2"
+    else
+       echo "$1"
+    fi
+}
+
+#
+# Outputs the file extension given a file name
+#
+# $1 - String
+#
+# Usage: string=$(to_lowercase "FOO.BAR")
+#   Result: $string ==> "foo.bar"
+#
+#
+function to_lowercase() {
+    echo "${1,,}"
+}
+
+#
+# Outputs the file extension given a file name
+#
+# $1 - Filename
+#
+# Usage: extension=$(file_extension "foo/bar.baz")
+#   Result: $extension ==> "baz"
+#
+#
+function file_extension() {
+    echo "${1##*.}"
+}
+
+#
+# Outputs the base filename given a full filename
+# Base filename means no path and no extension
+#
+# $1 - Filename
+#
+# Usage: basename=$(file_basename "foo/bar.baz")
+#   Result: $basename ==> "bar"
+#
+function file_basename() {
+    local filename=$(basename "$1")
+    echo "${filename%.*}"
+}
+
+function is_dry_run() {
+    if [[ "$1" == *"--dry-run"* ]]; then
+        echo "true"
+        return
+    fi
+    echo "false"
+}
+
+function is_quiet() {
+    if [[ "$1" == *"--quiet"* ]]; then
+        echo "true"
+        return
+    fi
+    echo "false"
+}
+
+function is_force() {
+    if [[ "$1" == *"--force"* ]]; then
+        echo "true"
+        return
+    fi
+    echo "false"
+}
+
+function is_wp_installed() {
+    if [ "" == "${BOX_CONTENT_DIR}" ]; then
+        echo "true"
+        return
+    fi
+    echo "false"
+}
+
+#
+# Generate output if -q|--quiet not in a string passed as $1.
+#
+# $1 - Always "$*", e.g. string containing parameters passed to the calling script
+# $2 - String to echo if not quiet. Prefix string w/"=", "^", "&" or "=" to effect before and after echos.
+#
+function echo_if_not_quiet() {
+    if [ "true" != $(is_quiet "$1") ]; then
+        local regex="s/\\\n/\n/g"
+        local control=${2:0:1}
+        local message=${2:1}
+        case "${control}" in
+            "^")
+                echo -e "${message}" | sed "${regex}"
+                echo
+                ;;
+            "*")
+                echo
+                echo -e "${message}" | sed "${regex}"
+                echo
+                ;;
+            "=")
+                echo -e "${message}" | sed "${regex}"
+                ;;
+            "&")
+                echo
+                echo -e "${message}" | sed "${regex}"
+                ;;
+            *)
+                echo
+                echo "CODING ERROR:"
+                echo "Your message for echo_if_not_quiet() does not begin with one of: ^, *, = or &."
+                echo
+                ;;
+        esac
+    fi
+}
+
+function exit_if_wp_not_installed() {
+    if [ "true" == $(is_wp_installed) ]; then
+        echo "WordPress in not installed. Cannot $1."
+        echo
+        how_to_install_wp
+        exit
+    fi
+}
+
+#
+# Check the "--force" option. If not set, output error message
+#
+# $1 - Always "$*", e.g. string containing parameters passed to the calling script
+# $2 - Error message or optionally output
+#
+
+function exit_if_no_force_option() {
+    if [[ "$1" != *"--force"* ]]; then
+        echo "ERROR: $2. Cannot continue."
+        echo
+        echo -e "\tUse --force to force continue."
+        echo
+        exit
+    fi
+}
+
+function find_composer_vendor_dir() {
+    if [ -d "${BOX_WEB_ROOT_DIR}/vendor" ]; then
+        echo "${BOX_WEB_ROOT_DIR}/vendor"
+        return
+    fi
+
+    if [ -d "${BOX_PROJECT_DIR}/vendor" ]; then
+        echo "${BOX_PROJECT_DIR}/vendor"
+        return
+    fi
+}
+
+function find_wp_content_dir() {
+    if [ -d "${BOX_WEB_ROOT_DIR}/content" ]; then
+        echo "${BOX_WEB_ROOT_DIR}/content"
+        return
+    fi
+
+    if [ -d "${BOX_WEB_ROOT_DIR}/wp-content" ]; then
+        echo "${BOX_WEB_ROOT_DIR}/wp-content"
+        return
+    fi
+}
+
+function find_wp_plugins_dir() {
+    local content_dir=$(find_wp_content_dir)
+    echo "${content_dir}/plugins"
+}
+
+function find_wp_mu_plugins_dir() {
+    local content_dir=$(find_wp_content_dir)
+    echo "${content_dir}/mu-plugins"
+}
+
+function find_project_dir() {
+    echo "${BOX_PROJECT_DIR}"
+}
+
+#
+# Echos the substring after a character
+#
+# $1 - String
+# $2 - Character
+#
+# Usage: vendor_dir=$(substring_after "www/vendor" "/")
+#   Result: $vendor_dir ==> "vendor"
+#
+#
+function substring_after() {
+    local string="$1"
+    local character="$2"
+    echo "${string#*${character}}"
+}
+
+#
+# Runs Git commands, quietly, unless they fail
+#
+# See http://stackoverflow.com/a/8944284/102699
+#
+function quiet_git() {
+    local stdout=$(tempfile)
+    local stderr=$(tempfile)
+
+    if ! git "$@" </dev/null >$stdout 2>$stderr; then
+        # Capture the error
+        error=$?
+        # Output the error messages to stderr
+        cat $stderr >&2
+        rm -f $stdout $stderr
+        return $error
+    fi
+
+    rm -f $stdout $stderr
+}
+
+#
+# Tests if arg is used when calling `box` command
+#
+# $1 - Arg (include '--' prefix, e.g.: --force)
+#
+# Usage:
+#
+#       is_quiet=$(has_arg "--quiet")
+#
+#       if [ $(has_arg "--quiet") ]; then
+#           echo "Is quiet"
+#       fi
+#
+# Depends on `box` setting $BOX_ARGS_ALL="$*"
+#
+# Returns: "1" or ""
+#
+function has_arg() {
+    if [[ "${BOX_ARGS_ALL}" == *"$1"* ]]; then
+        echo 1
+    fi
+}
+
+#
+# Renumbers backup files, rolling them forward.
+#
+# $1 - The file to backup, e.g. backup.sql
+#
+# Usage:  shift_files "${filename}"
+#
+# Behavior:
+#
+#       Assume that backup.sql, backup1.sql and backup2.sql exist.
+#
+#       Then:
+#
+#           backup2.sql ==[renamed to]==> backup3.sql
+#           backup1.sql ==[renamed to]==> backup2.sql
+#           backup.sql  ==[renamed to]==> backup1.sql
+#
+#
+function shift_files() {
+    local filename="$1"
+
+    #
+    # Get the file extension if there is one
+    # See: http://stackoverflow.com/a/965072/102699
+    #
+    local ext=$(file_extension "${filename}")
+    if [[ "" == "${ext}" || "${ext}" == "${filename}" ]]; then
+        ext=""
+    fi
+
+    #
+    # Get the filepath sans extension
+    # See: http://stackoverflow.com/a/965072/102699
+    #
+    filename="${filename%.*}"
+
+    #
+    # Reconstitute the filename with extension for testing
+    #
+    local testfile="${filename}.${ext}"
+
+    #
+    # If the test file does not exist then there is nothing to do
+    #
+    if [[ ! -f "${testfile}" && ! -d "${testfile}" ]]; then
+        return
+    fi
+
+    #
+    # Look for a file that does not exist. So if backup.sql,
+    # backup1.sql and backup2.sql exists this will backup3.sql.
+    #
+    local counter
+    until [[ ! -f "${testfile}" && ! -d "${testfile}" ]]; do
+        counter=$((counter))
+        let counter++
+        testfile="${filename}${counter}.${ext}"
+    done
+
+    #
+    # Now shifts all numbered files up to match the missing one
+    # and to leave the original file name passed as a file that
+    # does not exist so we can use it.
+    #
+    until [ "${testfile}" == "${filename}.${ext}" ]; do
+        oneless=$((counter))
+        let oneless--
+        if [ "0" == "${oneless}" ]; then
+            oneless=""
+        fi
+        mv "${filename}${oneless}.${ext}" "${filename}${counter}.${ext}"
+        counter="${oneless}"
+        testfile="${filename}${counter}.${ext}"
+    done
+
+}
+
+#
+# Generate output unless --quiet was passed in as an arg
+#
+function output() {
+    if [ $(has_arg "--quiet") ]; then
+        return
+    fi
+    echo -e "$1"
+    if [ "" != "$1" ] ; then
+        echo "[$1]===>>>" >> $DEPLOY_LOG 2>&1
+    fi
+}
+
+#
+# Generate output to stderr
+#
+function alert() {
+    (>&2 echo -e "$1")
+    if [ "" != "$1" ] ; then
+        echo "[$1]===>>>" >> $DEPLOY_LOG 2>&1
+    fi
+}
+
+
+function PushDir {
+    local dir
+    if [ "$#" -eq 0 ] ; then
+        dir="$(pwd)"
+    else
+        dir="$1"
+    fi
+    pushd "${dir}" >/dev/null 2>&1
+}
+function PopDir {
+    popd  >/dev/null 2>&1
+}
+
+function exitOnError() {
+    if [ "0" != "$?" ] ; then
+        if [ "" != "$1" ] ; then
+            alert "$1"
+        fi
+        exit 1
+    fi
+}
+
+function initErrorFile() {
+    touch $BOX_ERROR_FILE
+}
+function writeErrorFile() {
+    echo -e "$1" >> $BOX_ERROR_FILE
+}
+function showErrorFile() {
+    echo ===[ERRORS]===
+    cat $BOX_ERROR_FILE
+    echo ==============
+}
+
+function jqr() {
+    local query="$1"
+    output="$(jq -r "${query}")"
+    if [ "0" != "$?" ]; then
+        exitOnError "${RED}JQ ERROR${YELLOW} executing query: ${GREEN}${query}${RESET}"
+    fi
+    echo "${output}"
+}
+
+
+function checkParam() {
+    if [ "" == "$1" ]; then
+        alert
+        alert "${RED}ERROR:${YELLOW} ${2}${RESET}"
+        alert
+        return 1
+    fi
+    return 0
+}
+
+function RTrimSlashes() {
+    local path="$1"
+    if [[ "${path}" =~ ^(.*)/$ ]] ; then
+        path="${BASH_REMATCH[1]}"
+    fi
+    echo "${path}"
+}
+function LTrimSlashes() {
+    local path="$1"
+    if [[ "${path}" =~ ^/(.*)$ ]] ; then
+        path="${BASH_REMATCH[1]}"
+    fi
+    echo "${path}"
+}
+function TrimSlashes() {
+    echo "$(RTrimSlashes "$(LTrimSlashes "$1")" )"
+}
+
+#
+# See: https://stackoverflow.com/a/12973694/102699
+#
+function TrimSpace() {
+    echo "$(echo $1|xargs)"
+}
+
+#
+# See: https://stackoverflow.com/a/12973694/102699
+#
+function StrToUpper() {
+    echo "${1^^}"
+}
+
+function suggest_help_on_slack() {
+    alert "If you need help resolving an issue please ask for support via Slack:"
+    alert ""
+    alert "\t${CYAN}Our Slack:      ${GREEN}https://gearbox.slack.org${RESET}"
+    alert "\t${CYAN}Join our Slack: ${GREEN}https://launchpass/gearbox${RESET}"
+    alert ""
+}
+
+function iif() {
+    local criteria="$1"
+    local if_true="$2"
+    local if_false="$3"
+}
+
+function trace() {
+    local line="$1"
+    local info="$2"
+    local len="${#BOX_CLI_DIR}"
+    len=$(( len + 1 ))
+    local cur_file="$(echo ${BASH_SOURCE[@]} | awk '{print $2}')"
+    if [ "" != "${info}" ] ; then
+        info="; ${info}"
+    fi
+    echo "[${cur_file:$len}:${line}${info}]===>>>" >> $DEPLOY_LOG
+}

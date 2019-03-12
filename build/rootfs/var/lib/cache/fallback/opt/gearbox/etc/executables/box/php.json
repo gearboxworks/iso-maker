@@ -1,0 +1,8 @@
+{
+    "type": "box/binexec",
+    "uses": [
+    ],
+    "description": "The PHP language command line interpreter",
+    "volumes": [
+    ]
+}

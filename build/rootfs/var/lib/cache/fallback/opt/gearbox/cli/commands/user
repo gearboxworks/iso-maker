@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+#
+#
+
+declare="${BOX_FUNCTIONS_FILE:=}"
+declare="${BOX_USER_FILE:=}"
+declare="${YELLOW:=}"
+declare="${GREEN:=}"
+declare="${CYAN:=}"
+declare="${RED:=}"
+declare="${RESET:=}"
+
+source "${BOX_FUNCTIONS_FILE}"
+
+user_help() {
+	cat <<EOF
+
+${YELLOW}Gearbox ${GREEN}CLI${RESET} ${GREEN}user${RESET} usage:
+
+box ${YELLOW}user${RESET}	                - Show this help.
+
+box ${YELLOW}user ${GREEN}help${RESET}		        - Show this help.
+
+box ${YELLOW}user ${GREEN}show${RESET}		        - Output current user information.
+box ${YELLOW}user ${GREEN}set ${CYAN}"Name <email>"${RESET}     - Update basic user info in "Name <email>" format
+
+EOF
+}
+
+user_show() {
+    if [ -f "${BOX_USER_FILE}" ] ; then
+        output
+        output "Name:  ${GREEN}$(cat $BOX_USER_FILE | jq -r '.name')${RESET}"
+        output "Email: ${GREEN}$(cat $BOX_USER_FILE | jq -r '.email')${RESET}"
+        output
+    else
+        alert ""
+        alert "${RED}There is no ${GREEN}${BOX_USER_FILE}${RED} file yet; you must create one with this command:${RESET}"
+        alert ""
+        alert "\t${GREEN}box user set ${CYAN}\"Your Name <you@example.com>\"${RESET}"
+        alert ""
+        alert "Be sure to include quotes (\"...\") around user name and email."
+        alert ""
+        exit 1
+    fi
+}
+user_set() {
+    local user_info="$1"
+    if ! [[ "${user_info}" =~ ^(.+?)\<([^>]+)\>$ ]] ; then
+        alert ""
+        alert "${RED}You must supply user info in the following format:${RESET}"
+        alert ""
+        alert "\t${YELLOW}\"${CYAN}Your Name <you@example.com>${YELLOW}\"${RESET}"
+        alert ""
+        alert "Be sure to include quotes (\"...\") around your user name and email."
+        alert ""
+        exit 1
+    fi
+    #
+    #
+    #
+    name="$(TrimSpace "${BASH_REMATCH[1]}")"
+    email="${BASH_REMATCH[2]}"
+    jq -n "{name:\"${name}\", email: \"${email}\"}" > $BOX_USER_FILE
+    set_git_user_name_email "${name}" "${email}"
+    user_show
+}
+
+################################################################################
+
+CMD="$1"
+shift
+
+case $CMD in
+
+	'show')
+		user_show
+		;;
+
+	'set')
+		user_set "$1"
+		;;
+
+	*)
+		user_help
+		exit 1
+		;;
+
+esac

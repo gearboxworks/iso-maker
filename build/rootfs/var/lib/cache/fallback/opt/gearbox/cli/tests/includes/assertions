@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+#
+# @TODO We need to write a lot more of these
+#
+
+#
+# eval<Criteria>() function expect an expression to eval() and then test/compare
+# test<Criteria>() function expect a value to test/compare.
+#
+
+#
+# Tests if the output of an expression is equal to the supplied value
+#
+# @example  evalEquals "echo hello", "hello"
+#
+function evalEquals() {
+    local expr="$1"
+    local value="$2"
+    local message="$3"
+    if [ "" == "${message}" ] ; then
+        testEquals "$(eval "${expr}")" "${value}" "${message}"
+    else
+        testEquals "$(eval "${expr}")" "${value}" "${expr} <> ${value}"
+    fi
+}
+
+#
+# Tests if two values are equal.
+#
+# @example: testEquals "$(echo hello)", "hello"
+# @example:  foo=xyz && testEquals "$foo", "xyz"
+#
+function testEquals() {
+    local value1="$1"
+    local value2="$2"
+    local message="$3"
+    if [ "${value1}" == "${value2}" ] ; then
+        tests_IncrPassed
+    else
+       test_Fail "${message}" "${value1} <> ${value2}"
+    fi
+}
+
+#
+# Tests if value is not empty
+#
+function evalNotEmpty() {
+    local expr="$1"
+    local message="$2"
+    testNotEmpty "$(eval "${expr}")" "${message}" "The output of [${expr}] is empty."
+}
+
+#
+# Tests if value is not empty
+#
+function testNotEmpty() {
+    local value="$1"
+    local message="$2"
+    local altMessage="$3"
+    if [ "" != "$(TrimSpace "${value}")" ] ; then
+        tests_IncrPassed
+    else
+       test_Fail "${message}" "${altMessage}"
+    fi
+}
+

@@ -1,0 +1,1131 @@
+#!/bin/bash
+#
+# Provisioning and management functions for all containers.
+#
+# Provides:
+#	Pull the complete list of Gearbox container components from Docker Hub into local JSON files.
+#	Manage containers - stop/start and most importantly creating containers using the embedded JSON string in the image.
+
+declare="${ECHO_PREFIX:=}"
+declare="${YELLOW:=}"
+declare="${RESET:=}"
+declare="${CYAN:=}"
+declare="${RED:=}"
+declare="${IMAGE:=}"
+declare="${GREEN:=}"
+declare="${BOX_PROJECT_FILE:=}"
+declare="${BOX_RELEASE_JSON:=}"
+declare="${ORG_NAME:=}"
+declare="${BOX_ETC_DIR:=}"
+declare="${BOX_ROOT_ETC_DIR:=}"
+declare="${RETURN_CANT_REMOVE_IMAGE:=}"
+declare="${BOX_SQL_DIR:=}"
+declare="${BOX_NAME:=}"
+declare="${BOX_SQL_PROVISION_LOCK:=}"
+
+
+# Return codes from functions.
+RETURN_OK="0"
+RETURN_NO_IMAGE_NAME="1"
+RETURN_NO_LOCAL_IMAGE="2"
+RETURN_NO_IMAGE_JSON="3"
+RETURN_NO_IMAGE_REPO="4"
+RETURN_INVALID_PROJECT="5"
+RETURN_CANT_INSTALL_IMAGE="6"
+RETURN_ALREADY_STOPPED="7"
+RETURN_NO_CONTAINER="8"
+RETURN_CANT_REMOVE_CONTAINER="9"
+RETURN_NO_JSON_FILE="10"
+
+
+function error_pns()
+{
+	#RETURN="$?"
+	echo "$ECHO_PREFIX ${YELLOW}Warning project not supported.${RESET}"
+	echo "Look for possible fixes here: ${CYAN}http://gearbox.github.io/errors/W007/${RESET}"
+	#return $RETURN
+}
+
+function error_nip()
+{
+	#RETURN="$?"
+	echo "$ECHO_PREFIX ${RED}ERROR: Invalid command.${RESET}"
+	echo "Look for possible fixes here: ${CYAN}http://gearbox.github.io/errors/W008/${RESET}"
+	#return $RETURN
+}
+
+function error_nfl()
+{
+	#RETURN="$?"
+	echo "$ECHO_PREFIX ${RED}ERROR: component not found locally: ${CYAN}${IMAGE}${RESET}"
+	echo "Look for possible fixes here: ${CYAN}http://gearbox.github.io/errors/W009/${RESET}"
+	#return $RETURN
+}
+
+function error_dnc()
+{
+	#RETURN="$?"
+	echo "$ECHO_PREFIX ${RED}ERROR: component doesn't conform to JSON config format in 0.16 or later: ${CYAN}${IMAGE}${RESET}"
+	echo "Look for possible fixes here: ${CYAN}http://gearbox.github.io/errors/W010/${RESET}"
+	#return $RETURN
+}
+
+function error_dni()
+{
+	#RETURN="$?"
+	echo "$ECHO_PREFIX ${RED}ERROR: component does not exist in repository: ${CYAN}${IMAGE}${RESET}"
+	echo "Look for possible fixes here: ${CYAN}http://gearbox.github.io/errors/W011/${RESET}"
+	#return $RETURN
+}
+
+function error_ccbr()
+{
+	#RETURN="$?"
+	echo "$ECHO_PREFIX ${RED}ERROR: component can't be removed: ${CYAN}${IMAGE}${RESET}"
+	echo "Look for possible fixes here: ${CYAN}http://gearbox.github.io/errors/W012/${RESET}"
+	#return $RETURN
+}
+
+function error_ccbi()
+{
+	#RETURN="$?"
+	echo "$ECHO_PREFIX ${RED}ERROR: component can't be installed: ${CYAN}${IMAGE}${RESET}"
+	echo "Look for possible fixes here: ${CYAN}http://gearbox.github.io/errors/W013/${RESET}"
+	#return $RETURN
+}
+
+function error_ccbs()
+{
+	#RETURN="$?"
+	echo "$ECHO_PREFIX ${RED}ERROR: component can't be started: ${CYAN}${IMAGE}${RESET}"
+	echo "Look for possible fixes here: ${CYAN}http://gearbox.github.io/errors/W014/${RESET}"
+	#return $RETURN
+}
+
+function error_ccbd()
+{
+	#RETURN="$?"
+	echo "$ECHO_PREFIX ${RED}ERROR: component can't be stopped: ${CYAN}${IMAGE}${RESET}"
+	echo "Look for possible fixes here: ${CYAN}http://gearbox.github.io/errors/W015/${RESET}"
+	#return $RETURN
+}
+
+function error_cai()
+{
+	#RETURN="$?"
+	echo "$ECHO_PREFIX ${GREEN}Container already installed: ${CYAN}${IMAGE}${RESET}"
+	# echo "Look for possible fixes here: ${CYAN}http://gearbox.github.io/errors/W016/${RESET}"
+	#return $RETURN
+}
+
+function error_car()
+{
+	#RETURN="$?"
+	echo "$ECHO_PREFIX ${GREEN}Container already running: ${CYAN}${IMAGE}${RESET}"
+	# echo "Look for possible fixes here: ${CYAN}http://gearbox.github.io/errors/W017/${RESET}"
+	#return $RETURN
+}
+
+function error_cas()
+{
+	#RETURN="$?"
+	echo "$ECHO_PREFIX ${GREEN}Container already stopped: ${CYAN}${IMAGE}${RESET}"
+	# echo "Look for possible fixes here: ${CYAN}http://gearbox.github.io/errors/W018/${RESET}"
+	#return $RETURN
+}
+
+function error_csac()
+{
+	#RETURN="$?"
+	echo "$ECHO_PREFIX ${RED}ERROR: not all components could be stopped.${RESET}"
+	echo "Look for possible fixes here: ${CYAN}http://gearbox.github.io/errors/W019/${RESET}"
+	#return $RETURN
+}
+
+function error_cni()
+{
+	#RETURN="$?"
+	echo "$ECHO_PREFIX ${YELLOW}Warning component not installed: ${CYAN}${IMAGE}${RESET}"
+	echo "Look for possible fixes here: ${CYAN}http://gearbox.github.io/errors/W020/${RESET}"
+	#return $RETURN
+}
+
+
+function readJSON()
+{
+	local JSON RETURN MERGED SERVICES TESTVERSION
+	JSON="$1"
+	MERGED=""
+
+	if [ "${JSON}" == "" ]
+	then
+		JSON="${BOX_PROJECT_FILE}"
+	fi
+
+	if [ ! -f "${JSON}" ]
+	then
+		cp "${BOX_RELEASE_JSON}" "${JSON}"
+	fi
+
+	if [[ ${JSON} -nt ${JSON}.lock ]]
+	then
+		jq -s '.[0] * .[1]' "${BOX_RELEASE_JSON}" "${JSON}" > ${JSON}.lock
+	fi
+
+	#IMAGES="$(jq --raw-output ".stack | .[]" ${JSON}.lock)"
+	#for IMAGE_NAME in ${IMAGES}
+	#do
+	#	MERGED="${MERGED} $(get_image_name $IMAGE_NAME)"
+	#done
+
+	# jq '.stack | to_entries[] | "[\(.key)]=\"\(.value)\""' -r ${JSON}.lock
+	declare -g -A STACK="($(jq '.stack | to_entries[] | "[\(.key)]=\"\(.value)\""' -r ${JSON}.lock))"
+	echo "{" > ${JSON}.lock
+	echo "\"stack\" : {" >> ${JSON}.lock
+	for i in ${!STACK[@]}
+	do
+		if [ "$i" != "lock" ]
+		then
+			TESTVERSION="$(get_image_name ${STACK[$i]})"
+			MERGED="${MERGED} ${TESTVERSION}"
+			if [ "${TESTVERSION}" != "${STACK[$i]}" ]
+			then
+					STACK[$i]=${TESTVERSION}
+			fi
+			echo "\"$i\": \"${STACK[$i]}\"," >> ${JSON}.lock
+		fi
+	done
+	echo "\"lock\": \"yes\"" >> ${JSON}.lock
+	echo "}" >> ${JSON}.lock
+	echo "}" >> ${JSON}.lock
+
+	# Remove duplicates.
+	MERGED="$(echo ${MERGED} | awk -v RS="[ \n]+" '!n[$0]++')"
+	IMAGES="${MERGED}"
+	# echo "${IMAGES}"
+	RETURN=$RETURN_OK
+	# RETURN=$RETURN_NO_JSON_FILE
+
+	return $RETURN
+}
+
+
+function component_info()
+{
+	local DOCKER IFS RETURN
+    IMAGE="$1"
+
+	if [ "${IMAGE}" == "" ]
+	then
+		return $RETURN_NO_IMAGE_NAME
+	fi
+
+	RETURN="$(docker image ls -q ${IMAGE})"
+	if [ "$RETURN" == "" ]
+	then
+		return $RETURN_NO_LOCAL_IMAGE
+	fi
+
+	DOCKER=$(docker inspect --format='{{index .Config.Labels "container.organization"}};{{index .Config.Labels "container.name"}};{{index .Config.Labels "container.version"}};{{index .Config.Labels "container.majorversion"}};{{index .Config.Labels "container.latest"}};{{index .Config.Labels "container.class"}};{{index .Config.Labels "container.network"}};{{index .Config.Labels "container.ports"}};{{index .Config.Labels "container.volumes"}};{{index .Config.Labels "container.restart"}};{{index .Config.Labels "container.args"}};{{index .Config.Labels "container.env"}}' ${IMAGE})
+	IFS=';' read -r -a state_array <<< "$DOCKER"
+
+	ORGANIZATION="${state_array[0]}"
+	IMAGE_NAME="${state_array[1]}"
+	IMAGE_VERSION="${state_array[2]}"
+	IMAGE_MAJORVERSION="${state_array[3]}"
+	IMAGE_LATEST="${state_array[4]}"
+	IMAGE_CLASS="${state_array[5]}"
+	IMAGE_NETWORK="${state_array[6]}"
+	IMAGE_PORTS="${state_array[7]}"
+	IMAGE_VOLUMES="${state_array[8]}"
+	IMAGE_RESTART="${state_array[9]}"
+	IMAGE_ARGS="${state_array[10]}"
+	IMAGE_ENV="${state_array[11]}"
+
+	if [ "$ORGANIZATION" == "" ]
+	then
+		return $RETURN_NO_IMAGE_JSON
+	fi
+
+	if [ "$ORGANIZATION" != "${BOX_ORGANIZATION}" ]
+	then
+		return $RETURN_INVALID_PROJECT
+	fi
+
+
+	CONTAINER_NAME="${IMAGE_NAME}-${IMAGE_VERSION}"
+	CONTAINER_ID=$(docker container ls -qaf name="${CONTAINER_NAME}")
+	if [ "$CONTAINER_ID" != "" ]
+	then
+		# DOCKER="$(docker inspect -f '{{.State.Running}};{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}};{{range .NetworkSettings.Networks}}{{(index .Aliases 0)}}{{end}}' $CONTAINER_NAME 2>/dev/null)"
+		DOCKER="$(docker inspect -f '{{.State.Running}};{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}};{{.Config.Hostname}}' $CONTAINER_NAME 2>/dev/null)"
+		IFS=';' read -r -a state_array <<< "$DOCKER"
+
+		CONTAINER_RUNNING="${state_array[0]}"
+		CONTAINER_IP="${state_array[1]}"
+		CONTAINER_HOSTNAME="${state_array[2]}"
+		RETURN="$RETURN_OK"
+	else
+		CONTAINER_RUNNING=""
+		CONTAINER_IP=""
+		CONTAINER_HOSTNAME=""
+		RETURN="$RETURN_NO_CONTAINER"
+	fi
+
+	return $RETURN
+}
+
+
+function is_component_in_repo()
+{
+	local RETURN IFS ORGANIZATION IMAGE_NAME IMAGE_VERSION IMAGE
+	IMAGE=$1
+
+	IFS='/:' read -r -a state_array <<< "${IMAGE}"
+	ORGANIZATION="${state_array[0]}"
+	IMAGE_NAME="${state_array[1]}"
+	IMAGE_VERSION="${state_array[2]}"
+
+	# wget -qO /dev/null https://hub.docker.com/v2/repositories/${BOX_ORGANIZATION}/${IMAGE_NAME}/tags/
+	if [ -f "${BOX_ROOT_ETC_DIR}/images/${IMAGE_NAME}.json" ]
+	then
+		jq --raw-output ".results | .[] | .name" "${BOX_ROOT_ETC_DIR}/images/${IMAGE_NAME}.json" | grep -q "^${IMAGE_VERSION}\$"
+		if [ "$?" == "0" ]
+		then
+			RETURN=$RETURN_OK
+		else
+			RETURN=$RETURN_NO_IMAGE_REPO
+		fi
+	else
+		RETURN=$RETURN_NO_IMAGE_REPO
+	fi
+
+	return $RETURN
+}
+
+
+function update_components()
+{
+	echo -n "$ECHO_PREFIX ${GREEN}Updating repository list${RESET}."
+	if [ ! -d "${BOX_ROOT_ETC_DIR}" ]
+	then
+		sudo mkdir -p "${BOX_ROOT_ETC_DIR}"
+	fi
+	if [ ! -d "${BOX_ROOT_ETC_DIR}/images" ]
+	then
+		sudo mkdir -p "${BOX_ROOT_ETC_DIR}/images"
+	fi
+
+	sudo wget -qNO "${BOX_ROOT_ETC_DIR}/repositories.json" "https://hub.docker.com/v2/repositories/${BOX_ORGANIZATION}/?page_size=256"
+	IMAGES="$(jq -r '.results|.[]|.name' "${BOX_ROOT_ETC_DIR}/repositories.json")"
+	for IMAGE_NAME in $IMAGES
+	do
+		echo -n "."
+		sudo wget -qNO "${BOX_ROOT_ETC_DIR}/images/${IMAGE_NAME}.json" "https://hub.docker.com/v2/repositories/${BOX_ORGANIZATION}/${IMAGE_NAME}/tags/?page_size=256"
+	done
+	echo " ${GREEN}OK${RESET}"
+}
+
+
+function available_components()
+{
+	local RETURN IMAGES IMAGE_NAME VERSIONS IMAGE_VERSION
+
+	echo "$ECHO_PREFIX ${GREEN}Available component downloads.${RESET}"
+	IMAGES="$(jq -r '.results|.[]|.name' "${BOX_ROOT_ETC_DIR}/repositories.json" | sort -u)"
+	for IMAGE_NAME in ${IMAGES}
+	do
+		if [ -f "${BOX_ROOT_ETC_DIR}/images/${IMAGE_NAME}.json" ]
+		then
+			VERSIONS="$(jq -r '.results|.[]|.name' "${BOX_ROOT_ETC_DIR}/images/${IMAGE_NAME}.json" | sort -u)"
+			for IMAGE_VERSION in ${VERSIONS}
+			do
+				if [ "${IMAGE_VERSION}" != "latest" ]
+				then
+					echo "${BOX_ORGANIZATION}/${IMAGE_NAME}:${IMAGE_VERSION}"
+				fi
+			done
+		fi
+	done
+}
+
+
+function reallyclean()
+{
+	local RETURN TEMPFILE IMAGE RESPONSE
+	IMAGE=$1
+
+	echo "${GREEN}Are you really sure? ${RED}Warning: this will remove ALL images and ALL data.${GREEN}"
+	echo -n "Respond with ${YELLOW}Yes please${RESET}: "
+	read RESPONSE
+	if [ "$RESPONSE" == "Yes please" ]
+	then
+		echo -n "Please respond again with ${YELLOW}Yes please${RESET}: "
+		read RESPONSE
+		if [ "$RESPONSE" == "Yes please" ]
+		then
+			echo "$ECHO_PREFIX ${GREEN}Shutting down all Gearbox components.${RESET}"
+			$0 container shutdown
+			echo "$ECHO_PREFIX ${GREEN}Removing all Gearbox components.${RESET}"
+			docker container ls -qaf "label=container.organization=${BOX_ORGANIZATION}" | xargs -r docker container rm
+			echo "$ECHO_PREFIX ${GREEN}Removing all Gearbox component downloads.${RESET}"
+			docker image ls -qaf "label=container.organization=${BOX_ORGANIZATION}" | xargs -r docker image rm
+		fi
+	else
+		echo "$ECHO_PREFIX ${GREEN}Doing nothing.${RESET}"
+		echo "$ECHO_PREFIX If you want to really cleanup, then respond with ${YELLOW}Yes please${RESET}."
+	fi
+
+	return $RETURN_OK
+}
+
+
+function component_image_pull()
+{
+	local RETURN TEMPFILE IMAGE
+	IMAGE=$1
+
+	is_component_in_repo $IMAGE
+	RETURN="$?"
+	case $RETURN in
+		$RETURN_OK)
+			echo -n "$ECHO_PREFIX ${GREEN}Downloading component: ${CYAN}${IMAGE}${RESET} ... "
+			TEMPFILE="$(mktemp /tmp/box-container.XXX)"
+			docker pull $IMAGE >& $TEMPFILE
+
+			if [ "$?" == "1" ]
+			then
+				RETURN="$RETURN_NO_IMAGE_REPO"
+				echo "${RED}NOT OK${RESET}"
+				error_dni
+				cat $TEMPFILE
+			else
+				RETURN="$RETURN_OK"
+				echo "${GREEN}OK${RESET}"
+			fi
+
+			rm -f $TEMPFILE
+			;;
+
+		$RETURN_NO_IMAGE_REPO)
+			echo "$ECHO_PREFIX ${GREEN}Downloading component: ${CYAN}${IMAGE}${RESET} ... ${RED}no component found.${RESET}"
+			echo "$ECHO_PREFIX ${GREEN}Try updating the component catalog: ${CYAN}box comp update${RESET}"
+			;;
+	esac
+
+	return $RETURN
+}
+
+
+function component_shell()
+{
+	local RETURN TEMPFILE IMAGE
+	IMAGE=$1
+	shift
+
+	component_info $IMAGE
+	RETURN="$?"
+	case $RETURN in
+		$RETURN_OK)
+			if [ "$CONTAINER_HOSTNAME" == "" ]
+			then
+				error_cni
+			else
+				# echo "$ECHO_PREFIX ${GREEN}Shell to component: ${CYAN}${IMAGE}${RESET}" 1>&2
+				if [ -t 0 ]
+				then
+					# TTY allocated.
+					docker run --name ${CONTAINER_NAME}-shell --rm -i -t ${IMAGE_NETWORK} ${IMAGE_ARGS} ${IMAGE_VOLUMES} --env-file ${BOX_ETC_DIR}/container.env ${IMAGE} "$@"
+				else
+					# TTY not allocated.
+					docker run --name ${CONTAINER_NAME}-exec  --rm -i    ${IMAGE_NETWORK} ${IMAGE_ARGS} ${IMAGE_VOLUMES} --env-file ${BOX_ETC_DIR}/container.env ${IMAGE} "$@"
+				fi
+
+				#if [ "$?" == "1" ]
+				#then
+				#	error_ccbi
+				#fi
+			fi
+			;;
+
+		$RETURN_NO_LOCAL_IMAGE|$RETURN_NO_CONTAINER)
+			component_install $IMAGE
+			RETURN="$?"
+			if [ "$RETURN" == "$RETURN_OK" ]
+			then
+				component_shell $IMAGE "$@"
+			fi
+			;;
+
+		$RETURN_NO_IMAGE_JSON)
+			error_dnc
+			;;
+
+		$RETURN_INVALID_PROJECT)
+			error_pns
+			;;
+	esac
+
+	return $RETURN
+}
+
+
+function component_exec()
+{
+	local RETURN TEMPFILE IMAGE
+	IMAGE=$1
+	shift
+
+	component_info $IMAGE
+	RETURN="$?"
+	case $RETURN in
+		$RETURN_OK)
+			if [ "$CONTAINER_HOSTNAME" == "" ]
+			then
+				error_cni
+			else
+				# echo "$ECHO_PREFIX ${GREEN}Shell to component: ${CYAN}${IMAGE}${RESET}" 1>&2
+				docker run --name ${CONTAINER_NAME}-exec --rm ${IMAGE_NETWORK} ${IMAGE_ARGS} ${IMAGE_VOLUMES} --env-file ${BOX_ETC_DIR}/container.env ${IMAGE} "$@"
+				#if [ "$?" == "1" ]
+				#then
+				#	error_ccbi
+				#fi
+			fi
+			;;
+
+		$RETURN_NO_LOCAL_IMAGE|$RETURN_NO_CONTAINER)
+			component_provision $IMAGE 
+			;;
+
+		$RETURN_NO_IMAGE_JSON)
+			error_dnc
+			;;
+
+		$RETURN_INVALID_PROJECT)
+			error_pns
+			;;
+	esac
+
+	return $RETURN
+}
+
+
+function component_create_container()
+{
+	local RETURN TEMPFILE IMAGE
+	IMAGE=$1
+
+	component_info $IMAGE
+	RETURN="$?"
+	case $RETURN in
+		#$RETURN_OK)
+		$RETURN_NO_CONTAINER)
+			if [ "$CONTAINER_HOSTNAME" == "" ]
+			then
+				echo -n "$ECHO_PREFIX ${GREEN}Creating component: ${CYAN}${IMAGE}${RESET} ... "
+				TEMPFILE="$(mktemp /tmp/box-container.XXX)"
+
+				# To be fixed in 1.0.1
+				docker create --name ${CONTAINER_NAME} ${IMAGE_RESTART} ${IMAGE_NETWORK} ${IMAGE_PORTS} ${IMAGE_ARGS} ${IMAGE_VOLUMES} --env-file ${BOX_ETC_DIR}/container.env -v "${BOX_PROJECTS_ROOT}/${DEFAULT_PROJECT}":/project -v ${BOX_PROJECTS_ROOT}:/projects ${IMAGE} &> $TEMPFILE
+
+				if [ "$?" == "1" ]
+				then
+					echo "${RED}NOT OK${RESET}"
+					error_ccbi
+					cat $TEMPFILE
+					RETURN="$RETURN_CANT_INSTALL_IMAGE"
+				else
+					echo "${GREEN}OK${RESET}"
+					RETURN="$RETURN_OK"
+				fi
+
+				rm -f $TEMPFILE
+			fi
+			;;
+#
+#		$RETURN_NO_LOCAL_IMAGE)
+#			error_nfl
+#			;;
+
+		$RETURN_NO_IMAGE_JSON)
+			error_dnc
+			;;
+
+		$RETURN_INVALID_PROJECT)
+			error_pns
+			;;
+	esac
+
+	return $RETURN
+}
+
+
+function component_remove()
+{
+	local RETURN TEMPFILE IMAGE
+	IMAGE=$1
+
+	component_info $IMAGE
+	RETURN="$?"
+	case $RETURN in
+		$RETURN_OK)
+			echo -n "$ECHO_PREFIX ${GREEN}Removing component: ${CYAN}${IMAGE}${RESET} ... "
+			TEMPFILE="$(mktemp /tmp/box-container.XXX)"
+			docker container rm -f -v ${CONTAINER_NAME} >& $TEMPFILE
+
+			if [ "$?" == "1" ]
+			then
+				echo "${RED}NOT OK${RESET}"
+				error_ccbr
+				cat $TEMPFILE
+				RETURN="$RETURN_CANT_REMOVE_CONTAINER"
+			else
+				echo "${GREEN}OK${RESET}"
+				RETURN="$RETURN_OK"
+			fi
+
+			rm -f $TEMPFILE
+			;;
+
+		$RETURN_NO_LOCAL_IMAGE)
+			echo "$ECHO_PREFIX ${GREEN}Removing component: ${CYAN}${IMAGE}${RESET} ... ${GREEN}no component installed.${RESET}"
+			;;
+
+		$RETURN_NO_IMAGE_JSON)
+			error_dnc
+			;;
+
+		$RETURN_INVALID_PROJECT)
+			error_pns
+			;;
+	esac
+
+	return $RETURN
+}
+
+
+function image_remove()
+{
+	local RETURN TEMPFILE IMAGE
+	IMAGE=$1
+
+	component_info $IMAGE
+	RETURN="$?"
+	case $RETURN in
+		$RETURN_OK|$RETURN_ALREADY_STOPPED|$RETURN_NO_CONTAINER)
+			echo -n "$ECHO_PREFIX ${GREEN}Removing component download: ${CYAN}${IMAGE}${RESET} ... "
+			TEMPFILE="$(mktemp /tmp/box-container.XXX)"
+			docker image rm -f ${IMAGE} >& $TEMPFILE
+
+			if [ "$?" == "1" ]
+			then
+				echo "${RED}NOT OK${RESET}"
+				error_ccbr
+				cat $TEMPFILE
+				RETURN="$RETURN_CANT_REMOVE_IMAGE"
+			else
+				echo "${GREEN}OK${RESET}"
+				RETURN="$RETURN_OK"
+			fi
+
+			rm -f $TEMPFILE
+			;;
+
+		$RETURN_NO_LOCAL_IMAGE)
+			error_nfl
+			;;
+
+		$RETURN_NO_IMAGE_JSON)
+			error_dnc
+			;;
+
+		$RETURN_INVALID_PROJECT)
+			error_pns
+			;;
+	esac
+
+	return $RETURN
+}
+
+
+function component_start()
+{
+	local RETURN TEMPFILE IMAGE
+	IMAGE=$1
+
+	component_info $IMAGE
+	RETURN="$?"
+
+	case $RETURN in
+		$RETURN_OK)
+			if [ "$CONTAINER_RUNNING" != "true" ]
+			then
+				echo -n "$ECHO_PREFIX ${GREEN}Starting component: ${CYAN}${IMAGE}${RESET} ... "
+				TEMPFILE="$(mktemp /tmp/box-container.XXX)"
+				docker start ${CONTAINER_NAME} >& $TEMPFILE
+
+				if [ "$?" == "1" ]
+				then
+					echo "${RED}NOT OK${RESET}"
+					error_ccbs
+					cat $TEMPFILE
+				else
+					echo "${GREEN}OK${RESET}"
+
+					# A bit of a hack - this really shouldn't be here.
+					if [[ "${IMAGE_NAME}" =~ ^(mysql|mariadb)$ ]]
+					then
+						if [[ -f "${BOX_SQL_DIR}/provision.sql" && ! -e "${BOX_SQL_PROVISION_LOCK}" ]]
+						then
+							# We need to be able to query the DB and see when it's ready for connections.
+							# In the mean time sleep for 10.
+							sleep 10
+							box database import provision.sql --no-backup
+							touch "${BOX_SQL_PROVISION_LOCK}"
+						fi
+					fi
+				fi
+
+				rm -f $TEMPFILE
+			else
+				echo "$ECHO_PREFIX ${GREEN}Starting component: ${CYAN}${IMAGE}${RESET} ... ${GREEN}already running.${RESET}"
+			fi
+			;;
+
+		$RETURN_NO_LOCAL_IMAGE|$RETURN_NO_CONTAINER)
+			component_provision $IMAGE 
+			;;
+
+		$RETURN_NO_IMAGE_JSON)
+			error_dnc
+			;;
+
+		$RETURN_INVALID_PROJECT)
+			error_pns
+			;;
+	esac
+
+	return $RETURN
+}
+
+
+function component_stop()
+{
+	local RETURN TEMPFILE IMAGE
+	IMAGE=$1
+
+	component_info $IMAGE
+	RETURN="$?"
+	case $RETURN in
+		$RETURN_OK)
+			if [ "$CONTAINER_RUNNING" == "true" ]
+			then
+				echo -n "$ECHO_PREFIX ${GREEN}Stopping component: ${CYAN}${IMAGE}${RESET} ... "
+				TEMPFILE="$(mktemp /tmp/box-container.XXX)"
+				docker stop ${CONTAINER_NAME} >& $TEMPFILE
+
+				if [ "$?" == "1" ]
+				then
+					echo "${RED}NOT OK${RESET}"
+					error_ccbd
+					cat $TEMPFILE
+				else
+					echo "${GREEN}OK${RESET}"
+				fi
+				rm -f $TEMPFILE
+
+				RETURN="$RETURN_OK"
+			else
+				echo "$ECHO_PREFIX ${GREEN}Stopping component: ${CYAN}${IMAGE}${RESET} ... ${GREEN}already stopped.${RESET}"
+				RETURN="$RETURN_ALREADY_STOPPED"
+			fi
+			;;
+
+		$RETURN_NO_IMAGE_JSON)
+			error_dnc
+			;;
+
+		$RETURN_NO_LOCAL_IMAGE)
+			echo "$ECHO_PREFIX ${GREEN}Stopping component: ${CYAN}${IMAGE}${RESET} ... ${GREEN}no image present.${RESET}"
+			# error_nfl
+			;;
+
+		$RETURN_INVALID_PROJECT)
+			error_pns
+			;;
+	esac
+
+	return $RETURN
+}
+
+
+function shutdown()
+{
+	local RETURN TEMPFILE IMAGE
+	IMAGE=$1
+
+	echo "$ECHO_PREFIX ${GREEN}Stopping all Gearbox components. ${RESET} ... "
+	TEMPFILE="$(mktemp /tmp/box-container.XXX)"
+	docker container ls -qaf "label=container.organization=${BOX_ORGANIZATION}" | xargs docker stop &> $TEMPFILE
+	if [ "$?" == "1" ]
+	then
+		echo "${RED}NOT OK${RESET}"
+		error_csac
+		cat $TEMPFILE
+		return 1
+	fi
+
+	rm -f $TEMPFILE
+
+	# Remove lock file.
+	rm -f "${BOX_PROJECT_FILE}.lock"
+
+	return $RETURN_OK
+}
+
+
+function component_list()
+{
+	local RETURN TEMPFILE IMAGE
+	IMAGE=$1
+
+	component_info $IMAGE
+	RETURN="$?"
+	case $RETURN in
+		$RETURN_OK)
+			echo "$ECHO_PREFIX ${GREEN}Downloaded components: ${CYAN}${IMAGE}${RESET}"
+			echo "Image			Size"
+			docker image ls --format "{{.Repository}}:{{.Tag}}  \t{{.Size}}" $IMAGE
+			echo ""
+			echo "$ECHO_PREFIX ${GREEN}Installed components: ${CYAN}${IMAGE}${RESET}"
+			echo "Container		Size			Status"
+			docker container ls -af "name=${CONTAINER_NAME}" --format "{{.Image}}  \t{{.Size}}\t{{.Status}}"
+			;;
+
+		$RETURN_NO_IMAGE_NAME)
+			echo "$ECHO_PREFIX ${GREEN}Downloaded components: ${CYAN}${IMAGE}${RESET}"
+			echo "Image			Size"
+			docker image ls -af "label=container.organization=${BOX_ORGANIZATION}" --format "{{.Repository}}:{{.Tag}}  \t{{.Size}}"
+			echo ""
+			echo "$ECHO_PREFIX ${GREEN}Stopped components: ${CYAN}${IMAGE}${RESET}"
+			echo "Container		Size			Status"
+			docker container ls -af "label=container.organization=${BOX_ORGANIZATION}" -f "status=created" -f "status=exited" --format "{{.Image}}  \t{{.Size}}\t{{.Status}}"
+			echo ""
+			echo "$ECHO_PREFIX ${GREEN}Running components: ${CYAN}${IMAGE}${RESET}"
+			echo "Container		Size			Status"
+			docker container ls -af "label=container.organization=${BOX_ORGANIZATION}" -f "status=running" --format "{{.Image}}  \t{{.Size}}\t{{.Status}}"
+			;;
+
+		$RETURN_NO_LOCAL_IMAGE)
+			error_nfl
+			;;
+
+		$RETURN_NO_IMAGE_JSON)
+			error_dnc
+			;;
+
+		$RETURN_INVALID_PROJECT)
+			error_pns
+			;;
+	esac
+
+	return $RETURN
+}
+
+
+function component_inspect()
+{
+	local RETURN TEMPFILE IMAGE
+	IMAGE=$1
+
+	component_info $IMAGE
+	RETURN="$?"
+	case $RETURN in
+		$RETURN_OK)
+			echo "$ECHO_PREFIX ${GREEN}Downloaded component: ${CYAN}${IMAGE}${RESET}"
+			docker image inspect $IMAGE
+			echo ""
+			echo "$ECHO_PREFIX ${GREEN}Installed component: ${CYAN}${IMAGE}${RESET}"
+			docker container inspect ${CONTAINER_NAME}
+			;;
+
+		$RETURN_NO_LOCAL_IMAGE)
+			error_nfl
+			;;
+
+		$RETURN_NO_IMAGE_JSON)
+			error_dnc
+			;;
+
+		$RETURN_INVALID_PROJECT)
+			error_pns
+			;;
+	esac
+
+	return $RETURN
+}
+
+
+function component_log()
+{
+	local RETURN TEMPFILE IMAGE
+	IMAGE=$1
+
+	component_info $IMAGE
+	RETURN="$?"
+	case $RETURN in
+		$RETURN_OK)
+			echo "$ECHO_PREFIX ${GREEN}Logs for component: ${CYAN}${IMAGE}${RESET}"
+			docker container logs ${CONTAINER_NAME}
+			;;
+
+		$RETURN_NO_LOCAL_IMAGE)
+			error_nfl
+			;;
+
+		$RETURN_NO_IMAGE_JSON)
+			error_dnc
+			;;
+
+		$RETURN_INVALID_PROJECT)
+			error_pns
+			;;
+	esac
+
+	return $RETURN
+}
+
+
+function component_install()
+{
+	local RETURN TEMPFILE IMAGE
+	IMAGE=$1
+
+	echo -n "$ECHO_PREFIX ${GREEN}Installing component: ${CYAN}${IMAGE}${RESET} ... "
+	component_info $IMAGE
+	RETURN="$?"
+	case $RETURN in
+		$RETURN_OK)
+			echo "${GREEN}already installed.${RESET}"
+			;;
+
+		$RETURN_NO_CONTAINER)
+			echo "${GREEN}OK.${RESET}"
+			component_create_container $IMAGE
+			RETURN="$?"
+			;;
+
+		$RETURN_NO_LOCAL_IMAGE)
+			echo "${GREEN}requires download.${RESET}"
+			component_image_pull $IMAGE
+			RETURN="$?"
+			if [ "$RETURN" != "$RETURN_OK" ]
+			then
+				component_create_container $IMAGE
+				RETURN="$?"
+			fi
+			;;
+	esac
+
+	return $RETURN
+}
+
+
+function component_provision()
+{
+	local RETURN TEMPFILE IMAGE
+	IMAGE=$1
+
+	component_install $IMAGE
+	RETURN="$?"
+	case $RETURN in
+		$RETURN_OK)
+			component_start $IMAGE
+			RETURN="$?"
+			;;
+	esac
+
+	return $RETURN
+}
+
+
+# Displays a fancy spinner while something is happening.
+show_spinner()
+{
+	local PID
+	local -r delay='0.75'
+	local spinstr='\|/-'
+	local temp
+
+	set +m
+	("$@" || false) &
+	PID="$!"
+
+	while [ -d /proc/$PID ]
+	do
+		temp="${spinstr#?}"
+		printf "\b%c" "${spinstr}"
+		spinstr=${temp}${spinstr%"${temp}"}
+		sleep "${delay}"
+	done
+
+	printf "\b"
+	set -m
+}
+
+
+# Displays a fancy spinner while something is happening.
+show_dots()
+{
+	local PID TEMPFILE
+	local -r delay='0.75'
+
+	set +m
+	set +b
+	($@) & 2>/dev/null
+	PID="$!"
+
+	while [ -d /proc/$PID ]
+	do
+		printf "."
+		sleep "${delay}"
+	done
+	set -b
+	set -m
+}
+
+
+#
+# Returns a Docker container name from either a container name or an image name
+#
+#  @param string $image_name - Name of image or container.
+#  @param int $max_version - Allows specifying a max version to return so testing can
+#                            continue work even if a newer version is released later.
+#
+#   get_image_name gearbox/mysql:5.5.60 60 => mysql-5.5.60
+#   get_image_name mysql:5.5.60       60 => mysql-5.5.60
+#   get_image_name mysql-5.5.60       60 => mysql-5.5.60
+#   get_image_name mysql-5.5          60 => mysql-5.5.60
+#
+#  @TODO Add ability to also accept a container ID or image ID
+#
+function get_container_name() {
+    local name="$1"
+    local max_version="$2"
+    if [ "" == "${max_version}" ] ; then
+        max_version=999999
+    fi
+    local org="${name%%/*}"
+    if [ "${name}" == "${org}" ] ; then
+        container_name="${name}"
+    else
+        container_name="${name#*/}"
+    fi
+    container_name="${container_name//\-/\:}"
+    local repo="${container_name%:*}"
+    repo="${repo//\:/\-}"
+    image_name="$(get_image_name "${name}")"
+    local version="${image_name##*:}"
+    echo "${repo}-${version}"
+}
+
+
+#
+# Returns a Docker image name from either a container name or an image name
+#
+#  @param string $image_name - Name of image or container.
+#  @param int $max_version - Allows specifying a max version to return so testing can
+#                            continue work even if a newer version is released later.
+#
+#   get_image_name gearbox/mysql:5.5.60 60 => gearbox/mysql:5.5.60
+#   get_image_name mysql:5.5.60       60 => gearbox/mysql:5.5.60
+#   get_image_name mysql-5.5.60       60 => gearbox/mysql:5.5.60
+#   get_image_name mysql-5.5          60 => gearbox/mysql:5.5.60
+#
+#  @TODO Add ability to also accept a container ID or image ID
+#
+function get_image_name() {
+    local name="$1"
+    local max_version="$2"
+    if [ "" == "${max_version}" ] ; then
+        max_version=999999
+    fi
+    local org="${name%%/*}"
+    local image_name="${name}"
+    if [ "${name}" == "${org}" ] ; then
+        org="gearbox"
+    else
+        local image_name="${name#*/}"
+    fi
+    image_name="${image_name//\-/\:}"
+    local version="${image_name##*:}"
+    local length=$(( ${#image_name} - ${#version} - 1 ))
+    local repo="${image_name:0:$length}"
+    repo="${repo/\:/\-}"
+    version=$(get_latest_patch_version "${org}/${repo}:${version}" ${max_version})
+    echo "${org}/${repo}:${version}"
+}
+
+
+#
+#  Returns the latest patched version for a given {major}.{minor} version
+#
+#  @param string $image_name - Name of image. Does not support passing container name
+#  @param int $max_version - Allows specifying a max version to return so testing can
+#                            continue work even if a newer version is released later.
+#
+#       get_latest_patch_version gearbox/mysql:5.5 60 => 5.5.60
+#
+#  @TODO Add ability to also accept an image ID
+#
+function get_latest_patch_version() {
+    local image_name="$1"
+    local max_version="$2"
+    if [ "" == "${max_version}" ] ; then
+        max_version=999999
+    fi
+    local org="${image_name%%/*}"
+    local repo="${image_name##*/}"
+    repo="${repo%%:*}"
+    local version="${image_name##*:}"
+    local dots="${version//[^.]}"
+    if [ 0 -eq ${#dots} ] ; then
+        echo "The function get_full_version() was passed [$1] but needs at least [{major}.{minor}] version numbers."
+        exit
+    fi
+    if [ 2 -lt ${#dots} ] ; then
+        echo "The function get_full_version() was passed [$1] which contains more than [{major}.{minor}.{patch}] version numbers."
+        exit
+    fi
+    if [ 1 -eq ${#dots} ] ; then
+        # local repo_url="https://registry.hub.docker.com/v1/repositories/${org}/${repo}/tags"
+        # local repo_json="$(curl --silent --fail --max-time 3 --stderr /dev/null "${repo_url}")"
+        # local versions=$(echo "${repo_json}" | jq --raw-output ".[] | .name" | grep "${version}")
+        local versions=$(jq --raw-output ".results | .[] | .name" "${BOX_ROOT_ETC_DIR}/images/${repo}.json" | grep "^${version}")
+
+        if [ "" == "${versions}" ] ; then
+            version=""
+        else
+            local max_patch=0
+            for test in $versions ; do
+                dots="${test//[^.]}"
+                if [ "2" == "${#dots}" ] ; then
+                    if [ "${test}" == "${version}" ] ; then
+                        break;
+                    fi
+                    local patch="${test##*.}"
+                    if [ $max_patch -ge $max_version ] ; then
+                        continue
+                    fi
+                    if [ $max_patch -lt $patch ] ; then
+                        max_patch=$patch
+                    fi
+                fi
+            done;
+            version="${version}.${max_patch}"
+        fi
+    fi
+    echo "${version}"
+}
+
+

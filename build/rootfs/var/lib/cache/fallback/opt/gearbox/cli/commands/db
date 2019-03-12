@@ -1,0 +1,7 @@
+#!/bin/bash
+#
+# `box db` is an alias for `box database` command
+#
+declare="${BOX_COMMANDS_DIR:=}"
+
+source "${BOX_COMMANDS_DIR}/database"

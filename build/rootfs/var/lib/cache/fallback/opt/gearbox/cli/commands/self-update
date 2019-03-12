@@ -1,0 +1,69 @@
+#!/bin/bash
+#
+# Update Gearbox scripts.
+#
+# This script will handle having itself updated by creating a secondary script that contains
+# all the git commands.
+# This will be exec at the very end ensuring itself wont be changed during the update.
+
+
+# Don't reference common variables as they may not exist.
+BOX_SCRIPTS_REPO="https://github.com/gearboxworks/box-scripts"
+BOX_BASE_DIR="/opt/gearbox"
+DEFAULT_VERSION="master"
+
+
+# Determine version to run.
+if [ "$1" == "" ]
+then
+	VERSION="$(cat "${BOX_BASE_DIR}/version")"
+	if [ "" == "$DEFAULT_VERSION" ]
+	then
+		VERSION="${DEFAULT_VERSION}"
+	fi
+else
+	VERSION="$1"
+fi
+
+
+################################################################################
+# Pull from GitHub.
+if [ ! -d "${BOX_BASE_DIR}" ]
+then
+	cat <<EOF > /tmp/self-update.$$
+echo "# Gearbox: Initializing ${BOX_BASE_DIR} with version ${VERSION}"
+sudo git clone -q "${BOX_SCRIPTS_REPO}" "${BOX_BASE_DIR}" > /dev/null
+
+EOF
+fi
+
+
+cat <<EOF >> /tmp/self-update.$$
+cd "${BOX_BASE_DIR}"
+echo -n "# Gearbox: Updating ${BOX_BASE_DIR} with version ${VERSION} ... "
+# Fetch the latest tags/branches.
+git fetch -q --all
+# Reset branch - force local changes to be removed.
+git reset -q --hard "origin/${VERSION}" 2>/dev/null
+# Find any locally updated and tracked files - force overwrite.
+git diff --name-only | xargs git checkout -q
+# Add any locally updated and non-tracked files to the cache.
+git add -A .
+# Do a pull
+git pull -q
+# Finally checkout the branch/tag.
+git checkout -q "${VERSION}" 2>/dev/null
+git log -1 --format=%cd --date=unix > ${BOX_BASE_DIR}/last-commit-epoch
+git log -1 --format=%cd > ${BOX_BASE_DIR}/last-commit-date
+echo "Done"
+
+echo -n "# Gearbox: Fixing links ... "
+/opt/gearbox/bin/box provision fix
+echo "Done"
+
+rm /tmp/self-update.$$
+EOF
+
+
+chmod a+x /tmp/self-update.$$
+exec sudo /tmp/self-update.$$

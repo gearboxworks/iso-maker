@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+
+declare="${BOX_COMMANDS_DIR:=}"
+
+if [ -f "$1" ]; then
+    name=$(jq -r ".name" ${1})
+    containername=$(jq -r ".containername" ${1})
+    options=$(jq -r ".options" ${1})
+    container=$(jq -r ".download" ${1})
+    version=$(jq -r ".version" ${1})
+    type=$(jq -r ".type" ${1})
+    subtype=${type#*\/}
+
+    case ${subtype} in
+     webserver)
+       source "${BOX_COMMANDS_DIR}/set-webserver" nginx
+       ;;
+     database)
+       source "${BOX_COMMANDS_DIR}/set-database" mysql
+       ;;
+     processvm)
+       source "${BOX_COMMANDS_DIR}/set-processvm" php7.0
+       ;;
+     kvstore)
+       source "${BOX_COMMANDS_DIR}/set-kvstore" redis
+       ;;
+    esac
+
+    # Replace spaces in name with _
+    containername=${name// /_}
+    # Convert to lower case
+    containername=${containername,,}_${version//./_}
+
+    echo "Removing ${containername} container..."
+    docker rm ${containername} 2>&1 > /dev/null
+    echo "Removing ${container}:${version:-latest} Docker image..."
+    docker rmi ${container}:${version:-latest} 2>&1 > /dev/null
+
+    for command in "${1%\/*}/commands"/*
+    do
+      file=${BOX_COMMANDS_DIR}/${command##*\/}
+      if [ -f ${file} ]; then
+        sudo rm ${file}
+      fi
+    done
+fi

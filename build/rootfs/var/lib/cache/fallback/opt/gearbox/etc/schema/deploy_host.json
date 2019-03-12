@@ -1,0 +1,12 @@
+{
+	"@schema_type": "deploy_host",
+	"site_name": "string",
+	"site_ud": "string",
+	"credentials": "object",
+	"method": "enum: git-push",
+	"name": "string",
+	"label": "string",
+	"branch": "string",
+	"after": "string",
+	"repository": "repository"
+}

@@ -1,0 +1,9 @@
+{
+    "interface": "lxmp/dbadmin",
+    "description": "A PHP-based UI for managing a MySQL or clone database server on a LXMP stack, such as Adminer or phpMyAdmin",
+    "network": "box",
+    "restart": "no",
+    "ports": [
+        { "host": 8081, "container": 8080 }
+    ]
+}

@@ -1,0 +1,14 @@
+################################################################################
+#!/bin/bash
+
+
+source /opt/gearbox/cli/includes/functions
+
+# Creates IMAGES and STACK env variables.
+readJSON
+
+WPCLI="${STACK[wordpress/cliapp]}"
+
+# echo "box container shell ${WPCLI} $@"
+box container shell ${WPCLI} "$@"
+

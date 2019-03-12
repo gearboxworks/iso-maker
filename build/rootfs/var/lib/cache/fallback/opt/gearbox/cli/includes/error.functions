@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+
+declare="${RED:=}"
+declare="${GREEN:=}"
+declare="${RESET:=}"
+declare="${DEPLOY_LOG:=}"
+
+#
+# ERROR NUMBER CAN BE 255 MAX
+#
+
+export BOX_ERR_NODEPLOYNUM=101
+export BOX_ERR_NODEPLOYTAG=102
+export BOX_ERR_NODEPLOYFILE=103
+
+export BOX_ERR_GITADDFAIL=111
+export BOX_ERR_GITCOMMITFAIL=112
+export BOX_ERR_GITPULLFAIL=113
+export BOX_ERR_GITPUSHFAIL=114
+export BOX_ERR_GITTAGSPUSHFAIL=115
+export BOX_ERR_GITFETCHFAIL=116
+export BOX_ERR_GITTAGDELETEFAIL=117
+export BOX_ERR_GITTAGREMOTEDELETEFAIL=118
+export BOX_ERR_GITSHOWREFFAIL=119
+export BOX_ERR_GITLOGFAIL=120
+export BOX_ERR_COMMITMSGFAIL=121
+
+export BOX_ERR_GITPULLNOTNEEDED=151
+export BOX_ERR_GITPULLNEEDED=152
+export BOX_ERR_GITPUSHNEEDED=153
+export BOX_ERR_GITDIVERGED=154
+
+function git_error_message() {
+    local result="$1"
+    local filename="$2"
+    local extra="$3"
+    trace $LINENO "Result: ${result}, Filename: ${filename}, Extra: ${extra}"
+    case $result in
+        0)
+            trace $LINENO
+            return 0
+            ;;
+        $BOX_ERR_GITADDFAIL)
+            trace $LINENO
+            message="${RED}Could not add ${GREEN}${filename}${RED} to local repo${RESET}."
+            ;;
+        $BOX_ERR_GITCOMMITFAIL)
+            trace $LINENO
+            message="${RED}Could not commit ${GREEN}${filename}${RED} to local repo${RESET}."
+            ;;
+        $BOX_ERR_GITPULLFAIL)
+            trace $LINENO
+            message="${RED}Error pulling commits from remote repo at origin${RESET}."
+            ;;
+        $BOX_ERR_GITPUSHFAIL)
+            trace $LINENO
+            message="${RED}Could not push commit of [${GREEN}${filename}${RED}] to remote repo at origin.  Is it in ${GREEN}SFTP${RED} mode${RESET}?"
+            ;;
+        $BOX_ERR_NODEPLOYNUM)
+            trace $LINENO
+            message="${RED}Deploy file ${GREEN}${filename}${RED} not written${RESET}."
+            ;;
+        $BOX_ERR_NODEPLOYTAG)
+            trace $LINENO
+            message="${RED}Could not tag deploy locally with ${GREEN}${extra}${RED}"
+            ;;
+        $BOX_ERR_GITTAGSPUSHFAIL)
+            trace $LINENO
+            message="${RED}Could not tag remotely at origin with ${GREEN}${extra}${RED}${RESET}."
+            ;;
+        $BOX_ERR_GITPUSHNEEDED)
+            trace $LINENO
+            message="${RED}Your local repository needs to be pushed${RESET}."
+            ;;
+        $BOX_ERR_GITDIVERGED)
+            trace $LINENO
+            message="${RED}Your local repository has diverged from your remote. You will need to resolve before you can deploy${RESET}."
+            ;;
+        $BOX_ERR_GITPUSHFAIL)
+            trace $LINENO
+            message="${RED}Could not push to remote repository. Is it in ${GREEN}SFTP${RED} mode${RESET}?"
+            ;;
+        $BOX_ERR_GITPULLNEEDED)
+            trace $LINENO
+            message="${RED}Could not push to remote repository because you need to ${GREEN}git pull${RED} first${RESET}."
+            ;;
+        $BOX_ERR_GITPUSHNEEDED)
+            trace $LINENO
+            message="${RED}Could not deploy because push to remote repository needed${RESET}."
+            ;;
+        $BOX_ERR_GITDIVERGED)
+            trace $LINENO
+            message="${RED}Could not push to remote repository because your local repository on your remote have diverged${RESET}."
+            ;;
+        $BOX_ERR_GITSHOWREFFAIL)
+            trace $LINENO
+            message="${RED}Could not get hash referenced for tag ${GREEN}${extra}${RESET}."
+            ;;
+        $BOX_ERR_GITLOGFAIL)
+            message="${RED}Could not get git log."
+            ;;
+        $BOX_ERR_COMMITMSGFAIL)
+            trace $LINENO
+            message="${RED}Could not get git log for deploy commit message from hash ${GREEN}${extra}${RESET}."
+            ;;
+        $BOX_ERR_NODEPLOYFILE)
+            trace $LINENO
+            message="${RED}Could not write DEPLOY file: ${GREEN}${filename}${RESET}"
+            ;;
+        *)
+            trace $LINENO
+            message="${RED}Unknown and unexpected error occurred: ${GREEN}${result}${RESET}."
+            ;;
+    esac
+    trace $LINENO "Message: ${message}"
+    echo "${message}"
+    return $result
+}
+

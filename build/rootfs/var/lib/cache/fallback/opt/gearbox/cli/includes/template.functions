@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+
+declare="${BOX_PROJECT_FILE:=}"
+
+function extract_selectors {
+    local json="$1"
+    keys="$(echo "${json}" | jq -r "keys_unsorted[]?")"
+    for key in $keys ; do
+        if [ "$" == "${key}" ] ; then
+            continue
+        fi
+        type="$(echo "${json}" | jq -r ".${key}|type")"
+        if [ "object" != "${type}" ] ; then
+            echo ".${key}"
+        else
+            value="$(echo "${json}" | jq -r ".${key}")"
+            children="$(extract_selectors "${value}")"
+            for child in $children ; do
+                echo ".${key}${child}"
+            done
+        fi
+    done
+}
+
+function apply_selectors() {
+    local json="$1"
+    local selectors="$2"
+    for selector in $selectors; do
+        if [[ "${json}" = *"{${selector}}"* ]] ; then
+            value="$(echo "${json}" | jq -r "${selector}")"
+            json="${json//\{${selector}\}/${value}}"
+        fi
+    done
+    echo "${json}"
+}
+
+function substitute_args() {
+    local source="$1"
+    local destination="$2"
+    local args="$3"
+    for arg in $args ; do
+        value="$(echo -e "${source}"| jq -r ".${arg}")"
+        if [ "" == "${value}" ] ; then
+            continue
+        fi
+        destination="${destination//\{\$${arg}\}/$value}"
+    done
+    echo "${destination}" | jq .
+}
+
+function get_provider_args() {
+    local provider="$1"
+    local filepath="$(get_provider_filepath "${provider}")"
+    local args="$(cat "${filepath}" | jq -r '.["$"][]?')"
+    echo -e "${args}"
+}
+

@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+echo
+echo "Setting CLI Process VM to $1..."
+
+if [ -f "/usr/bin/$1" ]; then
+    sudo rm /etc/alternatives/php
+    sudo ln -s "/usr/bin/$1" /etc/alternatives/php
+    error=0
+else
+    echo "The $1 executable does not exist."
+    error=1
+fi
+
+echo
+php -v
+
+return $error

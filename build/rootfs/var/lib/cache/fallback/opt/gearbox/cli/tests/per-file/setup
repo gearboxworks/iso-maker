@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+declare="${BOX_FUNCTIONS_FILE:=}"
+source "${BOX_FUNCTIONS_FILE}"

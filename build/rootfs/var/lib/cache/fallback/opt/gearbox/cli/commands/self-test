@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+#
+# Master test script.
+#
+
+declare="${BOX_FUNCTIONS_FILE=}"
+declare="${BOX_TESTS_DIR=}"
+declare="${YELLOW:=}"
+declare="${GREEN:=}"
+declare="${CYAN:=}"
+declare="${RESET:=}"
+
+source "${BOX_FUNCTIONS_FILE}"
+source "${BOX_TESTS_DIR}/includes/framework"
+
+self_test_help() {
+	cat <<EOF
+
+${YELLOW}Gearbox ${GREEN}CLI${RESET} ${GREEN}self-test${RESET} usage:
+
+box ${YELLOW}self-test${RESET}			- Show this help.
+
+box ${YELLOW}self-test ${GREEN}list${RESET}		- List all self-tests in ${BOX_TESTS_DIR}.
+box ${YELLOW}self-test ${GREEN}run${RESET}		- Run all self-tests in ${BOX_TESTS_DIR}.
+box ${YELLOW}self-test ${GREEN}run ${CYAN}[script]${RESET}	- Run a specific self-test.
+
+EOF
+}
+
+self_test_list() {
+    echo
+    for testFile in $(getTest_Files); do
+        echo "$(basename "${testFile}")"
+    done
+    echo
+}
+
+self_test_run() {
+    if [ "" == "$1" ]; then
+        tests_RunAll
+    else
+        tests_RunOne "$1"
+    fi
+}
+
+################################################################################
+
+CMD="$1"
+shift
+
+case $CMD in
+	'list'|'ls')
+		self_test_list
+		;;
+
+	''|'help')
+		self_test_help
+		;;
+
+	'run')
+		self_test_run "$1"
+		;;
+
+	*)
+		self_test_help
+		exit 1
+		;;
+esac
+

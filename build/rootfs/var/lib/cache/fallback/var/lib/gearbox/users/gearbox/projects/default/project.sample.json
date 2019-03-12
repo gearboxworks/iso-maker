@@ -1,0 +1,29 @@
+{
+	"readme": [
+		"This file allows you to configure GearBox.",
+		"Find available components by typing 'vagrant ssh' in terminal followed by 'box component available'.",
+		"You can delete this `readme` section assuming it is still valid JSON after deletion."
+	],
+	"hostname": "gearbox.local",
+	"aliases": [
+		"docs.{hostname}",
+		"www.{hostname}",
+		"adminer.{hostname}",
+		"mailhog.{hostname}"
+	],
+	"localdev": {
+		"name": "GearBox",
+		"version": "0.17.0",
+		"website": "gearboxworks.org/box"
+	},
+	"stack": {
+		"wordpress/dbserver": "gearbox/mysql:5.5.60",
+		"wordpress/webserver": "gearbox/nginx:1.14.0",
+		"wordpress/processvm": "gearbox/php:7.1.18",
+		"wordpress/cacheserver": "gearbox/redis:4.0.9",
+		"mkdocs/webserver": "gearbox/mkdocs:0.15.3",
+		"box/mailsender": "gearbox/mailhog:1.0.0",
+		"box/webproxy": "gearbox/proxy:1.14.0",
+		"box/sqladmin": "gearbox/adminer:4.6.2"
+	}
+}

@@ -1,0 +1,5 @@
+{
+    "interface": "wordpress/dbserver",
+    "extends": "lxmp/dbserver",
+    "description": "A MySQL or clone database server for a WordPress stack"
+}

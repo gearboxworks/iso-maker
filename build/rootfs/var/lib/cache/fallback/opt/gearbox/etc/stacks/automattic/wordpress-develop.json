@@ -1,0 +1,10 @@
+{
+    "stack": "automattic/wordpress-develop",
+    "extends":[ "box/wordpress" ],
+    "comments": "This is an example, and hopefully a placeholder for future use",
+    "description": "A local development solution for developing and testing WordPress core",
+    "includes": [
+        "automattic/whatever",
+        "to-be/determined"
+    ]
+}

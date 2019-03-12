@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+#
+# Kill a screen by its name
+#
+
+for screen in $(screen -d); do
+    pid=${screen%.$1}
+    if [ "${pid}" != "${screen}" ]; then
+        echo_if_not_quiet "$*" "=Killing ${pid}..."
+        kill "${pid}"
+    fi
+done

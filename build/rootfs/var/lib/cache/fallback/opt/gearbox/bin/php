@@ -1,0 +1,13 @@
+#!/bin/bash
+
+
+source /opt/gearbox/cli/includes/functions
+
+# Creates IMAGES and STACK env variables.
+readJSON
+
+PHP="${STACK[wordpress/processvm]}"
+
+# echo "box container shell ${PHP} php $@"
+box container shell ${PHP} php "$@"
+

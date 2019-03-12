@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+#
+# Example
+#
+#       box check-mounts
+#
+declare="${BOX_PROJECTS_ROOT:=}"
+declare="${BOX_PROJECT_PATH:=}"
+
+if [ -e ${BOX_PROJECTS_ROOT}/${BOX_PROJECT_PATH}/www/NOTMOUNTED ]
+then
+	tput setaf 1
+	cat ${BOX_PROJECTS_ROOT}/${BOX_PROJECT_PATH}/www/index.txt
+	tput sgr0
+	exit 1
+fi
+
+exit 0
+

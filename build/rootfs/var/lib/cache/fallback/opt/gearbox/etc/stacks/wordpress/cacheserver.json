@@ -1,0 +1,11 @@
+{
+    "interface": "wordpress/cacheserver",
+    "description": "A key-value server such as Memcached or Redis designed to work with WordPress. Should include a plugin.",
+    "network": "box",
+    "restart": "no",
+    "ports": [
+        { "host": 11211, "container": 11211 },
+        { "host": 6379, "container": 6379 }
+    ],
+    "question": "Memcached and Redis ports are different. How do we resolve that?  Only define host port in interface and define related port on container?"
+}

@@ -1,0 +1,9 @@
+{
+    "stack": "pressbox/lxmp",
+    "description": "Linux, a web server, a MySQL or clone and PHP",
+    "includes": [
+        "lxmp/dbserver",
+        "lxmp/webserver",
+        "lxmp/processvm"
+    ]
+}

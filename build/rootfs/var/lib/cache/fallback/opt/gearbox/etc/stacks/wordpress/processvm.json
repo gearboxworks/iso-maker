@@ -1,0 +1,5 @@
+{
+    "interface": "wordpress/processvm",
+    "extends": "lxmp/processvm",
+    "description": "A process VM for a WordPress stack, specifically PHP-FPM 5.2 or greater."
+}

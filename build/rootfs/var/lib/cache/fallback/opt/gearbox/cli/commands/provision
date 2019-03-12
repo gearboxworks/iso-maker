@@ -1,0 +1,88 @@
+#!/bin/bash
+#
+# Provisioning script that usually gets run after a `box self-update`
+#
+# This HAS to be run as root!
+
+declare="${ECHO_PREFIX:=}"
+declare="${GREEN:=}"
+declare="${YELLOW:=}"
+declare="${RESET:=}"
+declare="${BOX_BASE_DIR:=}"
+declare="${BOX_ETC_DIR:=}"
+declare="${BOX_USER:=}"
+declare="${BOX_USER_HOME:=}"
+declare="${BOX_USER_UID:=}"
+declare="${BOX_USER_GID:=}"
+declare="${BOX_PROJECTS_ROOT:=}"
+declare="${BOX_PROJECT_DIR:=}"
+declare="${BOX_PROJECT_FILE:=}"
+declare="${BOX_RELEASE_JSON:=}"
+declare="${BOX_SQL_DIR:=}"
+declare="${BOX_RELEASE_DIR:=}"
+declare="${BOX_FUNCTIONS_FILE:=}"
+
+if [ -z "${BOX_FUNCTIONS_FILE}" ]
+then
+	echo "BOX_FUNCTIONS_FILE not defined. Exiting."
+	exit 1
+fi
+
+if [ ! -f "${BOX_FUNCTIONS_FILE}" ]
+then
+	echo "$BOX_FUNCTIONS_FILE not found. Exiting."
+	exit 1
+fi
+
+source "${BOX_FUNCTIONS_FILE}"
+
+
+################################################################################
+# This is here for now, should be put somewhere else later.
+
+# Setup gearbox, if not there.
+#
+#  QUESTION:  Why ${BOX_USER}, ${USERID} AND ${BOX_USER_UID}?
+#
+#             Seems this is ripe for confusion. It confused me.
+#
+#
+USERID="$(id -u "${BOX_USER}")"
+if [ "${USERID}" == "" ]
+then
+	echo "Adding gearbox user"
+	sudo useradd -o -d "${BOX_USER_HOME}" -c "Gearbox user" -u "${BOX_USER_UID}" -g "${BOX_USER_GID}" -N -s /bin/bash "${BOX_USER}"
+fi
+if [ "${USERID}" != "${BOX_USER_UID}" ]
+then
+	echo "Updating gearbox user"
+	sudo usermod -o -d "${BOX_USER_HOME}" -c "Gearbox user" -u "${BOX_USER_UID}" -g "${BOX_USER_GID}" -s /bin/bash "${BOX_USER}"
+fi
+sudo usermod -aG adm,cdrom,docker "${BOX_USER}" 2>/dev/null
+sudo chmod 0775 "${BOX_USER_HOME}" 2>/dev/null
+sudo mkdir -pm 0700 "${BOX_USER_HOME}/.ssh" 2>/dev/null
+sudo chmod 0700 "${BOX_USER_HOME}/.ssh" 2>/dev/null
+sudo chmod 0600 "${BOX_USER_HOME}/.ssh/authorized_keys" "${BOX_USER_HOME}/.bash_history" "${BOX_USER_HOME}/.Xauthority" 2>/dev/null
+
+# Change permissions.
+sudo chown -R "${BOX_USER_UID}:${BOX_USER_GID}" "${BOX_USER_HOME}/."
+sudo chown -R "${BOX_USER_UID}:${BOX_USER_GID}" "${BOX_BASE_DIR}/."
+sudo chown "${BOX_USER_UID}:${BOX_USER_GID}" "${BOX_PROJECT_DIR}/."
+
+
+# Make sure default project.json exists.
+if [ ! -f "${BOX_PROJECT_FILE}" ]
+then
+	sudo cp ${BOX_RELEASE_JSON} ${BOX_PROJECT_FILE}
+fi
+
+
+# Make sure default provision.sql file exists.
+if [ ! -d "${BOX_SQL_DIR}" ]
+then
+	sudo mkdir -p "${BOX_SQL_DIR}"
+fi
+if [ ! -f "${BOX_SQL_DIR}/provision.sql" ]
+then
+	sudo cp "${BOX_RELEASE_DIR}/sql/provision.sql" "${BOX_SQL_DIR}/provision.sql"
+fi
