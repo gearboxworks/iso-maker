@@ -2,3 +2,4 @@
 build/iso/*.iso
 build/iso/*.iso.md5sum
 build/iso/*.log
+build/rootfs.changes-*-*.tar.gz
