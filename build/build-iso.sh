@@ -1,16 +1,14 @@
-#!/bin/bash -l
-
-# We need to use the '-l' option for bash to ensure we pull in all the profile setup.
-# As part of the profile login, we execute /etc/profile.d/rootfs.sh, which untars the rootfs.changes.tar.gz file into /tmp/rootfs/
+#!/bin/bash
 
 # set -x
 
 REPO="$1"
 
+rootfs="/tmp/rootfs"
 
-if [ ! -d /tmp/rootfs ]
+if [ ! -d ${rootfs} ]
 then
-	echo "# ERROR: We don't have a /tmp/rootfs. Something is wrong!"
+	echo "# ERROR: We don't have a ${rootfs}. Something is wrong!"
 	exit
 fi
 
@@ -26,23 +24,34 @@ echo "# Pull ${FALLBACK}/opt/gearbox from GitHub."
 rm -rf "${FALLBACK}/opt/gearbox"
 git clone https://github.com/gearboxworks/box-scripts "${FALLBACK}/opt/gearbox"
 rm -f "${FALLBACK}/opt/gearbox/.cloned"
+rsync -HvaxP --delete "${FALLBACK}/opt/gearbox/etc/images" "${FALLBACK}/opt/gearbox/etc/repositories.json" "${FALLBACK}/etc/gearbox/"
 
 
 if [ "${REPO}" != "" ]
 then
 	if [ -f "/build/${REPO}" ]
 	then
-		echo "# Override /tmp/rootfs/etc/apk/repositories file with ${REPO}:"
+		echo "# Override ${rootfs}/etc/apk/repositories file with ${REPO}:"
 		cat "/build/${REPO}"
 		echo ""
-		cp "/build/${REPO}" /tmp/rootfs/etc/apk/repositories
+		cp "/build/${REPO}" ${rootfs}/etc/apk/repositories
 		cp "/build/${REPO}" /etc/apk/repositories
 	fi
 fi
 
 
-echo "# Save rootfs - Tarball /tmp/rootfs to /build/rootfs.changes.tar.gz"
-tar zcf /build/rootfs.changes.tar.gz -C /tmp/rootfs .
+echo "# Save rootfs - Tarball ${rootfs} to /build/rootfs.changes.tar.gz"
+TARBALL="/build/rootfs.changes.tar.gz"
+if [ -f "${TARBALL}" ]
+then
+	SAVEFILE="/build/rootfs.changes-$(date +%Y%m%d-%H%M%S).tar.gz"
+	echo "# Moving ${TARBALL} to ${SAVEFILE}"
+	mv "${TARBALL}" "${SAVEFILE}"
+fi
+
+echo "# Tarball ${rootfs} to ${TARBALL} ..."
+tar zcf /build/rootfs.changes.tar.gz -C ${rootfs} .
+
 if [ ! -s /build/rootfs.changes.tar.gz ]
 then
 	echo "# ERROR: /build/rootfs.changes.tar.gz is zero size. Something is wrong!"
