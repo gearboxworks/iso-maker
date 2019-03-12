@@ -17,6 +17,16 @@ create_iso() {
 	docker run --rm -v `pwd`/build/:/build/ -t -i --privileged gearboxworks/iso-maker /build/build-iso.sh "$@"
 }
 
+extract_rootfs() {
+	echo "# Extracting into build/rootfs."
+	if [ -f build/rootfs.changes.tar.gz ]
+	then
+		rm -rf build/rootfs && \
+			mkdir build/rootfs && \
+			tar zxf build/rootfs.changes.tar.gz -C build/rootfs
+	fi
+}
+
 shell_out() {
 	echo "# Shelling out to Gearbox iso-maker."
 	docker run --rm -v `pwd`/build/:/build/ -t -i --privileged gearboxworks/iso-maker /bin/bash -l
@@ -43,6 +53,7 @@ list_iso() {
 case "$1" in
 	'shell'|'bash')
 		shell_out
+		extract_rootfs
 		;;
 
 	'container'|'docker')
@@ -56,6 +67,7 @@ case "$1" in
 	'create'|'iso')
 		shift
 		create_iso "$@"
+		extract_rootfs
 		;;
 
 	'ls'|'list'|'show')
@@ -66,6 +78,7 @@ case "$1" in
 		clean_container
 		create_container
 		create_iso "$@"
+		extract_rootfs
 		;;
 
 	*)
