@@ -32,6 +32,12 @@ shell_out() {
 	docker run --rm -v `pwd`/build/:/build/ -t -i --privileged gearboxworks/iso-maker /bin/bash -l
 }
 
+push_to_git() {
+	echo "# Pushing changes to GitHub."
+	git commit -m "Release commit." . && \
+		git push
+}
+
 list_iso() {
 	ISOS="$(find build/iso -type f -name '*.iso')"
 	if [ "${ISOS}" == "" ]
@@ -81,6 +87,10 @@ case "$1" in
 		extract_rootfs
 		;;
 
+	'push'|'release')
+		push_to_git
+		;;
+
 	*)
 		echo "
 # Temporary shell script to build ISOs, (ahead of GoLang).
@@ -92,6 +102,8 @@ $0 iso		- Create ISO from iso-maker Docker container.
 $0 list		- Show ISOs along with MD5SUMs.
 
 $0 build		- Perform 'container' & 'iso' in one step.
+
+$0 push		- Push changes to GitHub.
 
 $0 shell		- Run a shell within the iso-maker Docker container.
 "
