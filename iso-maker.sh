@@ -1,20 +1,32 @@
 #!/bin/bash
 
+
+check_container() {
+	CONTAINER="$(docker image ls -q gearboxworks/iso-maker)"
+}
+
 create_container() {
-	echo "# Create Docker container to build a Gearbox ISO."
-	docker build --rm -t gearboxworks/iso-maker .
+	check_container
+	if [ -z "${CONTAINER}" ]
+	then
+		echo "# Create Docker container to build a Gearbox ISO."
+		docker build --rm -t gearboxworks/iso-maker .
+	else
+		echo "# ISO Docker container already created. You should remove first."
+	fi
 }
 
 clean_container() {
-	echo "# Removing Gearbox iso-maker Docker container."
-	docker image rm gearboxworks/iso-maker
-	echo "# Cleaning up log files and ISOs."
-	rm -f build/iso/*.log build/iso/*.iso build/iso/*.md5sum
-}
-
-create_iso() {
-	echo "# Creating Gearbox ISO."
-	docker run --rm -v `pwd`/build/:/build/ -t -i --privileged gearboxworks/iso-maker /build/build-iso.sh "$@"
+	check_container
+	if [ -z "${CONTAINER}" ]
+	then
+		echo "# Nothing to remove."
+	else
+		echo "# Removing Gearbox iso-maker Docker container."
+		docker image rm gearboxworks/iso-maker
+		echo "# Cleaning up log files and ISOs."
+		rm -f build/iso/*.log build/iso/*.iso build/iso/*.md5sum
+	fi
 }
 
 extract_rootfs() {
@@ -27,9 +39,27 @@ extract_rootfs() {
 	fi
 }
 
+create_iso() {
+	check_container
+	if [ -z "${CONTAINER}" ]
+	then
+		echo "# ISO Docker container not created."
+	else
+		echo "# Creating Gearbox ISO."
+		docker run --rm -v `pwd`/build/:/build/ -t -i --privileged gearboxworks/iso-maker /bin/bash -l /build/build-iso.sh "$@"
+		extract_rootfs
+	fi
+}
+
 shell_out() {
-	echo "# Shelling out to Gearbox iso-maker."
-	docker run --rm -v `pwd`/build/:/build/ -t -i --privileged gearboxworks/iso-maker /bin/bash -l
+	check_container
+	if [ -z "${CONTAINER}" ]
+	then
+		echo "# ISO Docker container not created."
+	else
+		echo "# Shelling out to Gearbox iso-maker."
+		docker run --rm -v `pwd`/build/:/build/ -t -i --privileged gearboxworks/iso-maker /bin/bash -l
+	fi
 }
 
 push_to_git() {
@@ -56,6 +86,7 @@ list_iso() {
 }
 
 
+
 case "$1" in
 	'shell'|'bash')
 		shell_out
@@ -63,7 +94,7 @@ case "$1" in
 		;;
 
 	'container'|'docker')
-		create_container
+		check_container
 		;;
 
 	'clean'|'rm'|'remove')
@@ -73,7 +104,6 @@ case "$1" in
 	'create'|'iso')
 		shift
 		create_iso "$@"
-		extract_rootfs
 		;;
 
 	'ls'|'list'|'show')
@@ -84,7 +114,6 @@ case "$1" in
 		clean_container
 		create_container
 		create_iso "$@"
-		extract_rootfs
 		;;
 
 	'push'|'release')

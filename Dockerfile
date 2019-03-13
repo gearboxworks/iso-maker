@@ -24,5 +24,5 @@ ENV PROFILENAME base
 RUN ls -l /build && /bin/sh /build/build-docker.sh
 
 # ENTRYPOINT ["./build/build-iso.sh"]
-CMD ["/build/build-iso.sh"]
+CMD ["/bin/bash", "-l", "/build/build-iso.sh"]
 
