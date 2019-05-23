@@ -22,6 +22,7 @@ echo "####################" | tee -a /dev/console /tmp/boot-check.log
 echo "# $(date) - check-docker" | tee -a /dev/console /tmp/boot-check.log
 /etc/init.d/check-docker start | tee -a /dev/console /tmp/boot-check.log
 
+/usr/local/bin/mount-default
 
 echo "####################" | tee -a /dev/console /tmp/boot-check.log
 echo "# $(date) - box startup" | tee -a /dev/console /tmp/boot-check.log

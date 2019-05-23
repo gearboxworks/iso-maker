@@ -1,0 +1,4 @@
+#!/bin/bash
+
+mount 192.168.99.1:$(showmount -e 192.168.99.1 | awk '/default/{print$1}') /var/lib/gearbox/users/gearbox/projects
+
