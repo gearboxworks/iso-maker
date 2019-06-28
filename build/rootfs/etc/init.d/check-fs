@@ -63,20 +63,24 @@ checkFs() {
 			fi
 		fi
 
-		echo "# ${DEVICE} - Checking disk."
-		fsck.ext4 "${DEVICE}" 2>/dev/null
+		echo "# ${DEVICE} - Checking disk FS."
+		blkid "${DEVICE}" 2>/dev/null
 		RETURN="$?"
+
+		# echo "# ${DEVICE} - Checking disk."
+		# fsck.ext4 "${DEVICE}" 2>/dev/null
+		# RETURN="$?"
 
 		case "$RETURN" in
 			0)
 				Mount "${DEVICE}" "${LABEL}" "${MOUNTDIR}" 
 				;;
 
-			1)
-				Mount "${DEVICE}" "${LABEL}" "${MOUNTDIR}" 
-				;;
+#			1)
+#				Mount "${DEVICE}" "${LABEL}" "${MOUNTDIR}" 
+#				;;
 
-			8)
+			2)
 				echo "# ${DEVICE} - Filesystem needs creating..."
 				mkfs.ext4 -L "${LABEL}" "${DEVICE}"
 

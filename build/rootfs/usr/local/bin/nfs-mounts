@@ -1,0 +1,58 @@
+#!/bin/bash
+
+PATH="/opt/gearbox/bin:/opt/gearbox/sbin:$HOME/bin:$PATH"
+
+# This will umount all exports under the /var/lib/gearbox/users/gearbox/projects directory.
+
+if [ -f /tmp/udhcpc.env ]
+then
+	IFS='
+'
+	export $(egrep -v '^#' /tmp/udhcpc.env | xargs -0)
+	IFS=
+else
+	exit
+fi
+
+
+case $1 in
+	'mount'|'up')
+		rc-service nfs start
+		rc-service nfsclient start
+
+		showmount -e ${serverid} | \
+			awk -v serverid="${serverid}" '
+BEGIN { f=0; }
+/anon clnt/ { f++; }
+f > 1 {
+n = split($1, a, "/"); basename=a[n]
+u = "umount "serverid":"$1
+m = "mount "serverid":"$1" /var/lib/gearbox/users/gearbox/projects/"basename
+print m
+system(m)
+}
+'
+		/opt/gearbox/bin/box startup
+		/opt/gearbox/bin/box status
+		;;
+
+
+	'umount'|'down')
+		/opt/gearbox/bin/box shutdown
+
+		showmount -e ${serverid} | \
+			awk -v serverid="${serverid}" '
+BEGIN { f=0; }
+/anon clnt/ { f++; }
+f > 1 {
+n = split($1, a, "/"); basename=a[n]
+u = "umount "serverid":"$1
+m = "mount "serverid":"$1" /var/lib/gearbox/users/gearbox/projects/"basename
+print u
+system(u)
+}
+'
+		;;
+esac
+
+

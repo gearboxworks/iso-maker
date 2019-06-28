@@ -3,5 +3,7 @@
 echo "WARNING: Gearbox is shutting down as requested." > /dev/tty0
 date > /dev/tty0
 
-poweroff
+/sbin/openrc shutdown
+/sbin/poweroff
+# /sbin/halt
 

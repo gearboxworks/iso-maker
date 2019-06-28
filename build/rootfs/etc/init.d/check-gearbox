@@ -1,5 +1,12 @@
 #!/bin/bash
 
+
+if [ "$1" != "start" ]
+then
+	exit 0
+fi
+
+
 if [ -d "/opt/gearbox/.git" ]
 then
 	echo "check-gearbox: Not required."

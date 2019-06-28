@@ -1,0 +1,48 @@
+#!/bin/bash
+
+DETAILS="/tmp/udhcpc.env"
+STATE="/tmp/udhcpc.state"
+IP="/tmp/udhcpc.ip"
+NAME="/tmp/udhcpc.name"
+SERVER="/tmp/udhcpc.server"
+INTERFACE="/tmp/udhcpc.interface"
+
+# interface=eth0
+# ip=192.168.42.10
+# lease=1200
+# mask=24
+# serverid=192.168.42.1
+# subnet=255.255.255.0
+
+
+get_details()
+{
+	echo -n "$1" > ${STATE}
+
+	if [ "${serverid}" != "" ]
+	then
+		echo -n "${serverid}" > ${SERVER}
+	fi
+
+	if [ "${ip}" == "" ]
+	then
+		ip="$(ip addr show ${interface} | awk '/inet /{gsub(/\/.*/, "", $2); print$2}')"
+	fi
+	echo -n "${ip}" > ${IP}
+
+	if [ "${domain}" != "" ]
+	then
+		domain="${HOSTNAME}.${domain}"
+	fi
+	echo -n "${domain}" > ${NAME}
+
+	echo -n "${domain}" > ${NAME}
+
+	env > ${DETAILS}
+}
+
+if [ "${interface}" == "eth0" ]
+then
+	get_details "OK"
+fi
+
