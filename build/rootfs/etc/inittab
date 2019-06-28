@@ -13,6 +13,7 @@ tty2::respawn:/sbin/getty 38400 tty2
 ::respawn:/usr/sbin/crond -f
 ::respawn:/sbin/acpid -f
 ttyS0::respawn:/root/bin/StartHB.sh
+# ttyS1::respawn:/sbin/agetty -pa gearbox 38400 ttyS1 linux
 
 # Stuff to do for the 3-finger salute
 ::ctrlaltdel:/sbin/reboot

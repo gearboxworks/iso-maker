@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 echo "" | tee /tmp/boot-check.log
 echo "################################################################################" | tee -a /dev/console /tmp/boot-check.log
 echo "# Starting GearboxOS." | tee -a /dev/console /tmp/boot-check.log
@@ -22,13 +21,7 @@ echo "####################" | tee -a /dev/console /tmp/boot-check.log
 echo "# $(date) - check-docker" | tee -a /dev/console /tmp/boot-check.log
 /etc/init.d/check-docker start | tee -a /dev/console /tmp/boot-check.log
 
-/usr/local/bin/mount-default
-
-echo "####################" | tee -a /dev/console /tmp/boot-check.log
-echo "# $(date) - box startup" | tee -a /dev/console /tmp/boot-check.log
-/bin/bash /opt/gearbox/bin/box status | tee -a /dev/console /tmp/boot-check.log
-/bin/bash /opt/gearbox/bin/box startup | tee -a /dev/console /tmp/boot-check.log
-
+/usr/local/bin/nfs-mounts mount > /tmp/mount.log 2>&1 &
 
 if [ ! -d /opt/gearbox/GearboxOS/var/etc ]
 then
