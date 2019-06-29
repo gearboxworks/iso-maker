@@ -6,10 +6,12 @@ PATH="/opt/gearbox/bin:/opt/gearbox/sbin:$HOME/bin:$PATH"
 
 if [ -f /tmp/udhcpc.env ]
 then
+	OLDPATH="$PATH"
 	IFS='
 '
 	export $(egrep -v '^#' /tmp/udhcpc.env | xargs -0)
 	IFS=
+	PATH="$OLDPATH"
 else
 	exit
 fi
@@ -32,7 +34,7 @@ print m
 system(m)
 }
 '
-		/opt/gearbox/bin/box startup
+		# /opt/gearbox/bin/box startup
 		/opt/gearbox/bin/box status
 		;;
 

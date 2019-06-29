@@ -3,7 +3,8 @@ iface lo inet loopback
 
 auto eth0
 iface eth0 inet dhcp
-	udhcpc_opts -x hostname:gearbox -s /etc/udhcpc/gearbox-eth0
+	udhcpc_opts -x hostname:gearbox
+	# -s /etc/udhcpc/gearbox-eth0
 
 auto eth1
 iface eth1 inet dhcp
