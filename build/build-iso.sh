@@ -74,7 +74,7 @@ cd /build/aports/scripts
 	--arch x86_64 \
 	--repository https://mirror.aarnet.edu.au/pub/alpine/v3.8/main \
 	--extra-repository https://mirror.aarnet.edu.au/pub/alpine/v3.8/community \
-	--profile gearbox_small >& /build/iso/output.log
+	--profile gearbox_tiny >& /build/iso/output.log
 
 echo "# Completed."
 
