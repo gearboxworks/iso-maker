@@ -94,7 +94,7 @@ case "$1" in
 		;;
 
 	'container'|'docker')
-		check_container
+		create_container
 		;;
 
 	'clean'|'rm'|'remove')
@@ -125,7 +125,7 @@ case "$1" in
 # Temporary shell script to build ISOs, (ahead of GoLang).
 
 $0 container	- Create iso-maker Docker container.
-$0 clean	- Remove iso-maker Docker container.
+$0 clean		- Remove iso-maker Docker container.
 
 $0 iso		- Create ISO from iso-maker Docker container.
 $0 list		- Show ISOs along with MD5SUMs.

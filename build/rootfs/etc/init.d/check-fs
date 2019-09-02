@@ -107,4 +107,6 @@ checkFs /dev/sdb DockerStatic.vdi "/var/lib/docker" ""
 checkFs /dev/sdc Data.vdi "/var/lib/gearbox" "/var/lib/cache/fallback/var/lib/gearbox"
 checkFs /dev/sdd Config.vdi "/etc/gearbox" "/var/lib/cache/fallback/etc/gearbox"
 
+echo "$ Re-mounting root with a fixed size of 400M."
+mount -o remount,size=400M /
 
