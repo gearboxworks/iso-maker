@@ -29,15 +29,18 @@ fi
 
 ${APK:-apk} add --keys-dir "$keys_dir" --no-cache \
 	--repositories-file "$repositories_file" \
-	--no-script --root "$tmp" --initdb \
+	--no-script --root "$tmp" --initdb --arch "$arch" \
 	"$@"
 for link in $("$tmp"/bin/busybox --list-full); do
 	[ -e "$tmp"/$link ] || ln -s /bin/busybox "$tmp"/$link
 done
 
 ${APK:-apk} fetch --keys-dir "$keys_dir" --no-cache \
-	--repositories-file "$repositories_file" \
+	--repositories-file "$repositories_file" --root "$tmp" \
 	--stdout --quiet alpine-base | tar -zx -C "$tmp" etc/
+
+# make sure root login is disabled
+sed -i -e 's/^root::/root:!:/' "$tmp"/etc/shadow
 
 branch=edge
 VERSION_ID=$(awk -F= '$1=="VERSION_ID" {print $2}'  "$tmp"/etc/os-release)
@@ -51,6 +54,4 @@ http://dl-cdn.alpinelinux.org/alpine/$branch/main
 http://dl-cdn.alpinelinux.org/alpine/$branch/community
 EOF
 
-#rm -rf "$tmp"/var/cache/apk/*
-
-tar --numeric-owner -c -C "$tmp" . | gzip -9n > "$outfile"
+tar --numeric-owner --exclude='dev/*' -c -C "$tmp" . | gzip -9n > "$outfile"

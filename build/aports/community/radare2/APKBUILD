@@ -4,11 +4,11 @@
 # Contributor: Jose-Luis Rivas <ghostbar@riseup.net>
 # Maintainer: Valery Kartel <valery.kartel@gmail.com>
 pkgname=radare2
-pkgver=2.9.0
-pkgrel=1
+pkgver=3.5.0
+pkgrel=0
 pkgdesc="An opensource, crossplatform reverse engineering framework"
 url="http://www.radare.org"
-arch="all !aarch64"
+arch="all"
 license="GPL-3.0"
 options="!check" # upstream does not provide any working testsuite
 depends=""
@@ -41,4 +41,4 @@ package() {
 	make DESTDIR="$pkgdir" install
 }
 
-sha512sums="8365edd54d0a8030955b566f750ae4c3b5db26550fa3035f7d543d6f2a9b31760a38df30dfd839f7c9ab938e7f032997d9a3198a16f44c54c71c58c39a2cfc8c  radare2-2.9.0.tar.gz"
+sha512sums="c2aaf6c258428987ad9c029f0bc3961503a7d505b422a97da1fd53bed8c0048955d0710958b7693f603002b62f64c7e0e2695256dfa2c3d629cf7080fbe267bd  radare2-3.5.0.tar.gz"

@@ -1,0 +1,35 @@
+# Contributor: Carlo Landmeter <clandmeter@gmail.com>
+# Maintainer: Fathi Boudra <fathi.boudra@linaro.org>
+pkgname=uboot-tools
+pkgver=2019.07
+pkgrel=0
+pkgdesc="U-Boot bootloader utility tools"
+url="https://www.denx.de/wiki/U-Boot/WebHome"
+arch="all !s390x !ppc64le"
+license="GPL"
+makedepends="$depends_dev bison flex openssl-dev linux-headers sdl-dev"
+options="!check" # No test suite
+source="http://ftp.denx.de/pub/u-boot/u-boot-$pkgver.tar.bz2"
+builddir="$srcdir/u-boot-$pkgver"
+
+build() {
+	cd "$builddir"
+	make defconfig
+	make tools-all
+}
+
+package() {
+	cd "$builddir"
+	for tool in bmp_logo dumpimage easylogo/easylogo env/fw_printenv \
+		fit_check_sign fit_info gdb/gdbcont gdb/gdbsend gen_eth_addr img2srec \
+		mkenvimage mkimage ncb proftool ubsha1 xway-swap-bytes env/fw_printenv; do
+			install -D tools/$tool \
+				$pkgdir/usr/bin/$(basename $tool)
+	done
+	install -Dm644 tools/env/fw_env.config \
+			$pkgdir/etc/fw_env.config
+	cd "$pkgdir"/usr/bin
+	ln -sf fw_printenv fw_setenv
+}
+
+sha512sums="879abf0c8773bfcdcbe7f28fc68e2b4369bcb74e276d95d510a9b2d1707e63eb01d82e304ba5a6a570552bc18bc593f27ba9b518bafa1d8f8e5bc83cf107c023  u-boot-2019.07.tar.bz2"

@@ -2,31 +2,27 @@
 # Contributor: Mike Milner <milner@blissisland.ca>
 # Maintainer: Bennett Goble <nivardus@gmail.com>
 pkgname=librdkafka
-pkgver=0.11.6
-pkgrel=1
+pkgver=1.1.0
+pkgrel=0
 pkgdesc="The Apache Kafka C/C++ library"
 url="https://github.com/edenhill/librdkafka"
 arch="all"
-license="BSD"
-makedepends="bash python2 openssl-dev cyrus-sasl-dev lz4-dev zlib-dev"
-subpackages="$pkgname-dev"
+license="BSD-2-Clause"
+makedepends="bash python2 openssl-dev cyrus-sasl-dev lz4-dev zlib-dev zstd-dev"
+subpackages="$pkgname-static $pkgname-dev"
 source="$pkgname-$pkgver.tar.gz::https://github.com/edenhill/$pkgname/archive/v$pkgver.tar.gz"
-builddir="$srcdir/$pkgname-$pkgver"
 
 build() {
-	cd "$builddir"
 	./configure --prefix=/usr
 	make
 }
 
 check() {
-	cd "$builddir"
 	make check
 }
 
 package() {
-	cd "$builddir"
 	make DESTDIR="$pkgdir" install
 }
 
-sha512sums="9657dc53220bbff3eb44941cff2f50ab7f71a82f7486d64ea14f67eabd4abe8c67f225a752cc1f0339439a1cc512e99ade6536d087857979cd198c0102015718  librdkafka-0.11.6.tar.gz"
+sha512sums="35561399b07278a09a51245c5503c86eb0cc8971692b4e65a332144bfb71e2e86d4ceaf1804534b6a416bcace74cef493b6465c20b32c14de97f45f2854359c6  librdkafka-1.1.0.tar.gz"

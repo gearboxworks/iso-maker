@@ -1,0 +1,82 @@
+# Contributor: Henrik Riomar <henrik.riomar@gmail.com>
+# Maintainer: Drew DeVault <sir@cmpwn.com>
+pkgname=sway
+pkgver=1.2
+pkgrel=0
+pkgdesc="i3 compatible window manager for Wayland"
+url="http://swaywm.org"
+arch="all"
+license="MIT"
+options="suid !check"
+depends="swaybg"
+makedepends="cairo-dev
+	gdk-pixbuf-dev
+	json-c-dev
+	libevdev-dev
+	libinput-dev
+	libxkbcommon-dev
+	linux-pam-dev
+	meson
+	ninja
+	pango-dev
+	pcre2-dev
+	scdoc
+	wayland-dev
+	wayland-protocols
+	wlroots-dev
+	"
+subpackages="
+	$pkgname-doc
+	$pkgname-bash-completion:bashcomp:noarch
+	$pkgname-fish-completion:fishcomp:noarch
+	$pkgname-zsh-completion:zshcomp:noarch
+	"
+source="$pkgname-$pkgver.tar.gz::https://github.com/swaywm/$pkgname/archive/$pkgver.tar.gz
+	"
+builddir="$srcdir/$pkgname-$pkgver"
+
+build() {
+	cd "$builddir"
+	meson \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--buildtype=release \
+		. output
+	ninja -C output
+}
+
+bashcomp() {
+	depends=""
+	pkgdesc="Bash completions for $pkgname"
+	install_if="$pkgname=$pkgver-r$pkgrel bash-completion"
+
+	mkdir -p "$subpkgdir"/usr/share/
+	mv "$pkgdir"/usr/share/bash-completion "$subpkgdir"/usr/share/
+}
+
+fishcomp() {
+	depends=""
+	pkgdesc="Fish completions for $pkgname"
+	install_if="$pkgname=$pkgver-r$pkgrel fish"
+
+	mkdir -p "$subpkgdir"/usr/share/fish
+	mv "$pkgdir"/usr/share/fish/completions "$subpkgdir"/usr/share/fish
+}
+
+zshcomp() {
+	depends=""
+	pkgdesc="Zsh completions for $pkgname"
+	install_if="$pkgname=$pkgver-r$pkgrel zsh"
+
+	mkdir -p "$subpkgdir"/usr/share/zsh
+	mv "$pkgdir"/usr/share/zsh/site-functions "$subpkgdir"/usr/share/zsh
+}
+
+package() {
+	cd "$builddir"
+	DESTDIR="$pkgdir" ninja -C output install
+	chmod u+s "$pkgdir"/usr/bin/sway
+}
+
+sha512sums="b43f625d35145a3377e64ea942f8b005946bb0925f08deace2da73ab504038b29331df9943296c97141e2283cd9b55e6cb3bca18c5c3999ecbd461325e36165b  sway-1.2.tar.gz"

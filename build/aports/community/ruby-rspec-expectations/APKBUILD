@@ -2,7 +2,7 @@
 # Maintainer: Jakub Jirutka <jakub@jirutka.cz>
 pkgname=ruby-rspec-expectations
 _gemname=${pkgname#ruby-}
-pkgver=3.8.2
+pkgver=3.8.4
 pkgrel=0
 pkgdesc="Provides a readable API to express expected outcomes of a code example in RSpec"
 url="https://relishapp.com/rspec/rspec-expectations/"
@@ -36,5 +36,5 @@ package() {
 		"$gemdir"/doc
 }
 
-sha512sums="d374f7add45d2b6ce607c1a068e3e0970f902a0edf96ec891bd618dd17253878c1e0b625296ff12a6dc35103651bbfbcfd1a1b444f94e08eae2680e32853a198  ruby-rspec-expectations-3.8.2.tar.gz
+sha512sums="0ecb16f11ccf19c02c40ce587f33846fb2241f1663dd87f012b9b782338c213362dac624c434dee6e00ad2cc7ec4a1cd0af7f2edf1a8e9ebb0a0dfb31cd244d8  ruby-rspec-expectations-3.8.4.tar.gz
 1d477004521852e23d01b197187dbb434a2c7fd179e506c82a12e17f5d52470fe2a113112e7052b9479077eafa6759beb07c03301de1f8ea7f5c4643c92d8346  gemspec.patch"

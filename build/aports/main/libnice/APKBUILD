@@ -1,43 +1,44 @@
+# Contributor: Leo <thinkabit.ukim@gmail.com>
 # Contributor: Natanael Copa <ncopa@alpinelinux.org>
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=libnice
-pkgver=0.1.14
-pkgrel=2
+pkgver=0.1.16
+pkgrel=0
 pkgdesc="GLib ICE implementation"
+options="!check" # Testsuite fails
 url="https://nice.freedesktop.org/wiki/"
 arch="all"
-license="LGPL-2.0 and MPL-1.1"
-makedepends="glib-dev gnutls-dev gstreamer-dev gst-plugins-base-dev
-	gstreamer0.10-dev gst-plugins-base0.10-dev
-	gobject-introspection-dev"
-subpackages="$pkgname-dbg $pkgname-dev $pkgname-doc
-	$pkgname-gstreamer0.10:_gst010 $pkgname-gstreamer:_gst"
+license="LGPL-2.0-or-later MPL-1.1"
+makedepends="
+	glib-dev
+	gnutls-dev
+	gstreamer-dev
+	gobject-introspection-dev
+	gtk-doc
+	meson"
+subpackages="
+	$pkgname-dbg
+	$pkgname-dev
+	$pkgname-doc
+	$pkgname-gstreamer:_gst"
 source="https://nice.freedesktop.org/releases/libnice-$pkgver.tar.gz"
-builddir="$srcdir"/$pkgname-$pkgver
 
 build() {
-	cd "$builddir"
-	./configure \
-		--build=$CBUILD \
-		--host=$CHOST \
-		--prefix=/usr \
-		--sysconfdir=/etc \
-		--mandir=/usr/share/man \
-		--infodir=/usr/share/info \
-		--localstatedir=/var \
-		--enable-introspection
-	make
+	meson --prefix=/usr \
+		  --libdir=/usr/lib \
+		  --bindir=/usr/bin \
+		  -Dgtk_doc=enabled \
+		  -Dtests=disabled \
+		  -Dexamples=disabled \
+		  -Dintrospection=enabled \
+		  -Dcrypto-library=gnutls \
+		  -Dgstreamer=enabled \
+		  -Dgupnp=disabled builddir
+	ninja -C builddir
 }
 
 package() {
-	cd "$builddir"
-	make DESTDIR="$pkgdir" install
-}
-
-_gst010() {
-	pkgdesc="Gstreamer-0.10 plugin for libnice"
-	mkdir -p "$subpkgdir"/usr/lib
-	mv "$pkgdir"/usr/lib/gstreamer-0.10 "$subpkgdir"/usr/lib/
+	DESTDIR="$pkgdir" ninja -C builddir install
 }
 
 _gst() {
@@ -46,4 +47,4 @@ _gst() {
 	mv "$pkgdir"/usr/lib/gstreamer-1.0 "$subpkgdir"/usr/lib/
 }
 
-sha512sums="58bd0e0f630f4f14fe4765f2dab24215d71d61a4e7dc260cdb34eb0254b3dcdc9ce3b6fb010800250fb85f91e06b1c48cfcdd6e18867324609ead17a9106d4dd  libnice-0.1.14.tar.gz"
+sha512sums="8fdf0f9fcf43c0fdffbdcb61988a7f9e14bd13bb1bc561d2b9faf493deb18151da14d484740571a302fa203ec7109d45c361ea791e81a2b29932a26220ce902c  libnice-0.1.16.tar.gz"

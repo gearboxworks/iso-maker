@@ -1,0 +1,30 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=kgpg
+pkgver=19.08.0
+pkgrel=0
+arch="all"
+url="https://kde.org/applications/utilities/org.kde.kgpg"
+pkgdesc="A simple interface for GnuPG, a powerful encryption utility"
+license="GPL-2.0-or-later"
+makedepends="extra-cmake-modules qt5-qtbase-dev karchive-dev kdoctools-dev kcodecs-dev kcoreaddons-dev kcrash-dev kdbusaddons-dev ki18n-dev kiconthemes-dev kjobwidgets-dev kio-dev knotifications-dev kservice-dev ktextwidgets-dev kxmlgui-dev kwidgetsaddons-dev kwindowsystem-dev akonadi-contacts-dev kcontacts-dev gpgme-dev"
+source="https://download.kde.org/stable/applications/$pkgver/src/$pkgname-$pkgver.tar.xz"
+subpackages="$pkgname-doc $pkgname-lang"
+
+build() {
+	cmake \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	make
+}
+
+check() {
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" make install
+}
+
+sha512sums="a90a78556bbe26279917b55f582d3bb9d8376aec7f70e55ff10ed9f6a769d77ee2d2bd6ab1ef4c9aec27d20a098bd6d8c0e37db2fe57af8ad781ceb7493c1bc6  kgpg-19.08.0.tar.xz"

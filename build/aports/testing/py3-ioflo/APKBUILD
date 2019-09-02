@@ -1,0 +1,35 @@
+# Contributor: Fabian Affolter <fabian@affolter-engineering.ch>
+# Maintainer: Fabian Affolter <fabian@affolter-engineering.ch>
+pkgname=py3-ioflo
+_pkgname=ioflo
+pkgver=1.7.6
+pkgrel=0
+pkgdesc="Automated Reasoning Engine and Flow Based Programming Framework"
+url="https://github.com/ioflo/ioflo"
+arch="noarch"
+license="MIT"
+depends="python3"
+makedepends="py3-setuptools-git"
+checkdepends="py3-pytest"
+source="https://files.pythonhosted.org/packages/source/${_pkgname:0:1}/$_pkgname/$_pkgname-$pkgver.tar.gz"
+builddir="$srcdir"/$_pkgname-$pkgver
+
+replaces="py-ioflo" # Backwards compatibility
+provides="py-ioflo=$pkgver-r$pkgrel" # Backwards compatibility
+
+build() {
+	python3 setup.py build
+}
+
+check() {
+	py.test-3
+}
+
+package() {
+	python3 setup.py install --prefix=/usr --root="$pkgdir"
+
+	# keep ioflo and remove ioflo3
+	rm -f "$pkgdir"/usr/bin/ioflo3
+}
+
+sha512sums="8e175f2ac7aa5ac211a9518a228de174b4d44bae557f99b2069746724b13668f128c93b031cfebeca3f8d31b8b5dbe6b3437132cb5c1cc1c01d31ac1c5c3af7d  ioflo-1.7.6.tar.gz"

@@ -1,0 +1,67 @@
+# Contributor: Boris Faure <boris@fau.re>
+# Maintainer: Boris Faure <boris@fau.re>
+pkgname=efl
+pkgver=1.22.2
+pkgrel=1
+pkgdesc="Enlightenment Foundation Libraries"
+url="https://www.enlightenment.org"
+arch="all !s390x" #luajit not available
+license="LGPL-2.1-only"
+depends_dev="giflib-dev gstreamer-dev gst-plugins-base-dev libpng-dev
+	libjpeg-turbo-dev libx11-dev libxcomposite-dev libxcursor-dev
+	libxdamage-dev libxinerama-dev libxrandr-dev libxtst-dev
+	libxscrnsaver-dev xorgproto luajit-dev"
+makedepends="$depends_dev dbus-dev openssl-dev fontconfig-dev freetype-dev bash
+	fribidi-dev zlib-dev"
+options="!check" # Test suite issues
+subpackages="$pkgname-dev"
+source="https://download.enlightenment.org/rel/libs/efl/efl-$pkgver.tar.xz"
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--localstatedir=/var \
+		--enable-image-loader-png \
+		--disable-audio \
+		--disable-avahi \
+		--disable-cserve \
+		--disable-cocoa \
+		--disable-doc \
+		--disable-eglfs \
+		--disable-elua \
+		--disable-glib \
+		--disable-gesture \
+		--disable-gstreamer \
+		--disable-image-loader-tiff \
+		--disable-image-loader-tgv \
+		--disable-libeeze \
+		--disable-libmount \
+		--disable-libraw \
+		--disable-librsvg \
+		--disable-libvlc \
+		--disable-nls \
+		--disable-neon \
+		--disable-physics \
+		--disable-poppler \
+		--disable-pulseaudio \
+		--disable-spectre \
+		--disable-systemd \
+		--disable-tslib \
+		--with-dbus-services= \
+		--with-glib=no \
+		--with-js=none \
+		--with-opengl=none \
+		--with-x \
+		--with-x11=xlib
+	make
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="7385b1fdeee0a4565a0765fedbe5cecca81b86b306ee95a703b3064a88427ab0b4967f6f075a92f5c1d5911cefc56a9c2d45c7347572480169e3f53348321734  efl-1.22.2.tar.xz"

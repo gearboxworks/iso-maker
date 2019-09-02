@@ -1,0 +1,38 @@
+# Maintainer: Chloe Kudryavtsev <toast@toastin.space>
+pkgname=rclone
+pkgver=1.49.0
+pkgrel=0
+pkgdesc="Rsync for cloud storage"
+url="https://rclone.org/"
+arch="all"
+license="MIT"
+makedepends="go"
+options="net"
+source="$pkgname-$pkgver.tar.gz::https://github.com/ncw/$pkgname/archive/v$pkgver.tar.gz"
+subpackages="$pkgname-doc"
+
+export GOPATH="$srcdir"
+export CGO_ENABLED=0
+
+build() {
+	GO111MODULE=on go build -o bin/"$pkgname"
+}
+
+check() {
+	GO111MODULE=on go test ./...
+}
+
+package() {
+	install -Dm755 "$builddir"/bin/"$pkgname" \
+		"$pkgdir"/usr/bin/"$pkgname"
+
+	install -Dm644 "$builddir"/"$pkgname".1 \
+		"$pkgdir"/usr/share/man/man1/"$pkgname".1
+}
+
+cleanup_srcdir() {
+	go clean -modcache
+	default_cleanup_srcdir
+}
+
+sha512sums="809f7bf49f49aa0bad1e30119a7895705b1df1d2843eb068e1128dba84050a1424e2294a0afd999cc12c308ed18bd9689ca3728ed82658b0ae2078bc0ed687ea  rclone-1.49.0.tar.gz"

@@ -1,41 +1,29 @@
 # Maintainer: Drew DeVault <sir@cmpwn.com>
 pkgname=qutebrowser
-pkgver=1.4.1
-pkgrel=0
+pkgver=1.6.2
+pkgrel=1
 pkgdesc="A keyboard-driven, vim-like browser based on PyQT5"
 url="https://qutebrowser.org/"
 arch="noarch !s390x !ppc64le !x86" # limited by qt5-qtwebengine
 license="GPL-3.0-only"
 depends="
 	py3-attrs py3-jinja2 py3-pygments py3-pypeg2 py3-qt5 py3-yaml qt5-qtbase
-	qt5-qtwebengine qt5-qtbase-sqlite
+	qt5-qtwebengine qt5-qtbase-sqlite py3-qtwebengine py3-setuptools py3-sip-pyqt5
 "
-makedepends="asciidoc py3-pytest py3-hypothesis py3-setuptools"
+makedepends="asciidoc"
+checkdepends="py3-pytest py3-hypothesis"
+subpackages="$pkgname-doc"
 source="
 	https://github.com/qutebrowser/qutebrowser/releases/download/v$pkgver/qutebrowser-$pkgver.tar.gz
 "
-builddir="$srcdir/$pkgname-$pkgver"
-options="!check"
 
 build() {
-	cd "$builddir"
 	a2x -f manpage doc/qutebrowser.1.asciidoc
 	python3 setup.py build
 }
 
 package() {
-	cd "$builddir"
-	python3 setup.py install --root="$pkgdir/" --optimize=1
-	install -Dm644 misc/qutebrowser.desktop \
-		"$pkgdir"/usr/share/applications/qutebrowser.desktop
-	for i in 16 24 32 48 64 128 256 512; do
-		install -Dm644 "icons/qutebrowser-${i}x$i.png" \
-			"$pkgdir/usr/share/icons/hicolor/${i}x$i/apps/qutebrowser.png"
-	done
-	install -Dm644 icons/qutebrowser.svg \
-		"$pkgdir/usr/share/icons/hicolor/scalable/apps/qutebrowser.svg"
-	mkdir -p "$pkgdir/usr/share/qutebrowser/userscripts"
-	install -Dm755 -t "$pkgdir/usr/share/qutebrowser/userscripts/" misc/userscripts/*
+	make -f misc/Makefile DESTDIR="$pkgdir" PREFIX=/usr install
 }
 
-sha512sums="a77b786980326f67ffb933d019438933de3a6f43244bfc0f42f22a8f189480b093757b2d5d81de58ab774f39ee4442c2482be4f78ffcad7b73f03d028e2b455d  qutebrowser-1.4.1.tar.gz"
+sha512sums="708fe9c5db54fdab0697e03ce26d901ee18da2a04d3934c0705f9cdff543e859892de2ac9aa9e3b0b12c4a3d6be7a492d34a868058e4a6b21f06d4343caff89a  qutebrowser-1.6.2.tar.gz"

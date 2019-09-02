@@ -1,7 +1,7 @@
 # Maintainer: Jakub Jirutka <jakub@jirutka.cz>
 _gemname=bundler
 pkgname=ruby-$_gemname
-pkgver=1.17.1
+pkgver=2.0.2
 pkgrel=0
 pkgdesc="Manage an application's gem dependencies"
 url="https://bundler.io/"
@@ -31,7 +31,8 @@ package() {
 	rm -rf "$gemdir"/cache \
 		"$gemdir"/build_info \
 		"$gemdir"/doc \
-		"$gemdir"/gems/$_gemname-$pkgver/man
+		"$gemdir"/gems/$_gemname-$pkgver/man \
+		"$gemdir"/gems/$_gemname-$pkgver/*.md
 }
 
-sha512sums="6adf044096b7716c8b0dae5f559506c65dcb8fd8a8a57428ac25331ca3a85b7cb399fb40b79aeccb0908d172686df9213b86f69286c3e383373ff5ee6f3b414d  bundler-1.17.1.gem"
+sha512sums="f41fe9e385fbf42859f3514b71abdaa1fd787f4ff4b1169b8ee40ea7778c114657c60ca3d6d6d72fbe972af0558f0cccd9c9f28cad7fc712ada27f037dce8a6a  bundler-2.0.2.gem"

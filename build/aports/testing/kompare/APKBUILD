@@ -1,0 +1,31 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=kompare
+pkgver=19.08.0
+pkgrel=0
+arch="all"
+url="https://kde.org/applications/development/org.kde.kompare"
+pkgdesc="Graphical File Differences Tool"
+license="GPL-2.0-or-later AND GFDL-1.2-only"
+makedepends="extra-cmake-modules qt5-qtbase-dev kcoreaddons-dev kcodecs-dev kdoctools-dev kiconthemes-dev kjobwidgets-dev kconfig-dev kparts-dev ktexteditor-dev kwidgetsaddons-dev libkomparediff2-dev"
+source="https://download.kde.org/stable/applications/$pkgver/src/$pkgname-$pkgver.tar.xz"
+subpackages="$pkgname-doc $pkgname-lang"
+options="!check" # No tests
+
+build() {
+	cmake \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	make
+}
+
+check() {
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" make install
+}
+
+sha512sums="300e9a5354b6d9f7de8d2de5c5e14e70d8930d8a188e830d7c4b77cd4ada56eea377e9f576bdafb8e8dbe70eef688a9b714a557ca7c5a3a38fa4ef38a4a622e4  kompare-19.08.0.tar.xz"

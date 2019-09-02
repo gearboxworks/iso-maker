@@ -1,0 +1,39 @@
+# Contributor: Sören Tempel <soeren+alpine@soeren-tempel.net>
+# Maintainer:
+pkgname=py3-fonttools
+_pkgname=fonttools
+pkgver=3.44.0
+pkgrel=0
+pkgdesc="Converts OpenType and TrueType fonts to and from XML"
+url="https://github.com/fonttools/fonttools"
+arch="noarch"
+license="MIT AND OFL-1.1"
+depends="py3-numpy py3-setuptools"
+checkdepends="py3-pytest"
+subpackages="py-$_pkgname-doc"
+source="$_pkgname-$pkgver.tar.gz::https://github.com/fonttools/fonttools/archive/$pkgver.tar.gz"
+builddir="$srcdir/$_pkgname-$pkgver"
+
+replaces="py-fonttools" # Backwards compatibility
+provides="py-fonttools=$pkgver-r$pkgrel" # Backwards compatibility
+
+prepare() {
+	default_prepare
+	# remove interpreter line
+	sed -i '1d' Lib/fontTools/mtiLib/__init__.py
+}
+
+build() {
+	python3 setup.py build
+}
+
+check() {
+	cd "$builddir"/build
+	py.test-3
+}
+
+package() {
+	python3 setup.py install --prefix=/usr --root="$pkgdir"
+}
+
+sha512sums="ce390ccf69a4222ab8042f72c4e2495e39cb6907fafaea36f505407c7c6cca891d43374d648ae9f1a3119bfaeb1768b34f7c0340fad4fd158722cf2bfff425f7  fonttools-3.44.0.tar.gz"

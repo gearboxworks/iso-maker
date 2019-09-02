@@ -4,10 +4,10 @@
 # Contributor: Jakub Jirutka <jakub@jirutka.cz>
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=dovecot
-pkgver=2.3.3
+pkgver=2.3.7.2
 _pkgvermajor=2.3
-pkgrel=1
-_pigeonholever=0.5.3
+pkgrel=0
+_pigeonholever=0.5.7.2
 _pigeonholevermajor=${_pigeonholever%.*}
 pkgdesc="IMAP and POP3 server"
 url="https://www.dovecot.org/"
@@ -33,6 +33,7 @@ makedepends="
 	postgresql-dev
 	sqlite-dev
 	zlib-dev
+	libsodium-dev
 	"
 install="$pkgname.pre-install $pkgname.post-install $pkgname.post-upgrade"
 subpackages="
@@ -65,6 +66,16 @@ builddir="$srcdir/$pkgname-$pkgver"
 _builddir_pigeonhole="$srcdir/$pkgname-$_pkgvermajor-pigeonhole-$_pigeonholever"
 
 # secfixes:
+#   2.3.7.2-r0:
+#     - CVE-2019-11500
+#   2.3.6-r0:
+#     - CVE-2019-11499
+#     - CVE-2019-11494
+#     - CVE-2019-10691
+#   2.3.5.1-r0:
+#     - CVE-2019-7524
+#   2.3.4.1-r0:
+#     - CVE-2019-3814
 #   2.3.1-r0:
 #     - CVE-2017-15130
 #     - CVE-2017-14461
@@ -290,8 +301,8 @@ _submv() {
 	done
 }
 
-sha512sums="8666c4f92f7df883067540f85be9d03dbe6815b58a7f5de55b4292e986e9a2a1ef52c7e0c72dde2bc781fe40d57488b78a99b6b813745b8e4683f1a2fdc1f2ff  dovecot-2.3.3.tar.gz
-8403b1976a915836ba875b96825446d46e0d8c7ff245ed1f2b014347fdc78a81f9ed6dbd05bd3b4f1f7072edc5e9a302201cdb375de44436adcbb83919f203f5  dovecot-2.3-pigeonhole-0.5.3.tar.gz
+sha512sums="172f7f0edb884259e4c050607510aee67a35c3a20b7dd147e7c8a25a04921c18f7d6b5c85af2c69ae8c4d53791550970e471b033dbfae94253e331053b6a317d  dovecot-2.3.7.2.tar.gz
+7fc8d89ee31c8e8c16a9aeaeffb591f4188de36fc80e3a30a9ae10bc5acd7ea5d5d91e077fda566e61d588d9221ec53044ce17a9cc0c9c219dbe6824558a1d60  dovecot-2.3-pigeonhole-0.5.7.2.tar.gz
 fe4fbeaedb377d809f105d9dbaf7c1b961aa99f246b77189a73b491dc1ae0aa9c68678dde90420ec53ec877c08f735b42d23edb13117d7268420e001aa30967a  skip-iconv-check.patch
 794875dbf0ded1e82c5c3823660cf6996a7920079149cd8eed54231a53580d931b966dfb17185ab65e565e108545ecf6591bae82f935ab1b6ff65bb8ee93d7d5  split-protocols.patch
 0d8f89c7ba6f884719b5f9fc89e8b2efbdc3e181de308abf9b1c1b0e42282f4df72c7bf62f574686967c10a8677356560c965713b9d146e2770aab17e95bcc07  default-config.patch

@@ -1,8 +1,8 @@
 # Contributor: Carlo Landmeter <clandmeter@gmail.com>
 # Maintainer: Francesco Colista <fcolista@alpinelinux.org>
 pkgname=certbot
-pkgver=0.30.2
-pkgrel=2
+pkgver=0.37.2
+pkgrel=0
 pkgdesc="An ACME client that can update Apache/Nginx configurations"
 url="https://github.com/certbot/certbot"
 arch="noarch"
@@ -13,33 +13,23 @@ depends="
 	py3-configargparse
 	py3-configobj
 	py3-cryptography
+	py3-distutils-extra
 	py3-josepy
 	py3-mock
 	py3-parsedatetime
-	py3-rfc3339
+	py3-pyrfc3339
 	py3-tz
 	py3-setuptools
 	py3-zope-component
 	py3-zope-interface
 "
 checkdepends="py3-augeas"
-makedepends="python3-dev"
 replaces="letsencrypt"
-subpackages="py3-acme:acme $pkgname-nginx $pkgname-apache $pkgname-postfix"
-source="certbot-$pkgver.tar.gz::https://github.com/certbot/certbot/archive/v$pkgver.tar.gz"
-builddir="$srcdir"/$pkgname-$pkgver
-
-check() {
-	cd "$builddir"
-	local i
-	for i in . $subpackages; do
-		cd "$builddir"/${i##*:}
-		python3 setup.py test
-	done
-}
+subpackages="py3-acme:acme $pkgname-nginx $pkgname-apache"
+source="certbot-$pkgver.tar.gz::https://github.com/certbot/certbot/archive/v$pkgver.tar.gz
+	remove-check-for-setuptools-version.patch"
 
 build() {
-	cd "$builddir"
 	local i
 	for i in . $subpackages; do
 		cd "$builddir"/${i##*:}
@@ -47,8 +37,15 @@ build() {
 	done
 }
 
+check() {
+	local i
+	for i in . $subpackages; do
+		cd "$builddir"/${i##*:}
+		python3 setup.py check
+	done
+}
+
 package() {
-	cd "$builddir"
 	python3 setup.py install --prefix=/usr --root="$pkgdir"
 }
 
@@ -61,9 +58,9 @@ acme() {
 		py3-josepy
 		py3-mock
 		py3-openssl
-		py3-rfc3339
+		py3-pyrfc3339
 		py3-tz
-		py-requests
+		py3-requests
 		py3-requests-toolbelt
 		py3-six
 	"
@@ -100,18 +97,5 @@ apache() {
 	python3 setup.py install --prefix=/usr --root="$subpkgdir"
 }
 
-postfix() {
-	cd "$builddir"/certbot-apache
-	pkgdesc="postfix plugin for $pkgname"
-	depends="
-		certbot=$pkgver-r$pkgrel
-		py3-acme=$pkgver-r$pkgrel
-		py3-setuptools
-		py3-six
-		py3-zope-component
-		py3-zope-interface
-	"
-	python3 setup.py install --prefix=/usr --root="$subpkgdir"
-}
-
-sha512sums="94c26be7c04de74acf650b4d243675e92c6807eb6bb82fcffd867b22aa5b5527e6f637155fafcb121dfeff77e8a236301c080ad42284b3bf777d2cfc7f4d0de6  certbot-0.30.2.tar.gz"
+sha512sums="2e357dfcb6da669f1ab6e4f9aa3e8e3457ce0f794f40c9ac862a9f24208b4f4d773dbafffd97fd1f7e5b2a29e1ca99be787101469384a9e61b4ddb077b644211  certbot-0.37.2.tar.gz
+eef4247230e27327b90b07489ff8774539624135f2196010fd0c188709da7f092afcb58d8690a48280e508f619bc580295eeb8d12364234d1933a35d31c4c924  remove-check-for-setuptools-version.patch"

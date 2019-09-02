@@ -1,14 +1,14 @@
 # Contributor: Jakub Jirutka <jakub@jirutka.cz>
 # Maintainer: Jakub Jirutka <jakub@jirutka.cz>
 pkgname=mediainfo
-pkgver=18.08.1
+pkgver=19.07
 pkgrel=0
 pkgdesc="Supplies technical and tag information about media files (CLI)"
 url="https://mediaarea.net/en/MediaInfo"
 arch="all"
 license="BSD-2-Clause"
 makedepends="automake autoconf cmake libmediainfo-dev>=$pkgver libtool libzen-dev"
-source="https://mediaarea.net/download/source/$pkgname/$pkgver/${pkgname}_$pkgver.tar.xz"
+source="https://mediaarea.net/download/source/mediainfo/$pkgver/${pkgname}_$pkgver.tar.xz"
 builddir="$srcdir/MediaInfo"
 _clidir="$builddir/Project/GNU/CLI"
 
@@ -44,4 +44,4 @@ package() {
 	make DESTDIR="$pkgdir" install
 }
 
-sha512sums="ff807138a253dfe8ea79d568a0c742e9391709e1e0ae3c5d0ce0e5345f2306057b541e5eb2bdd6bf0032f287b2387dfc21a506698ccd2c81a9f70679cf518480  mediainfo_18.08.1.tar.xz"
+sha512sums="ef543b2b3fa61347adaa510fc3b051ff148e24ef6461e25b9f1d158f3c4b57ce96826d0c0e8ae46996092e0eb84e99308ba87d95dd0392b99f05b704438c5983  mediainfo_19.07.tar.xz"

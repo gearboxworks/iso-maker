@@ -1,0 +1,31 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=knotifyconfig
+pkgver=5.61.0
+pkgrel=0
+pkgdesc="Configuration system for KNotify"
+arch="all"
+url="https://community.kde.org/Frameworks"
+license="LGPL-2.0-only"
+depends_dev="kcompletion-dev kconfig-dev ki18n-dev kio-dev"
+makedepends="$depends_dev extra-cmake-modules qt5-qttools-dev doxygen"
+source="https://download.kde.org/stable/frameworks/${pkgver%.*}/$pkgname-$pkgver.tar.xz"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-lang"
+
+build() {
+	cmake \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_QCH=ON
+	make
+}
+
+check() {
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" make install
+}
+sha512sums="142d24ba3801582ec7b46f0acd8d3f1eaa7cde80a404b1f2759f0de95b61fa84e36464ac88084e5e182e206f1dcd28d18ec494f1630bc5aa8abb77f045864956  knotifyconfig-5.61.0.tar.xz"

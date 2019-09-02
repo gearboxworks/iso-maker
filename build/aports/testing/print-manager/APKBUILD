@@ -1,0 +1,31 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=print-manager
+pkgver=19.08.0
+pkgrel=0
+arch="all"
+url="https://www.kde.org/applications/utilities/"
+pkgdesc="A tool for managing print jobs and printers"
+license="GPL-2.0-or-later"
+makedepends="extra-cmake-modules qt5-qtbase-dev qt5-qtdeclarative-dev cups-dev kconfig-dev kconfigwidgets-dev kcoreaddons-dev kdbusaddons-dev kiconthemes-dev ki18n-dev kcmutils-dev kio-dev knotifications-dev plasma-framework-dev kwidgetsaddons-dev kwindowsystem-dev"
+source="https://download.kde.org/stable/applications/$pkgver/src/$pkgname-$pkgver.tar.xz"
+subpackages="$pkgname-lang"
+options="!check" # No tests available
+
+build() {
+	cmake \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	make
+}
+
+check() {
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" make install
+}
+
+sha512sums="3197faa830f87ffacc080fb8e7c325dac07332175ccd740c4830e58dcb6faad9e277ad0666fdb45729c11851b40f091de9db19f0caed1abf13bfaeedb3127b8a  print-manager-19.08.0.tar.xz"

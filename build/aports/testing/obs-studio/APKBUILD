@@ -1,15 +1,15 @@
 # Contributor: Francesco Colista <fcolista@alpinelinux.org>
 # Maintainer: Francesco Colista <fcolista@alpinelinux.org>
 pkgname=obs-studio
-pkgver=22.0.2
-pkgrel=2
+pkgver=23.2.1
+pkgrel=0
 pkgdesc="Free and open source software for live streaming and screen recording"
 url="https://obsproject.com/"
 arch="x86 x86_64"
 license="GPL-2.0"
 options="!check"
 makedepends="cmake ffmpeg-dev libxinerama-dev
-	qt5-qtbase-dev qt5-qtx11extras-dev x264-dev fontconfig-dev
+	qt5-qtbase-dev qt5-qtx11extras-dev qt5-qtsvg-dev x264-dev fontconfig-dev
 	libxcomposite-dev freetype-dev libx11-dev mesa-dev curl-dev
 	pulseaudio-dev jack-dev vlc-dev alsa-lib-dev fdk-aac-dev speexdsp-dev
 	v4l-utils-dev jansson-dev eudev-dev swig mbedtls-dev python3-dev"
@@ -36,4 +36,4 @@ package() {
 	make DESTDIR="$pkgdir" install
 }
 
-sha512sums="2e4e187e828236757d77f745855910e6c4f8c5164f69772f753564356d711cd865a9497f62b910164977d47c34202ce94425181355b4bd13c078ec3099cd476f  obs-studio-22.0.2.tar.gz"
+sha512sums="aabc23d825c2ca3f40274a8e2c4935939dab4955d929c44b28cebde114e808543c1c0dc05791bb6d9f2611effb0f2cb3e20c9a653154c30a9851ea94e74c8169  obs-studio-23.2.1.tar.gz"

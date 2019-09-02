@@ -1,0 +1,31 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=oxygen-icons
+_pkgname=oxygen-icons5
+pkgver=5.61.0
+pkgrel=0
+arch="noarch"
+pkgdesc="Oxygen icon theme"
+url="https://community.kde.org/Frameworks"
+license="LGPL-2.1-or-later"
+makedepends="$depends_dev extra-cmake-modules fdupes qt5-qtbase-dev"
+source="https://download.kde.org/stable/frameworks/${pkgver%.*}/$_pkgname-$pkgver.tar.xz"
+builddir="$srcdir/$_pkgname-$pkgver"
+
+build() {
+	cmake \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_QCH=ON
+	make
+}
+
+check() {
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" make install
+}
+sha512sums="ba3ea47eca15977366f7a5e51c5be2280ba378c0fbb8802194463ed887ff62856305d0a2065a4ad7dd87e557edd92159162ece5efb4f6e1f0d15ff0be7bbd386  oxygen-icons5-5.61.0.tar.xz"

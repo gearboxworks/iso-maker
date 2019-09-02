@@ -1,19 +1,15 @@
 # Contributor: Fabian Affolter <fabian@affolter-engineering.ch>
 # Maintainer: Fabian Affolter <fabian@affolter-engineering.ch>
 pkgname=p11-kit
-pkgver=0.23.14
+pkgver=0.23.16.1
 pkgrel=0
 pkgdesc="Library for loading and sharing PKCS#11 modules"
 url="https://p11-glue.freedesktop.org/"
 arch="all"
 license="BSD"
-depends=""
-depends_dev=""
 makedepends="libtasn1-dev libffi-dev"
-install=""
 subpackages="$pkgname-dev $pkgname-doc $pkgname-trust $pkgname-server"
 source="https://github.com/p11-glue/p11-kit/releases/download/$pkgver/p11-kit-$pkgver.tar.gz"
-builddir="$srcdir"/$pkgname-$pkgver
 
 build() {
 	cd "$builddir"
@@ -66,4 +62,4 @@ server() {
 		"$subpkgdir"/usr/libexec/p11-kit
 }
 
-sha512sums="fc7e7e0745d7f8e5d783a1f38bad9bbe65b56d54897b6ba2c3118a0d912451c2d48dd113a875e7f7bfcff8fbd6b4905472fcd120630661c12029a16d2b13add4  p11-kit-0.23.14.tar.gz"
+sha512sums="7d0bbd793b43dba081054b4d022a8dbd1d477a3bd6aced72a641087023cf020f1d898899a08e737880e6c810f924814c62497c5ecb19f8322cde42667426a9a7  p11-kit-0.23.16.1.tar.gz"

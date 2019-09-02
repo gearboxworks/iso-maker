@@ -1,0 +1,37 @@
+# Contributor: Adam Dobrawy <a.dobrawy@hyperone.com>
+# Maintainer: Adam Dobrawy <a.dobrawy@hyperone.com>
+# Maintainer: HyperOne staff <pkg-maintainers@hyperone.com>
+pkgname=h1-cli
+_pkgname=${pkgname/-cli/}
+pkgver=1.7.0
+pkgrel=0
+pkgdesc="Command-line interface for HyperOne platform"
+url="https://www.hyperone.com/tools/cli/"
+arch="x86_64"
+license="MIT"
+depends="openssh-client"
+makedepends="nodejs npm"
+subpackages="rbx-cli:rbx"
+source="$pkgname-$pkgver.tar.gz::https://github.com/hyperonecom/$pkgname/archive/v$pkgver.tar.gz"
+options="!strip !check"
+
+build() {
+	npm install
+	npx pkg -c ./package.json -t "node12-alpine" -o "./dist/h1" "./bin/h1"
+	npx pkg -c ./package.json -t "node12-alpine" -o "./dist/rbx" "./bin/rbx"
+}
+
+package() {
+	mkdir -p "$pkgdir"/usr/bin
+	cp "$builddir/dist/$_pkgname" "$pkgdir"/usr/bin/$_pkgname
+}
+
+rbx() {
+	pkgdesc="Command-line interface for Rootbox platform"
+	url="http://rootbox.com/"
+	cd "$builddir"
+	mkdir -p "$subpkgdir"/usr/bin
+	cp "$builddir/dist/rbx" "$subpkgdir"/usr/bin/rbx
+}
+
+sha512sums="5d7770872ad9e3de33d83cc46a2e9ce346fe84ebd7cac85fd0ead295782094e045b113061f854001fd0233e7239c1220c4ac4ddedbcf2a794f7e62554d8548b4  h1-cli-1.7.0.tar.gz"

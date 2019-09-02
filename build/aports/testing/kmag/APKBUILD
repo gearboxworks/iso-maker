@@ -1,0 +1,30 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=kmag
+pkgver=19.08.0
+pkgrel=0
+arch="all"
+url="https://kde.org/applications/utilities/org.kde.kmag"
+pkgdesc="A screen magnifier"
+license="GPL-2.0-or-later AND GFDL-1.2-only"
+makedepends="extra-cmake-modules qt5-qtbase-dev kdoctools-dev ki18n-dev kio-dev kxmlgui-dev"
+source="https://download.kde.org/stable/applications/$pkgver/src/$pkgname-$pkgver.tar.xz"
+subpackages="$pkgname-doc $pkgname-lang"
+
+build() {
+	cmake \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	make
+}
+
+check() {
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" make install
+}
+
+sha512sums="dec8a5c863ba6e9cedaa1f1953841533adc3accf2270441e5e5c7ac217822eb23908fb0000c98a7fd967a8d25c47285455d365f3aa106a294c0bcd7678f7d6b3  kmag-19.08.0.tar.xz"

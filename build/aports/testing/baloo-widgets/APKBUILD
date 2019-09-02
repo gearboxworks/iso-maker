@@ -1,0 +1,32 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=baloo-widgets
+pkgver=19.08.0
+pkgrel=0
+pkgdesc="Widgets for Baloo"
+arch="all"
+url="https://community.kde.org/Baloo"
+license="LGPL-2.0-only AND LGPL-2.1-or-later"
+depends_dev="qt5-qtbase-dev kconfig-dev kio-dev ki18n-dev kfilemetadata-dev baloo-dev"
+makedepends="$depends_dev extra-cmake-modules"
+checkdepends="xvfb-run"
+source="https://download.kde.org/stable/applications/$pkgver/src/$pkgname-$pkgver.tar.xz"
+subpackages="$pkgname-dev $pkgname-lang"
+
+build() {
+	cmake \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	make
+}
+
+check() {
+	# filemetadatadatedisplaytest requires running dbus server
+	CTEST_OUTPUT_ON_FAILURE=TRUE xvfb-run ctest -E "filemetadatadatedisplaytest"
+}
+
+package() {
+	DESTDIR="$pkgdir" make install
+}
+sha512sums="16fc7e652a939bc758fee34bc1778dd77ced17708c61b4c247907a0a3372d7df8fee60f6e93df828d46f62972325210edf0c8c3eaf8143fa874f344fe0820c2d  baloo-widgets-19.08.0.tar.xz"

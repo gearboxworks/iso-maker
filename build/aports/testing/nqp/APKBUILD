@@ -1,7 +1,7 @@
 # Contributor: Curt Tilmes <Curt.Tilmes@nasa.gov>
 # Maintainer: Curt Tilmes <Curt.Tilmes@nasa.gov>
 pkgname=nqp
-pkgver=2018.11
+pkgver=2019.07.1
 pkgrel=0
 pkgdesc="Not Quite Perl"
 url="https://github.com/perl6/nqp"
@@ -10,24 +10,19 @@ options="!archcheck" # Arch dependencies are embedded
 license="Artistic-2.0"
 depends="moarvm"
 makedepends="perl-utils moarvm-dev"
-install=""
 subpackages="$pkgname-doc"
-source="${pkgname}-${pkgver}.tar.gz::https://github.com/perl6/nqp/archive/${pkgver}.tar.gz"
-builddir="$srcdir"/"$pkgname"-"$pkgver"
+source="https://github.com/perl6/nqp/releases/download/$pkgver/nqp-$pkgver.tar.gz"
 
 build() {
-	cd "$builddir"
 	perl Configure.pl --prefix=/usr --backends=moar
 	make
 }
 
 check() {
-	cd "$builddir"
 	make test
 }
 
 package() {
-	cd "$builddir"
 	make DESTDIR="$pkgdir" install
 }
 
@@ -39,4 +34,4 @@ doc() {
 	done
 }
 
-sha512sums="2d5cf38fd153a4fb96e7597347e31315b87771554f0c7fce4fe7957628da95f219baf2111fce2ce2cfead9008125926f7be79515c3ab28b4d5ea8f41bf352ef2  nqp-2018.11.tar.gz"
+sha512sums="90c9cfbc3de165ba8c0b4653a849a6faafef9e3862743c3675277c25bc4578522a97a663a4ed7529831fa0b617c7412fcfe67b3e3ff1fc5994f6c42cdf7a4bc5  nqp-2019.07.1.tar.gz"

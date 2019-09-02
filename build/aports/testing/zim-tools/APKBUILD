@@ -1,0 +1,34 @@
+# Contributor: Oleg Titov <oleg.titov@gmail.com>
+# Maintainer: Oleg Titov <oleg.titov@gmail.com>
+pkgname=zim-tools
+pkgver=1.0.4
+pkgrel=0
+pkgdesc="Various ZIM command line tools"
+url="https://github.com/openzim/zim-tools"
+arch="all"
+license="GPL-3.0-or-later"
+options="!check" # No test suite from upstream
+makedepends="meson libzim-dev"
+subpackages="$pkgname-doc"
+source="zim-tools-$pkgver.tar.gz::https://github.com/openzim/zim-tools/archive/$pkgver.tar.gz"
+
+build() {
+	mkdir build
+
+	meson . build \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--localstatedir=/var \
+		--buildtype=release
+
+	ninja -C build
+}
+
+package() {
+	DESTDIR="$pkgdir" ninja -C build install
+
+	install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md" 
+}
+
+sha512sums="fe2526a401d5448a46a1248fdbc32df57e93544dd2fd53004adf71e8c8b0fdf2aca9ee8b1d463d0ad50237d07f55a4e0039020e5bf277b905078d20333b2cbf6  zim-tools-1.0.4.tar.gz"

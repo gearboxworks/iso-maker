@@ -4,13 +4,13 @@
 pkgname=ocaml-camlp4
 _pkgname=camlp4
 # NOTE: camlp4 version must match ocaml version!
-pkgver=4.06.1
+pkgver=4.08.1
 _pkgver="${pkgver%.*}+${pkgver##*.}"
 _ocamlver=${pkgver%.*}
-pkgrel=1
+pkgrel=0
 pkgdesc="Caml preprocessor and pretty-printer"
 url="https://github.com/ocaml/camlp4/releases"
-arch="all !x86 !armhf !armv7 !s390x"  # ocaml not avail on excluded platforms
+arch="aarch64 ppc64le x86_64"  # reflect ocaml aport platforms
 license="LGPL-2.0-or-later-WITH-linking-exception"
 depends="ocaml-runtime=~$_ocamlver ocaml-ocamlbuild"
 depends_dev="$pkgname=$pkgver-r$pkgrel"
@@ -23,18 +23,15 @@ source="$pkgname-$_pkgver.tar.gz::https://github.com/ocaml/$_pkgname/archive/$_p
 builddir="$srcdir/$_pkgname-${_pkgver/+/-}"
 
 build() {
-	cd "$builddir"
-
-	./configure
+	./configure \
+		--bindir="/usr/bin" \
+		--libdir="/usr/lib/ocaml" \
+		--pkgdir="/usr/lib/ocaml"
 	make -j1 all camlp4/META
 }
 
 package() {
-	cd "$builddir"
-
-	make BINDIR="$pkgdir/usr/bin" \
-		LIBDIR="$pkgdir/usr/lib/ocaml" \
-		PKGDIR="$pkgdir/usr/lib/ocaml" \
+	make DESTDIR="$pkgdir" \
 		install install-META
 }
 
@@ -56,4 +53,4 @@ dev() {
 	rmdir "$subpkgdir"/$sitelib 2>/dev/null || true
 }
 
-sha512sums="32be92c4e64a985a3d2880e2201351961a4b7138a8be6e3f17e9b8e038a1660d13596f29fe0249c8c4183cd8cd06277cebc58f42609c8d2028032e893490fe43  ocaml-camlp4-4.06+1.tar.gz"
+sha512sums="1f8d6df42935ecdbed96a7b02d05564665b4bf0cbe4f5fd1800a1f292d8b3864d973df1e9e8c566c0fd00b5a55ba47ecd9bd07f134a9be83601e010b0246e075  ocaml-camlp4-4.08+1.tar.gz"

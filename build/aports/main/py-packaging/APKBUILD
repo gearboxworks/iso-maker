@@ -1,22 +1,22 @@
 # Maintainer: Breno Leitao <breno.leitao@gmail.com>
 pkgname=py-packaging
 _pkgname=packaging
-pkgver=17.1
+pkgver=19.1
 pkgrel=0
 pkgdesc="Core utilities for Python packages"
 url="https://pypi.python.org/pypi/packaging"
 arch="noarch"
-license="Apache-2.0 BSD"
+license="Apache-2.0 AND BSD-2-Clause"
 depends="py-parsing py-six"
 subpackages="py2-${pkgname#py-}:_py2 py3-${pkgname#py-}:_py3"
-makedepends="python3-dev python2-dev py-setuptools"
+makedepends="py2-setuptools py3-setuptools"
 source="https://files.pythonhosted.org/packages/source/p/$_pkgname/$_pkgname-$pkgver.tar.gz"
 builddir="$srcdir/$_pkgname-$pkgver"
 
 build() {
 	cd "$builddir"
-	python2 setup.py build || return 1
-	python3 setup.py build || return 1
+	python2 setup.py build
+	python3 setup.py build
 }
 
 package() {
@@ -46,4 +46,4 @@ _py() {
 }
 
 
-sha512sums="52d2f482ae5cd0f8e7b3ac35c4b270ca736bc4f7ebaa569631d1dcb8ea024ee6f75127ca2aa3c95e686ebbd427de2ef4bc01bcd839591f7b4c1e26f9b8d9acb0  packaging-17.1.tar.gz"
+sha512sums="1dec7f49c325801eb85b11432f8a316d228bb1881a04ac546f5556d60f5fa33f8085d0e91bbd5abfeb30bfcb05ec0532ed75a977dc996e256b4dc8c27c10e79b  packaging-19.1.tar.gz"

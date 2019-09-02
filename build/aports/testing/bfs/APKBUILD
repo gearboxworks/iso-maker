@@ -1,32 +1,31 @@
 # Contributor: dai9ah <dai9ah@protonmail.com>
 # Maintainer: dai9ah <dai9ah@protonmail.com>
 pkgname=bfs
-pkgver=1.2.4
+pkgver=1.5
 pkgrel=0
 pkgdesc="Breadth-first variant of the UNIX find command"
 url="https://github.com/tavianator/bfs"
 arch="all"
 license="0BSD"
-makedepends="linux-headers"
-checkdepends="bash"
+makedepends="acl-dev libcap-dev linux-headers attr-dev"
+checkdepends="bash acl"
 subpackages="$pkgname-doc"
 options="!checkroot"
-source="$pkgname-$pkgver.tar.gz::https://github.com/tavianator/bfs/archive/$pkgver.tar.gz"
-builddir="$srcdir/$pkgname-$pkgver"
+source="$pkgname-$pkgver.tar.gz::https://github.com/tavianator/bfs/archive/$pkgver.tar.gz
+	no-statx.patch
+	"
 
 build() {
-	cd "$builddir"
 	make
 }
 
 check() {
-	cd "$builddir"
 	make check
 }
 
 package() {
-	cd "$builddir"
 	make DESTDIR="$pkgdir" install
 }
 
-sha512sums="223a09a2896bceafb1c13240156d22de7e822de8c28e7301a60a5285d1128365e42282ff8e3642046e2d0e7d501e14fc0e15b3ae2539c1da57465322ff436556  bfs-1.2.4.tar.gz"
+sha512sums="13e79ce1d488f5ed9338020b1502c78cf9141ec7eceacc2fb79da23a81403b10b17c07116408dbf0b6bef7744dd547a8749d98bc485fda70665a07fac7e5f561  bfs-1.5.tar.gz
+010666234db1bae05f42288eaf4943d4677ec363e5142839c958bee0ed10d7a994bec255d9efee05d63f58e7c91e060a4ca06306aa1774bb47068daf1ef34e85  no-statx.patch"

@@ -1,17 +1,17 @@
 # Contributor: Sören Tempel <soeren+alpine@soeren-tempel.net>
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=ccache
-pkgver=3.5.1
-_pkgver=${pkgver}a
+pkgver=3.7.3
+_pkgver=${pkgver}
 pkgrel=0
 pkgdesc="A fast C/C++ compiler cache"
-url="https://ccache.samba.org/"
+url="https://ccache.dev/"
 arch="all"
 license="GPL-3.0-or-later"
 makedepends="zlib-dev"
 checkdepends="bash perl"
 subpackages="$pkgname-doc"
-source="https://samba.org/ftp/$pkgname/$pkgname-$_pkgver.tar.xz"
+source="https://github.com/ccache/ccache/releases/download/v$pkgver/$pkgname-$pkgver.tar.xz"
 builddir="$srcdir/$pkgname-$pkgver"
 
 prepare() {
@@ -52,4 +52,4 @@ package() {
 	done
 }
 
-sha512sums="8a2e9eb06ba21fcf92084afd94fc221168693de545e0448f4da2098bef2bcbfdb017117c325b0bab4931b9e346dd8c1a9d1ebaed0cdc36496d9452985cdd1b43  ccache-3.5.1a.tar.xz"
+sha512sums="74e6dd9558273af74aaf085d932955e8ded3d9f7d7b316172109af8f703f00a75fcc27187469d9cb5ba8654bcad12e406bede77cfcacbc0a752d5ca42e52c628  ccache-3.7.3.tar.xz"

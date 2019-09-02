@@ -1,7 +1,7 @@
 # Contributor: Carlo Landmeter <clandmeter@gmail.com>
 # Maintainer: Andy Postnikov <apostnikov@gmail.com>
 pkgname=drupal7
-pkgver=7.63
+pkgver=7.67
 pkgrel=0
 pkgdesc="An open source content management platform"
 url="https://www.drupal.org/"
@@ -36,6 +36,10 @@ builddir="$srcdir/drupal-$pkgver"
 options="!check" # This package not have testsuite
 
 # secfixes:
+#   7.66-r0:
+#     - CVE-2018-11358
+#   7.65-r0:
+#     - CVE-2019-6341
 #   7.62-r0:
 #     - CVE-2018-1000888
 #   7.59-r0:
@@ -78,4 +82,4 @@ package() {
 		"$pkgdir"/var/lib/$pkgname/sites/default/files
 }
 
-sha512sums="e601732590a0b6d63d15d4d73e9531576592092dda986d965ff4d466069f21fc0adcd004798547b14dc528546ddcb5bb089a7cb1919b89f94339888858f12dd1  drupal-7.63.tar.gz"
+sha512sums="0e4f60010b1395183cea19424e8c2849f93fb7285a081bf7d0c774b8e82f403083533059f58c3831950cc06dfa8117d443db52b66a521301ceac10b1b333aa28  drupal-7.67.tar.gz"

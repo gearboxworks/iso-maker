@@ -1,0 +1,32 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=kdeclarative
+pkgver=5.61.0
+pkgrel=0
+pkgdesc="Provides integration of QML and KDE Frameworks"
+arch="all"
+url="https://community.kde.org/Frameworks"
+license="LGPL-2.1-or-later"
+depends_dev="qt5-qtdeclarative-dev kconfig-dev ki18n-dev kiconthemes-dev kio-dev kwidgetsaddons-dev kwindowsystem-dev kglobalaccel-dev kguiaddons-dev kpackage-dev libepoxy-dev"
+makedepends="$depends_dev extra-cmake-modules doxygen qt5-qttools-dev"
+checkdepends="xvfb-run"
+source="https://download.kde.org/stable/frameworks/${pkgver%.*}/$pkgname-$pkgver.tar.xz"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-lang"
+
+build() {
+	cmake \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_QCH=ON
+	make
+}
+
+check() {
+	CTEST_OUTPUT_ON_FAILURE=TRUE xvfb-run ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" make install
+}
+sha512sums="8f6667812e55bb8f8aca38d1bc8c0df83d10ed4bab1dd7a22695f76adecf1c5dd0d0852f3b19c9ad4d292c6284845ff5c06fcd897ac764c8f1d6e891754e15ce  kdeclarative-5.61.0.tar.xz"

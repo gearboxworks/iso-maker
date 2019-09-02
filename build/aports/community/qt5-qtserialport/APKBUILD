@@ -2,7 +2,7 @@
 # Maintainer: Denis Ryabyy <vv1r0x@gmail.com>
 pkgname=qt5-qtserialport
 _pkgname=${pkgname/qt5-//}-everywhere-src
-pkgver=5.12.0
+pkgver=5.12.4
 _ver=${pkgver/_p/-}
 _ver=${_ver/_/-}
 _ver=${_ver/beta0/beta}
@@ -39,4 +39,4 @@ package() {
 	make INSTALL_ROOT="$pkgdir" install
 }
 
-sha512sums="b8004e844cab66a50f5c899af74f22e62dbac23493210d579344d4a9337990da9781c3647662e7f31b132b4c60d7e3de640a9a636ae7c63de253858324e11428  qtserialport-everywhere-src-5.12.0.tar.xz"
+sha512sums="c51fa5eca92a16c41678eef37c3e33c6ea7f61ad881dd309548b83bafa3fedf191afc324437863dcf1a35dafc512363e7588f65136c07ad8f0d51c6854da178f  qtserialport-everywhere-src-5.12.4.tar.xz"

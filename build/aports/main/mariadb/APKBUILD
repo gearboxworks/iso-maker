@@ -3,12 +3,13 @@
 # Contributor: Łukasz Jendrysik <scadu@yandex.com>
 # Contributor: Carlo Landmeter <clandmeter@gmail.com>
 # Contributor: TBK <alpine@jjtc.eu>
+# Contributor: Marcel Haazen <marcel@haazen.xyz>
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=mariadb
-pkgver=10.3.12
-pkgrel=2
+pkgver=10.4.7
+pkgrel=0
 pkgdesc="A fast SQL database server"
-url="http://www.mariadb.org"
+url="https://www.mariadb.org/"
 pkgusers="mysql"
 pkggroups="mysql"
 arch="all"
@@ -39,17 +40,27 @@ fi
 
 source="https://downloads.mariadb.org/interstitial/mariadb-$pkgver/source/mariadb-$pkgver.tar.gz
 	$pkgname.initd
-	fix-c11-atomics-check.patch
-	fix-mysql-install-db-path.patch
-	ppc-remove-glibc-dep.patch
 	pcre.cmake.patch
-	0001-MDEV-18269-fix-off-by-one-bug-in-unittest.patch
+	ppc-remove-glibc-dep.patch
 	"
 # dbug test fails under rootbld
 #options="!check"
 builddir="$srcdir/$pkgname-$pkgver"
 
 # secfixes:
+#   10.4.7-r0:
+#     - CVE-2019-2805
+#     - CVE-2019-2740
+#     - CVE-2019-2739
+#     - CVE-2019-2737
+#     - CVE-2019-2758
+#   10.3.15-r0:
+#     - CVE-2019-2614
+#     - CVE-2019-2627
+#     - CVE-2019-2628
+#   10.3.13-r0:
+#     - CVE-2019-2510
+#     - CVE-2019-2537
 #   10.3.11-r0:
 #     - CVE-2018-3282
 #     - CVE-2016-9843
@@ -107,8 +118,8 @@ build() {
 		-DSYSCONF2DIR=/etc/my.cnf.d \
 		-DMYSQL_DATADIR=/var/lib/mysql \
 		-DMYSQL_UNIX_ADDR=/run/mysqld/mysqld.sock \
-		-DDEFAULT_CHARSET=utf8 \
-		-DDEFAULT_COLLATION=utf8_general_ci \
+		-DDEFAULT_CHARSET=utf8mb4 \
+		-DDEFAULT_COLLATION=utf8mb4_general_ci \
 		-DENABLED_LOCAL_INFILE=ON \
 		-DINSTALL_INFODIR=share/info \
 		-DINSTALL_MANDIR=share/man \
@@ -176,9 +187,7 @@ build() {
 check() {
 	cd "$builddir"
 	# exclude test-connect which seems to be buggy. testsuite does not set port env var
-	# ma_test_loghandler_readonly seems to fail if /etc/my.conf.d is missing
-	ctest -E '(test-connect|ma_test_loghandler_readonly)'
-
+	ctest -E '(test-connect)'
 }
 
 package() {
@@ -221,6 +230,7 @@ package() {
 		"$pkgdir"/usr/lib/$pkgname/plugin/mysql_clear_password.so \
 		"$pkgdir"/usr/lib/$pkgname/plugin/sha256_password.so \
 		"$pkgdir"/usr/lib/$pkgname/plugin/caching_sha2_password.so \
+		"$pkgdir"/usr/lib/$pkgname/plugin/client_ed25519.so \
 		"$pkgdir"/usr/lib/libmysqlclient.so \
 		"$pkgdir"/usr/lib/libmysqlclient_r.so \
 		"$pkgdir"/usr/lib/libmariadb.so* \
@@ -416,13 +426,10 @@ _plugin_rocksdb() {
 	depends="$pkgname=$pkgver-r$pkgrel"
 	mkdir -p "$subpkgdir"/usr/lib/mariadb/plugin
 	mv "$pkgdir"/usr/lib/mariadb/plugin/ha_rocksdb.so \
-		 "$subpkgdir"/usr/lib/mariadb/plugin/ha_rocksdb.so
+		"$subpkgdir"/usr/lib/mariadb/plugin/ha_rocksdb.so
 }
 
-sha512sums="9dd2939684c4591db306be6afb34663626dfaae133f88dd31125c759dce16b9e9d767a9254e30d9ee5fa2ea027e223dd4799effba8a8b0e4638d5de9e2512003  mariadb-10.3.12.tar.gz
-06751768cb00d2e433655635c38d267ef25084a5830ff40e719ac579223c7192dc34b43f919ab6faf480094632327511cbd22456064dde2d04dc15648b9e3b9f  mariadb.initd
-b4469f2f0299e71c09b65c91373f2d72b7fe9a9cd58ad24737a78a8097473b29c32b7267e173a2dfe1158f2f7d40a7fb02fb1b35caeda44d16ae3b9e2602a75f  fix-c11-atomics-check.patch
-0c08198b907dad18c5a7ab89f37ff53da7cb102b0848fb58912900bd92468a0d4f853bc5c0116f655c500d5ed20dcbf20d3884dcd0040634e23c911dfeaf7001  fix-mysql-install-db-path.patch
-e9ae4613f1d8c5f0a59b39a3548c46e50674ae78e7457d0e64c49f7e1573125c13634bbce7e29179bb8865a423171f852f43b96f7ef95619a95f02edcfc71efd  ppc-remove-glibc-dep.patch
+sha512sums="cb8b5adaef1970b9c8f04db08c18660f8b3df87f699aa93c1bee9497b887ddf50fcf3a2aebbe21a5fc9dfcbd118d0192d7421512522d98eaf30a014822c2f7ce  mariadb-10.4.7.tar.gz
+c352969f6665b0ffa387f7b185a5dea7751f4b16c12c809627857b27321efa09159369d7dd5c852d6159a9f173cb895fb601f0c52a1fa6e3527899520030964c  mariadb.initd
 70da971aa78815495098205bcbd28428430aa83c3f1050fec0231ca86af9d9def2d2108a48ee08d86812c8dc5ad8ab1ef4e17a49b4936ed5187ae0f6a7ef8f63  pcre.cmake.patch
-f203fe7d4ab2c54dba1219b7fe7fcc7d128256424441f45441b65f117da2fb3e217fb69561bb3891c4b8a3cbd6d7b98ee614242533b441f198e211dcf6c5b1d9  0001-MDEV-18269-fix-off-by-one-bug-in-unittest.patch"
+e9ae4613f1d8c5f0a59b39a3548c46e50674ae78e7457d0e64c49f7e1573125c13634bbce7e29179bb8865a423171f852f43b96f7ef95619a95f02edcfc71efd  ppc-remove-glibc-dep.patch"

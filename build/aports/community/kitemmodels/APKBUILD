@@ -1,0 +1,32 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=kitemmodels
+pkgver=5.61.0
+pkgrel=0
+pkgdesc="Models for Qt Model/View system"
+arch="all"
+url="https://community.kde.org/Frameworks"
+license="LGPL-2.0-only AND LGPL-2.0-or-later"
+depends_dev="qt5-qtbase-dev"
+makedepends="$depends_dev extra-cmake-modules qt5-qttools-dev doxygen"
+checkdepends="xvfb-run"
+source="https://download.kde.org/stable/frameworks/${pkgver%.*}/$pkgname-$pkgver.tar.xz"
+subpackages="$pkgname-dev $pkgname-doc"
+
+build() {
+	cmake \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_QCH=ON
+	make
+}
+
+check() {
+	CTEST_OUTPUT_ON_FAILURE=TRUE xvfb-run ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" make install
+}
+sha512sums="986bcea37c65ce85df9c42f594a2f7a5ad65b5104a0be855221c57bdd57319a095dfd9ed9fe60ded5e97108b12859893326c7e66814a77e11538a8a244b22497  kitemmodels-5.61.0.tar.xz"

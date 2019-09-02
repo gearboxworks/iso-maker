@@ -1,0 +1,29 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=spectacle
+pkgver=19.08.0
+pkgrel=0
+pkgdesc="Application for capturing desktop screenshots"
+arch="all"
+url="https://kde.org/applications/utilities/org.kde.spectacle"
+license="GPL-2.0-only"
+makedepends="extra-cmake-modules qt5-qtbase-dev qt5-qtx11extras-dev kcoreaddons-dev kwidgetsaddons-dev kdbusaddons-dev knotifications-dev kconfig-dev ki18n-dev kio-dev kwindowsystem-dev kdoctools-dev knewstuff-dev kdeclarative-dev libkipi-dev purpose-dev xcb-util-image-dev xcb-util-cursor-dev libxcb-dev xcb-util-renderutil-dev"
+source="https://download.kde.org/stable/applications/$pkgver/src/$pkgname-$pkgver.tar.xz"
+subpackages="$pkgname-doc $pkgname-lang"
+
+build() {
+	cmake \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	make
+}
+
+check() {
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" make install
+}
+sha512sums="3581db1a0135e0942c3ddddeb8b8bf7d913e0bb45576a5a3982d24793bfab75f9ae66dc40db5708cdcadd950bd977a7c85ad44e20d8c8b50c2cf0e219cb89a97  spectacle-19.08.0.tar.xz"

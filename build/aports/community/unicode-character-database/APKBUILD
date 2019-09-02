@@ -1,0 +1,24 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Rasmus Thomsen <oss@cogitri.dev>
+pkgname=unicode-character-database
+pkgver=12.1.0
+pkgrel=0
+pkgdesc="Unicode Character Database"
+arch="noarch"
+license="Unicode-DFS-2015"
+url="https://www.unicode.org/"
+makedepends="libarchive-tools"
+source="UCD-$pkgver.zip::http://www.unicode.org/Public/zipped/$pkgver/UCD.zip
+	Unihan-$pkgver.zip::http://www.unicode.org/Public/zipped/$pkgver/Unihan.zip"
+options="!check" # no tests to speak off
+builddir="$srcdir"
+
+package() {
+	for _f in UCD Unihan; do
+		install -Dm644 $_f-$pkgver.zip "$pkgdir/usr/share/unicode/$_f.zip"
+		bsdtar -C "$pkgdir/usr/share/unicode" -x --no-same-owner --no-same-permissions -f $_f-$pkgver.zip
+	done
+}
+
+sha512sums="68512627ecb75520b354160216cc14622c0d5321356f03429a102f734bddf6859c4ab266ed15db177dcbffd76c97d13d90de9a4fc38b10082a0e58fe3c82cda4  UCD-12.1.0.zip
+7fdefad078284c14a9105655d1cb4d2b0dc1c89c56effe92ffcbd5a30b325559a56d97574b6077144d7a4ed02df6e6a402a2a5360e4abc0c84bae5c589044375  Unihan-12.1.0.zip"

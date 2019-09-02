@@ -1,7 +1,7 @@
 # Maintainer: Francesco Colista <fcolista@alpinelinux.org>
 pkgname=qt5-qtquickcontrols
 _pkgname=${pkgname/qt5-//}-everywhere-src
-pkgver=5.12.0
+pkgver=5.12.4
 _ver=${pkgver/_/-}
 _ver=${_ver/beta0/beta}
 _ver=${_ver/rc0/rc}
@@ -36,4 +36,4 @@ package() {
 	make install INSTALL_ROOT="$pkgdir"
 }
 
-sha512sums="a2052398c281e81f8a61afe49f262d4feeb4da2593dbec0cc9971e7de6b169b17c1cf2ee7c213b3d5939cc322d4d715a1ce318b031fd4b8a783fac7bae3e37f9  qtquickcontrols-everywhere-src-5.12.0.tar.xz"
+sha512sums="315f711d856a4f2882c4e60435bd5fc77623b4ba3bd10fea8e8d052e0a183556c4b5342236b18fade0bbae3a45df8b1426a26a87b1d7b071bb3e5846585775f6  qtquickcontrols-everywhere-src-5.12.4.tar.xz"

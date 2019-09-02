@@ -1,0 +1,32 @@
+# Contributor: Fabian Affolter <fabian@affolter-engineering.ch>
+# Maintainer: Fabian Affolter <fabian@affolter-engineering.ch>
+pkgname=py3-fs
+_pkgname=fs
+pkgver=2.4.10
+pkgrel=0
+pkgdesc="Python's filesystem abstraction layer."
+options="!check" # Tests fail on builder
+url="https://pypi.org/project/fs/"
+arch="noarch"
+license="MIT"
+replaces="py-fs" # for backwards compatibility
+provides="py-fs=$pkgver-r$pkgrel" # for backwards compatibility
+depends="python3 py3-appdirs py3-six py3-tz"
+makedepends="py3-setuptools"
+checkdepends="py3-mock py3-nose py3-openssl py3-psutil py3-pyftpdlib"
+source="https://files.pythonhosted.org/packages/source/${_pkgname:0:1}/$_pkgname/$_pkgname-$pkgver.tar.gz"
+builddir="$srcdir"/$_pkgname-$pkgver
+
+build() {
+	python3 setup.py build
+}
+
+check() {
+	python3 setup.py test
+}
+
+package() {
+	python3 setup.py install --prefix=/usr --root="$pkgdir"
+}
+
+sha512sums="225d372d74d5bf916ecd78d8254c54d94141cad259c10178014afae1593c472df20300525b0758604a95cb867388a3145fb7608ed73a6893ec5e489dbf93b88e  fs-2.4.10.tar.gz"

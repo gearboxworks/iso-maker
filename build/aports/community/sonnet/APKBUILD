@@ -1,0 +1,32 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=sonnet
+pkgver=5.61.0
+pkgrel=0
+pkgdesc="Spelling framework for Qt5"
+arch="all"
+url="https://community.kde.org/Frameworks"
+license="LGPL-2.1-only"
+depends_dev="qt5-qtbase"
+makedepends="$depends_dev extra-cmake-modules qt5-qttools-dev doxygen hunspell-dev"
+checkdepends="xvfb-run"
+source="https://download.kde.org/stable/frameworks/${pkgver%.*}/$pkgname-$pkgver.tar.xz"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-lang"
+
+build() {
+	cmake \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_QCH=ON
+	make
+}
+
+check() {
+	CTEST_OUTPUT_ON_FAILURE=TRUE xvfb-run ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" make install
+}
+sha512sums="8917ca9207715e308080c9f68107a97d234a1aa95fffa85712c413a51493010fc52e0e39c618c3d8290a9731d07b343d8349f383428cce8358a662ddc8698b97  sonnet-5.61.0.tar.xz"

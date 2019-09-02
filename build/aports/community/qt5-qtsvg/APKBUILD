@@ -2,7 +2,7 @@
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=qt5-qtsvg
 _pkgname=${pkgname/qt5-//}-everywhere-src
-pkgver=5.12.0
+pkgver=5.12.4
 _ver=${pkgver/_/-}
 _ver=${_ver/beta0/beta}
 _ver=${_ver/rc0/rc}
@@ -38,4 +38,4 @@ package() {
 	make install INSTALL_ROOT="$pkgdir"
 }
 
-sha512sums="571e457dce3b62de5f316ab69fa0a9a9fd6a3ace8b05ae525ad5c82e6784b60f3c06f1ce94c3639c861639740b29d996fda6907ce77b60aeae916788313e0a65  qtsvg-everywhere-src-5.12.0.tar.xz"
+sha512sums="40d7dc82e0acde52e1258e1b1753cc93609c31cf69057c52dc2dd30dc59f2d7d434e20fa4f7f27db3fa300fd3c8f23a8fb03cc26b27cc1c02cc3bf6d97383503  qtsvg-everywhere-src-5.12.4.tar.xz"

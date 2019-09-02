@@ -1,17 +1,17 @@
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=qt5-qtbase
 _pkgname=${pkgname/qt5-//}-everywhere-src
-pkgver=5.12.0
+pkgver=5.12.4
 _ver=${pkgver/_p/-}
 _ver=${_ver/_/-}
 _ver=${_ver/beta0/beta}
 _ver=${_ver/rc0/rc}
 _V=${_ver/rc/RC}
-pkgrel=0
+pkgrel=1
 pkgdesc="Qt5 - QtBase components"
-url="http://qt-project.org/"
+url="https://qt.io/developers/"
 arch="all"
-license="LGPL-2.0 with exceptions or GPL-3.0 with exceptions"
+license="LGPL-2.1-only AND LGPL-3.0-only AND GPL-3.0-only AND Qt-GPL-exception-1.0"
 _sub="$pkgname-sqlite $pkgname-odbc $pkgname-postgresql $pkgname-mysql
 	$pkgname-tds $pkgname-x11"
 depends_dev="mesa-dev libice-dev libsm-dev libx11-dev libxext-dev
@@ -49,6 +49,7 @@ makedepends="$depends_dev
 	xcb-util-renderutil-dev
 	"
 subpackages="$pkgname-dev $pkgname-doc $_sub"
+provides="qtbase"
 
 case $pkgver in
 *_beta*|*_rc*) _rel=development_releases;;
@@ -202,5 +203,5 @@ x11() {
 	return 0
 }
 
-sha512sums="8e6c51b754840d17e694b5b4a0d732afe04ebe48d166bca429db01ce3ac9014bb0ed35fe99ad165973889d96919f6b6774429585bae9a7fdba6b07f4c1eb3570  qtbase-everywhere-src-5.12.0.tar.xz
+sha512sums="28b029a0d3621477f625d474b8bc38ddcc7173df6adb274b438e290b6c50bd0891e5b62c04b566a281781acee3a353a6a3b0bc88228e996994f92900448d7946  qtbase-everywhere-src-5.12.4.tar.xz
 7d68421a14f0259535c977d8a521c98918193c107b76ac664571b12f5b0d7588a0d0e1297af412a26753a393b21f3f44c3274fa8ab5bc87f03705a3a03acb444  qt-musl-iconv-no-bom.patch"

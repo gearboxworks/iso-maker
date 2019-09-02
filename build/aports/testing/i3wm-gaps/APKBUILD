@@ -1,6 +1,6 @@
-# Maintainer:
+# Maintainer: prspkt <prspkt@protonmail.com>
 pkgname=i3wm-gaps
-pkgver=4.15.0.1
+pkgver=4.17.1
 pkgrel=0
 pkgdesc="Improved dynamic tiling window manager with additional features"
 url="https://github.com/Airblader/i3"
@@ -16,29 +16,27 @@ source="i3wm-$pkgver.tar.gz::https://github.com/Airblader/i3/archive/$pkgver.tar
 	i3wm-musl-glob-tilde.patch
 	"
 builddir="$srcdir/i3-$pkgver"
+options="!check" # missing perl bindings for libxcb
+
+prepare() {
+	default_prepare
+	autoreconf -vfi
+}
 
 build() {
-	cd "$srcdir/i3-$pkgver"
-	autoreconf -fi
 	./configure \
-		--prefix="/usr" \
-		--sysconfdir="/etc" \
+		--prefix=/usr \
+		--sysconfdir=/etc \
 		--disable-builddir
 	make
 }
 
-check() {
-	cd "$builddir"
-	./i3 --version > /dev/null
-}
-
 package() {
-	cd "$builddir"
 	make DESTDIR="$pkgdir/" install
 
 	install -d "$pkgdir/usr/share/man/man1"
 	install -m644 man/*.1 "$pkgdir"/usr/share/man/man1/
 }
 
-sha512sums="76ff860e4ca0edd0e22bdff9ae9b1bc150df2b5bc15b0d7ea7a63d373e8d156a43bd91f8a40c48b4c771603f7de7c18c6d16c53fef582e53f51c53a197fa7a0a  i3wm-4.15.0.1.tar.gz
-8ce7d00371c43b93dabbe0dadf9caf7c58a68f4a0079f5a9b9552c15c55bfa0df16d7e87a281595af2ac5254632ba28ccf82a467cea16159b41490f6f2910299  i3wm-musl-glob-tilde.patch"
+sha512sums="31e47487f6f662f27b2642925f4ddfc553f1fd075e612d0d2661db723897b12eeae0a2bcefa8a43e7f1d4c15aec2222d3a63e37c8f7e1f9fc96567faa380ebff  i3wm-4.17.1.tar.gz
+c6ae3f22d0303da5de7ca4c92734b043a76d7447559fe2ffc308a8d135076cf05ee53ef63eb28c1bd628a1edfb2d1a0ed2d090836cb5fc70f2b882ee1105dad3  i3wm-musl-glob-tilde.patch"

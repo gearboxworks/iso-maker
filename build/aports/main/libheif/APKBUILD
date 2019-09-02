@@ -1,0 +1,47 @@
+# Contributor: Jakub Jirutka <jakub@jirutka.cz>
+# Maintainer: Jakub Jirutka <jakub@jirutka.cz>
+pkgname=libheif
+pkgver=1.5.0
+pkgrel=0
+pkgdesc="ISO/IEC 23008-12:2017 HEIF file format decoder and encoder"
+url="https://www.libde265.org"
+arch="all"
+license="LGPL-3.0-or-later"
+depends_dev="x265-dev libde265-dev"
+makedepends="$depends_dev libjpeg-turbo-dev libpng-dev"
+options="!check"  # no tests provided
+subpackages="$pkgname-dev $pkgname-tools"
+source="https://github.com/strukturag/libheif/releases/download/v$pkgver/libheif-$pkgver.tar.gz"
+
+# secfixes:
+#   1.5.0-r0:
+#     - CVE-2019-11471
+
+build() {
+	# This is en/decoder, so performance matters more than size.
+	export CPPFLAGS="${CFLAGS/-Os/-O2}"
+	export CXXFLAGS="${CFLAGS/-Os/-O2}"
+
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--localstatedir=/var \
+		--disable-static
+	make
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+tools() {
+	pkgdesc="$pkgdesc (tools)"
+
+	mkdir -p "$subpkgdir"/usr
+	mv "$pkgdir"/usr/bin "$subpkgdir"/usr/
+}
+
+sha512sums="a5f7073e17ce856d8a00d1e123e234317824e95a10fda8a29b93c2cac3798beba52093f4552c9701a0d4fe9f00ab057f36c1d304aa288317c54b25cd32f59735  libheif-1.5.0.tar.gz"

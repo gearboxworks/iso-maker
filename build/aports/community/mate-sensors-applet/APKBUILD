@@ -1,8 +1,8 @@
 # Contributor: Alan Lacerda <alacerda@alpinelinux.org>
 # Maintainer: Alan Lacerda <alacerda@alpinelinux.org>
 pkgname=mate-sensors-applet
-pkgver=1.21.0
-pkgrel=1
+pkgver=1.22.1
+pkgrel=0
 pkgdesc="Applet for the MATE Panel to display readings from hardware sensors"
 url="https://github.com/mate-desktop/mate-sensors-applet"
 arch="all"
@@ -15,7 +15,6 @@ source="https://pub.mate-desktop.org/releases/${pkgver%.*}/$pkgname-$pkgver.tar.
 builddir="$srcdir/$pkgname-$pkgver"
 
 build() {
-	cd "$builddir"
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
@@ -26,13 +25,11 @@ build() {
 }
 
 check() {
-	cd "$builddir"
 	make check
 }
 
 package() {
-	cd "$builddir"
 	make DESTDIR="${pkgdir}" install
 }
 
-sha512sums="fb99c705b13d3e4b91d5ec33aa472c3359861246d17de484b7a9f43a69427fdef062a6aaabe0dad6c82b8bbd9985ff3626d654786a24cc0fc1762de211ad7920  mate-sensors-applet-1.21.0.tar.xz"
+sha512sums="4b6e608c92f03051044863f770b295d1526b19a9668513b566e81adeb28bc8524d8f458d114d2b44acf00f20c2f0a8d86b1ca7254fa165fde3b867c75a6b83e6  mate-sensors-applet-1.22.1.tar.xz"

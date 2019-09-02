@@ -1,0 +1,31 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=kbackup
+pkgver=19.08.0
+pkgrel=0
+arch="all"
+url="https://kde.org/applications/utilities/org.kde.kbackup"
+pkgdesc="An application which lets you back up your data in a simple, user friendly way"
+license="GPL-2.0-or-only"
+makedepends="extra-cmake-modules qt5-qtbase-dev knotifications-dev ki18n-dev kio-dev kdoctools-dev kxmlgui-dev kiconthemes-dev karchive-dev kwidgetsaddons-dev shared-mime-info"
+source="https://download.kde.org/stable/applications/$pkgver/src/$pkgname-$pkgver.tar.xz"
+subpackages="$pkgname-doc $pkgname-lang"
+options="!check" # No tests
+
+build() {
+	cmake \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	make
+}
+
+check() {
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" make install
+}
+
+sha512sums="22f007476b7c7ca6ddee474530bbb98aa24997c66af722b8ac1fee83dd0c98566c9ad6fc7c467ab8a6834bb7b71f6f649bc36f5dde4ac14decb84e4c18f8110a  kbackup-19.08.0.tar.xz"

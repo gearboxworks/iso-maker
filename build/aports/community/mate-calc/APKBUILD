@@ -1,8 +1,8 @@
 # Contributor: Francesco Colista <fcolista@alpinelinux.org>
 # Maintainer: Francesco Colista <fcolista@alpinelinux.org>
 pkgname=mate-calc
-pkgver=1.21.0
-pkgrel=1
+pkgver=1.22.1
+pkgrel=0
 pkgdesc="Calculator for MATE"
 url="https://github.com/mate-desktop/mate-calc"
 arch="all"
@@ -34,4 +34,4 @@ package() {
 	make DESTDIR="${pkgdir}" install
 }
 
-sha512sums="ea91f1747332d66fffda93ffd7bca966bc40455f0adcc819033dd032e8e61d16b8e5dff48946288173806d6cb51d2a7b47e7f33125cf5188ba27a9a465ad93eb  mate-calc-1.21.0.tar.xz"
+sha512sums="8e8efa1c17f6b6330471d877bc4d9c8486c64fb22ac3e3caf13a47f8be030664f1ca635a2323a78c5345a838fda307c3b4913caa748a67cc45fe43b9c8070e9a  mate-calc-1.22.1.tar.xz"

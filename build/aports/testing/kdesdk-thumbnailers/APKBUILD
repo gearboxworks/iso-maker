@@ -1,0 +1,31 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=kdesdk-thumbnailers
+pkgver=19.08.0
+pkgrel=0
+arch="all"
+url="https://www.kde.org/applications/development/"
+pkgdesc="Plugins for the thumbnailing system"
+license="GPL-2.0-only OR GPL-3.0-only"
+makedepends="extra-cmake-modules qt5-qtbase-dev kconfig-dev ki18n-dev kio-dev gettext-dev"
+source="https://download.kde.org/stable/applications/$pkgver/src/$pkgname-$pkgver.tar.xz"
+subpackages="$pkgname-lang"
+options="!check" # No tests
+
+build() {
+	cmake \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	make
+}
+
+check() {
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" make install
+}
+
+sha512sums="722c16cd109ff14ef9270cb6be98cbaab0d6e0f9b8b2c998bfc3b5bb69d0c165347fe975a751a9a4fbfc3aa04234a9ae68cbf0cff2dd4371e29cdd5eaa4a54a7  kdesdk-thumbnailers-19.08.0.tar.xz"

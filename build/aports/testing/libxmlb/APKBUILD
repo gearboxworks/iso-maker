@@ -1,0 +1,41 @@
+# Contributor: Leo <thinkabit.ukim@gmail.com>
+# Maintainer: Leo <thinkabit.ukim@gmail.com>
+pkgname=libxmlb
+pkgver=0.1.11
+pkgrel=0
+pkgdesc="Library to help create and query binary XML blobs"
+url="https://github.com/hughsie/libxmlb"
+arch="all"
+license="LGPL-2.1-or-later"
+makedepends="meson glib-dev util-linux-dev gobject-introspection-dev"
+checkdepends="shared-mime-info"
+subpackages="$pkgname-dev:_dev"
+source="$pkgname-$pkgver.tar.gz::https://github.com/hughsie/libxmlb/archive/$pkgver.tar.gz"
+
+build() {
+	meson \
+		--prefix=/usr \
+		-Dgtkdoc=false \
+		-Dtests=true \
+		-Dstemmer=false \
+		-Dintrospection=true \
+		build
+	ninja -C build
+}
+
+check() {
+	ninja -C build test
+}
+
+package() {
+	DESTDIR="$pkgdir" ninja -C build install
+	rm -rf "$pkgdir"/usr/share/installed-tests
+}
+
+_dev() {
+	default_dev
+	mkdir -p "$subpkgdir"/usr
+	mv "$pkgdir"/usr/libexec "$subpkgdir"/usr
+}
+
+sha512sums="734082c4c15d8b02eb3e526b59fb6be8a7a61758a059792fca567c9a647df0597561fb6967903fb44d566ccd6e8e6d99286d0cae495b9d8ec12a3cd257c24a16  libxmlb-0.1.11.tar.gz"

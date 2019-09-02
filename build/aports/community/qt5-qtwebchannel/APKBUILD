@@ -2,7 +2,7 @@
 # Maintainer: Francesco Colista <fcolista@alpinelinux.org>
 pkgname=qt5-qtwebchannel
 _pkgname=${pkgname/qt5-//}-everywhere-src
-pkgver=5.12.0
+pkgver=5.12.4
 _ver=${pkgver/_/-}
 _ver=${_ver/beta0/beta}
 _ver=${_ver/rc0/rc}
@@ -40,4 +40,4 @@ package() {
 	cd "$builddir"/build
 	make INSTALL_ROOT="$pkgdir" install
 }
-sha512sums="cab265acd32e9e4a9454af5e76b803b7a63d63ce33fd587f3f2121d8ccfb7e59bdcc328149b39818a1afe83cf5b2ae8d21dc04739cd9ed04162fd621b59310bd  qtwebchannel-everywhere-src-5.12.0.tar.xz"
+sha512sums="956c57c019623a2ccc4b4a7fc8ca2404a04862b7a3fdb8d1317dfd0d24d00f73db4698df22a9758667256646129163ea1b3a588435aa01f28e72e35300637458  qtwebchannel-everywhere-src-5.12.4.tar.xz"

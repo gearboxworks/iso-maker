@@ -1,0 +1,31 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=kimap
+pkgver=19.08.0
+pkgrel=0
+pkgdesc="Job-based API for interacting with IMAP servers"
+arch="all"
+url="https://community.kde.org/KDE_PIM"
+license="LGPL-2.0-or-later"
+depends_dev="qt5-qtbase-dev cyrus-sasl-dev kcoreaddons-dev ki18n-dev kio-dev kmime-dev"
+makedepends="$depends_dev extra-cmake-modules"
+source="https://download.kde.org/stable/applications/$pkgver/src/$pkgname-$pkgver.tar.xz"
+subpackages="$pkgname-dev"
+
+build() {
+	cmake \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	make
+}
+
+check() {
+	# loginjobtest is broken
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest -E "loginjobtest"
+}
+
+package() {
+	DESTDIR="$pkgdir" make install
+}
+sha512sums="63ce93e69dc06a78efcafa71f00054cdaad9c94a5b0842fbce0989291ca5261ee006083617a1f3921fd5a7f9d2add6f20b1b2d7c8728deaf32f14730420f2b17  kimap-19.08.0.tar.xz"

@@ -1,0 +1,37 @@
+# Contributor: Oleg Titov <oleg.titov@gmail.com>
+# Maintainer: Oleg Titov <oleg.titov@gmail.com>
+pkgname=libzim
+pkgver=5.1.0
+pkgrel=0
+pkgdesc="Reference implementation of the ZIM file format"
+url="https://openzim.org/"
+arch="all"
+license="GPL-2.0-or-later"
+makedepends="icu-dev libexecinfo-dev meson xapian-core-dev xz-dev zlib-dev"
+checkdepends="cython3 gtest-dev python3-dev"
+subpackages="$pkgname-dev $pkgname-doc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/openzim/libzim/archive/$pkgver.tar.gz"
+
+build() {
+	LDFLAGS="$LDFLAGS -lexecinfo"
+	meson \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--localstatedir=/var \
+		--buildtype=release \
+		. output
+	ninja -C output
+}
+
+check() {
+	ninja -C output test
+}
+
+package() {
+	DESTDIR="$pkgdir" ninja -C output install
+
+	install -Dm 644 -t "$pkgdir/usr/share/doc/$pkgname/" README.md
+}
+
+sha512sums="119cc939ab08aa70c1f112e8bf5ba6289b750dc5eb8b7f27f58e3fb142ad8227b7e8aa9f925831eb819a4e5de1bc9e76c402dae4bd4f4603dc5dae0799dcda03  libzim-5.1.0.tar.gz"

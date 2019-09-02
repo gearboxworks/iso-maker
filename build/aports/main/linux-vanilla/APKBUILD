@@ -2,7 +2,7 @@
 
 _flavor=vanilla
 pkgname=linux-${_flavor}
-pkgver=4.19.18
+pkgver=4.19.68
 case $pkgver in
 	*.*.*)	_kernver=${pkgver%.*};;
 	*.*) _kernver=$pkgver;;
@@ -12,7 +12,7 @@ pkgdesc="Linux vanilla kernel"
 url="http://kernel.org"
 depends="mkinitfs"
 _depends_dev="perl gmp-dev elfutils-dev bash flex bison"
-makedepends="$_depends_dev sed installkernel bc linux-headers linux-firmware openssl-dev"
+makedepends="$_depends_dev sed installkernel bc linux-headers linux-firmware-any openssl-dev"
 options="!strip"
 _config=${config:-config-vanilla.${CARCH}}
 install=
@@ -22,7 +22,6 @@ source="https://cdn.kernel.org/pub/linux/kernel/v${pkgver%%.*}.x/linux-$_kernver
 	config-vanilla.armv7
 	config-vanilla.x86
 	config-vanilla.x86_64
-	config-vanilla.ppc
 	config-vanilla.ppc64le
 	config-vanilla.s390x
 
@@ -93,10 +92,13 @@ prepare() {
 
 	# remove localversion from patch if any
 	rm -f localversion*
+	oldconfig
+}
 
+oldconfig() {
 	for i in $_flavors; do
 		local _config=config-$i.${CARCH}
-		local _builddir="$srcdir"/build-$i-$CARCH
+		local _builddir="$srcdir"/build-$i.$CARCH
 		mkdir -p "$_builddir"
 		echo "-$pkgrel-$i" > "$_builddir"/localversion-alpine \
 			|| return 1
@@ -112,7 +114,7 @@ prepare() {
 build() {
 	unset LDFLAGS
 	for i in $_flavors; do
-		cd "$srcdir"/build-$i-$CARCH
+		cd "$srcdir"/build-$i.$CARCH
 		make ARCH="$_carch" CC="${CC:-gcc}" \
 			KBUILD_BUILD_VERSION="$((pkgrel + 1 ))-Alpine"
 	done
@@ -122,7 +124,7 @@ _package() {
 	local _buildflavor="$1" _outdir="$2"
 	local _abi_release=${pkgver}-${pkgrel}-${_buildflavor}
 
-	cd "$srcdir"/build-$_buildflavor-$CARCH
+	cd "$srcdir"/build-$_buildflavor.$CARCH
 
 	mkdir -p "$_outdir"/boot "$_outdir"/lib/modules
 
@@ -210,7 +212,7 @@ _dev() {
 	find $(find arch -name include -type d -print) -type f \
 		| cpio -pdm "$dir"
 
-	install -Dm644 "$srcdir"/build-$_flavor-$CARCH/Module.symvers \
+	install -Dm644 "$srcdir"/build-$_flavor.$CARCH/Module.symvers \
 		"$dir"/Module.symvers
 
 	mkdir -p "$subpkgdir"/lib/modules/${_abi_release}
@@ -219,15 +221,14 @@ _dev() {
 }
 
 sha512sums="ab67cc746b375a8b135e8b23e35e1d6787930d19b3c26b2679787d62951cbdbc3bb66f8ededeb9b890e5008b2459397f9018f1a6772fdef67780b06a4cb9f6f4  linux-4.19.tar.xz
-af3d633e28e5699b6314c2c57c2c671d2103e1181e5465e32f474dc9a07453090ef44f5028cb3bcca7e528db548a77a8b2fc790a08fdbada0322de62f93de9e6  config-vanilla.aarch64
-3c60cb2eee228de79b67d65682d67d25147cfcc321c0dcc27dbefa1eb4ab6ec692fe08df8f14aa868e09a9ad3581b3770a3dd4b9255c585f35f5725e29d2eeb1  config-vanilla.armhf
-3c60cb2eee228de79b67d65682d67d25147cfcc321c0dcc27dbefa1eb4ab6ec692fe08df8f14aa868e09a9ad3581b3770a3dd4b9255c585f35f5725e29d2eeb1  config-vanilla.armv7
-cbc431ed447eefc83fa39fbb7396ed7e04739b5210600a20e6a5bd1b8fc42a985d9c4df0deee8e8a3f6a928b5cad870b637d3390ef49090f653c24ccab8f7a1f  config-vanilla.x86
-d4c60ff52b83a490293a4cc0b5ddf53c3f15c4b0f28f67c7c0279eb2e6d5de3fa17041c3eaa8e43a4f926b2dda4074c2acf3073d1ae1f923f797692bdf67e968  config-vanilla.x86_64
-96651aca476c905c04d616565a2dd08066167c1d4887e2ddc86c4b7cdda44257ef633a9bcf745a91f00f88023dde8f1804c56b258e7e99232bb8bfa25d0ba4db  config-vanilla.ppc
-c7e146b33460b4ff69adffb680e794536038c8a6bf5af90a6474fc7dfafeea80a6659f4f4bfe2fd6285a17c39db49f1420636ea1512131edec8ac1d7ab31e7ef  config-vanilla.ppc64le
-c6dc137c3b0518284da53a8876c18a58bd299be4980b3c183949c7e57bef97570d73f3c568888fa392a769226dacc5558082b44b388f79d9a7daa677bbc5f9f4  config-vanilla.s390x
-2f4b32df9f0168dd3388443ca8aa8e77a2e061ce68d4227d651fe6a6dec06e7b55d94fec135f6f5b64d573b2c7327d454e98199290b6c720fa5eb47b4bfe143b  config-virt.aarch64
-0fbe2986a564664c4081267c10c51f14e7cbf416c2812e898a4b31260a64eebcc11da75e155af099b9e409aba275e7a67dac6ef1147e9fd856f65778a3a62a49  config-virt.x86
-0a3d194ccd06df7dda28775608b23e79a6641be9d545b623bffdeccc66e1f4de224dc419b84fa640b21b1badbffcd1eb33fc52f35a261b9a049699ac3569bbde  config-virt.x86_64
-f7a6539d0cc957ba5293e27ed2c0e3847be3704bd1cab1a1f271f3924c73abcf8220aa813d9f034b60701291a700e5d5ac779043f7e32562ce037e5db6832008  patch-4.19.18.xz"
+50ae7e70fc764f04c2b531518b4bec7b2145a6a08149816fa50dd40f398906009a2e1d82d0af34ed578dbbb96211bddaf9cb3bc77ed1058059cc0893e76ae7a9  config-vanilla.aarch64
+3f00e71ece67dda2e45db51211994fc21bdc3460ad2c47545bc47de3358cf1880118ee168ec358b6be318ac3412766e1d49b29954955f1244a18777f0d0eb394  config-vanilla.armhf
+3f00e71ece67dda2e45db51211994fc21bdc3460ad2c47545bc47de3358cf1880118ee168ec358b6be318ac3412766e1d49b29954955f1244a18777f0d0eb394  config-vanilla.armv7
+6c92b315e87349a0e8cf9e05101ccca4113ef2b553ce91966b5efd5b02b5e2691f9d8f5b74104b2d1cbccc5543c064ee3cecc7a729bd646848b5730759f41086  config-vanilla.x86
+c64fb857642808a1a7b7107ecd16b50e6dbdea1287434780cd8974ec6a5518e2946f2985a38e938adf1b212daa1a9d6f7813a3afc9861b4104d6650bc88c5acb  config-vanilla.x86_64
+a579b231245d082700f565fbadba2c6ea982c0074fe84e1ae3fdf922bafbd35565071a6e860338d95f001a3c3c583182c0f3632b33e78434463fb7b10364f9f8  config-vanilla.ppc64le
+a13751b71fcf76adc421c247136de7495a4bc7944236e2a1c3fd93449f054f8ebca783e5cc63aebd6bd9a1dca77db6f7dbb08451826421cbca388f0ec823a2ce  config-vanilla.s390x
+9eab9df75a19a09e504bfff833135cfb6502578a85b66c6db5a7a00890ce5c72640d4d07a6a925e5d48b39645f1928d344e6e4f8456fc0d7127f11eae896aac4  config-virt.aarch64
+fbb89a74efec783adad0188b4b8fdc9f8d113aee601f3410061c7f50b706d4f49241f6ad974527d2f312c56dd270d9e1b0a7c3da7b32988c88aeedf000ce7c8f  config-virt.x86
+6e6ff4fd7046bc65f71e55f77f2c347690eefe71da4d0f596fe70090f5e57f291ba885cec1678e9549c48113942c61857b3084959f6bdce83e1606b2e522a1a1  config-virt.x86_64
+1ed94f33984f380f87f202cada991b6ee285f7816fe2a31719dd9aabf2573f920645daedfab6b8c08cafa37d4416024bec543ab00fb33518d66686f38c66b308  patch-4.19.68.xz"

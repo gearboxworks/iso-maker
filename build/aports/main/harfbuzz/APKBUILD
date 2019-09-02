@@ -1,22 +1,20 @@
 # Contributor: Sören Tempel <soeren+alpinelinux@soeren-tempel.net>
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=harfbuzz
-pkgver=2.2.0
+pkgver=2.6.1
 pkgrel=0
 pkgdesc="Text shaping library"
 url="https://freedesktop.org/wiki/Software/HarfBuzz"
 arch="all"
 license="MIT"
-depends=""
 # tests depend on certain freetype behaviours
 options="!check"
 makedepends="freetype-dev glib-dev gobject-introspection-dev cairo-dev icu-dev
 	graphite2-dev"
 checkdepends="python3"
-subpackages="$pkgname-static $pkgname-dev $pkgname-icu"
-source="https://www.freedesktop.org/software/harfbuzz/release/$pkgname-$pkgver.tar.bz2"
+subpackages="$pkgname-static $pkgname-dev $pkgname-icu $pkgname-doc"
+source="https://www.freedesktop.org/software/harfbuzz/release/harfbuzz-$pkgver.tar.xz"
 
-builddir="$srcdir/$pkgname-$pkgver"
 build() {
 	cd "$builddir"
 	./configure \
@@ -32,7 +30,7 @@ build() {
 		--with-gobject \
 		--with-graphite2 \
 		--with-icu \
-		--with-truetype
+		--with-freetype
 	make
 }
 
@@ -65,4 +63,4 @@ icu() {
 	mv "$pkgdir"/usr/lib/lib*icu.so.* "$subpkgdir"/usr/lib/
 }
 
-sha512sums="5e8f35c0d7634afc6f623a91d56bfde46b2a1030d439e5dec196001d49a58e409a1bf66c7f9c15a04e030dab4fe2fe2c928061839b1e985459d4f8379b8a0818  harfbuzz-2.2.0.tar.bz2"
+sha512sums="cea531ab9db0ae1b188ac56c3ea6e0344192c4321b97d4425f4a53e6bb34c88463a7453fd69fcadccb8574506c1fb5505422019e41a7938a04e7823e3f484c06  harfbuzz-2.6.1.tar.xz"

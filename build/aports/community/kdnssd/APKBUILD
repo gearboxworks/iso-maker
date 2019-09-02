@@ -1,0 +1,32 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=kdnssd
+pkgver=5.61.0
+pkgrel=0
+arch="all"
+pkgdesc="Network service discovery using Zeroconf"
+url="https://community.kde.org/Frameworks"
+license="LGPL-2.0-or-later"
+depends="avahi"
+depends_dev="qt5-qtbase-dev avahi-dev"
+makedepends="$depends_dev extra-cmake-modules qt5-qttools-dev doxygen"
+source="https://download.kde.org/stable/frameworks/${pkgver%.*}/$pkgname-$pkgver.tar.xz"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-lang"
+
+build() {
+	cmake \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_QCH=ON
+	make
+}
+
+check() {
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" make install
+}
+sha512sums="d23920c09cb822192a4538929fd6f8f6424abdc20df3f282542b42be6845b8efe9e22651147ce41e078ab40093966de380dd538eb7c532a28877a09e274b9ffb  kdnssd-5.61.0.tar.xz"

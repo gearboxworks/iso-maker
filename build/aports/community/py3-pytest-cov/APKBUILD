@@ -1,0 +1,32 @@
+# Contributor: TBK <alpine@jjtc.eu>
+# Maintainer: TBK <alpine@jjtc.eu>
+pkgname=py3-pytest-cov
+_pkgname=${pkgname#py3-}
+pkgver=2.7.1
+pkgrel=0
+pkgdesc="Pytest plugin for measuring coverage."
+options="!check" # Requires unpackaged 'fields' module
+url="https://github.com/pytest-dev/pytest-cov"
+arch="noarch"
+license="MIT"
+replaces="pytest-cov" # for backwards compatibility
+provides="pytest-cov=$pkgver-r$pkgrel" # for backwards compatibility
+depends="pytest py3-pytest py3-coverage"
+makedepends="py3-setuptools"
+checkdepends="py3-virtualenv py3-pytest-xdist"
+source="$pkgname-$pkgver.tar.gz::https://github.com/pytest-dev/pytest-cov/archive/v$pkgver.tar.gz"
+builddir="$srcdir/$_pkgname-$pkgver"
+
+build() {
+	python3 setup.py build
+}
+
+check() {
+	pytest-3
+}
+
+package() {
+	python3 setup.py install --prefix="/usr" --root="$pkgdir"
+}
+
+sha512sums="bb2bc5be49b3c2f56a36b6396d6b1a6734e86fb0bf1c2ef29bf8dbc95dcb9364c6deb1525529d46f4ec0ffa6899ef0e94b5f76e5ed892b0a092e69ad6c6e080e  py3-pytest-cov-2.7.1.tar.gz"

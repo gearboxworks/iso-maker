@@ -1,7 +1,7 @@
 # Contributor: Francesco Colista <fcolista@alpinelinux.org>
 # Maintainer: Francesco Colista <fcolista@alpinelinux.org>
 pkgname=pdfcrack
-pkgver=0.16
+pkgver=0.18
 pkgrel=0
 pkgdesc="Command line, password recovery tool for PDF-files."
 url="http://pdfcrack.sourceforge.net/"
@@ -21,4 +21,4 @@ package() {
 	install -Dm755 $pkgname "$pkgdir"/usr/bin/$pkgname
 }
 
-sha512sums="460113f28249d1ea1cefc6dac8ff22b33849ccff50f61830144e41eeec47c4b9113845bb955d26757adb0552d8c0dfa43b3f5666c1419afe4063037a1e1c933d  pdfcrack-0.16.tar.gz"
+sha512sums="7d1624d835bcefff131745c75dc2ecafe63afdbf2c56568880804d5b7062a8eef27eebfedf340ab9d7e5770dd1a553d5d30b7ea5bca63a317deb40e0deed35a2  pdfcrack-0.18.tar.gz"

@@ -3,22 +3,27 @@
 # Maintainer: Fabian Affolter <fabian@affolter-engineering.ch>
 pkgname=py-yaml
 _pkgname=PyYAML
-pkgver=4.1
+pkgver=5.1.2
 pkgrel=0
 pkgdesc="Python bindings for YAML"
 url="http://pyyaml.org"
 arch="all"
 license="MIT"
-depends=""
-makedepends="python2-dev python3-dev yaml-dev"
+makedepends="python2-dev python3-dev yaml-dev cython2 cython3"
 subpackages="py2-${pkgname#py-}:_py2 py3-${pkgname#py-}:_py3"
 source="$_pkgname-$pkgver.tar.gz::https://github.com/yaml/pyyaml/archive/$pkgver.tar.gz"
 builddir="$srcdir/pyyaml-$pkgver"
 
+prepare() {
+	cd "$builddir"
+	default_prepare
+	rm -f ext/_yaml.c
+}
+
 build() {
 	cd "$builddir"
-	python2 setup.py build
-	python3 setup.py build
+	python2 setup.py --with-libyaml build
+	python3 setup.py --with-libyaml build
 }
 
 check() {
@@ -49,4 +54,4 @@ _py() {
 	$python setup.py install --prefix=/usr --root="$subpkgdir"
 }
 
-sha512sums="3eb30d0d2f7e300dda98ad8378fa2ec4488071d165a7649d21ac32e1b3efeee14ee00ba86a32ba2db0c491866480f18480dec3e552ab7df82115bd9669833119  PyYAML-4.1.tar.gz"
+sha512sums="7bc3dceadcfd512ede67581625887d00822464f20d3b646904f4a73afce8cf3b9766829c6004b626c31757edf8e2eedc27e60d96bee13afa68d3296a8a7f33bb  PyYAML-5.1.2.tar.gz"

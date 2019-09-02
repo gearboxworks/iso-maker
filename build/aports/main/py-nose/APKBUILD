@@ -1,9 +1,10 @@
 # Contributor: Fabian Affolter <fabian@affolter-engineering.ch>
+# Contributor: Eivind Uggedal <eu@eju.no>
 # Maintainer:
 pkgname=py-nose
 _pkgname=nose
 pkgver=1.3.7
-pkgrel=2
+pkgrel=3
 pkgdesc="A Python unittest module"
 url="http://readthedocs.org/docs/nose/"
 arch="noarch"

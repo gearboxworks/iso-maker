@@ -1,9 +1,9 @@
-# Contributor: William Pitcock <nenolod@dereferenced.org>
-# Maintainer: William Pitcock <nenolod@dereferenced.org>
+# Contributor: 
+# Maintainer: 
 pkgname=py-cparser
 _pkgname=pycparser
 pkgver=2.19
-pkgrel=0
+pkgrel=2
 pkgdesc="A C parser written in Python"
 url="https://github.com/eliben/pycparser"
 arch="noarch"
@@ -18,6 +18,12 @@ build() {
 	cd "$builddir"
 	python2 setup.py build || return 1
 	python3 setup.py build || return 1
+}
+
+check() {
+	cd "$builddir"
+	python2 tests/all_tests.py
+	python3 tests/all_tests.py
 }
 
 package() {

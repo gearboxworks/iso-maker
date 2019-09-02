@@ -1,0 +1,36 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=kconfig
+pkgver=5.61.0
+pkgrel=0
+pkgdesc="Configuration system"
+arch="all"
+url="https://community.kde.org/Frameworks"
+license="LGPL-2.0-or-later AND LGPL-2.0-only AND LGPL-2.1-or-later"
+makedepends="extra-cmake-modules qt5-qttools-dev doxygen"
+checkdepends="xvfb-run"
+source="https://download.kde.org/stable/frameworks/${pkgver%.*}/$pkgname-$pkgver.tar.xz"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-lang"
+
+# secfixes:
+#   5.60.0-r1:
+#     - CVE-2019-14744
+
+build() {
+	cmake \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_QCH=ON
+	make
+}
+
+check() {
+	CTEST_OUTPUT_ON_FAILURE=TRUE xvfb-run ctest -E '(kconfigcore-kconfigtest|kconfigcore-kdesktopfiletest|kconfigcore-test_kconf_update)'
+}
+
+package() {
+	DESTDIR="$pkgdir" make install
+}
+
+sha512sums="38a1e9d4cfc1ca692b9721c56536cb8f19cbd3b75ec9ccb400c811dddcefe78f5147d6fccc99a4202aa78ab9d1a68028312c7202103397164983bd02f59fd705  kconfig-5.61.0.tar.xz"

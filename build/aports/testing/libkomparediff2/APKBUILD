@@ -1,0 +1,30 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=libkomparediff2
+pkgver=19.08.0
+pkgrel=0
+arch="all"
+url="https://kde.org/applications/development"
+pkgdesc="Library to compare files and strings"
+license="GPL-2.0-or-later AND LGPL-2.0-or-later"
+makedepends="extra-cmake-modules qt5-qtbase-dev kcoreaddons-dev kcodecs-dev kconfig-dev kxmlgui-dev ki18n-dev kio-dev"
+source="https://download.kde.org/stable/applications/$pkgver/src/$pkgname-$pkgver.tar.xz"
+subpackages="$pkgname-dev $pkgname-lang"
+
+build() {
+	cmake \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	make
+}
+
+check() {
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" make install
+}
+
+sha512sums="2791e6eedb30fe8f9df029826d9b324dbd8b7e793b167186792c662d436d6d2ae301f8d165a7777b3482cf49453ae48f486df2473c4323d4808131061a2f07a0  libkomparediff2-19.08.0.tar.xz"

@@ -1,0 +1,30 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=kmail-account-wizard
+pkgver=19.08.0
+pkgrel=0
+arch="all !ppc64le !s390x" # Limited by kmailtransport -> libkgapi -> qt5-qtwebengine
+url="https://kontact.kde.org/"
+pkgdesc="KMail account wizard"
+license="GPL-2.0-or-later AND LGPL-2.0-or-later AND GFDL-1.2-only"
+makedepends="extra-cmake-modules qt5-qtbase-dev kwallet-dev kcmutils-dev knotifyconfig-dev kconfig-dev kservice-dev kdbusaddons-dev kdoctools-dev ktexteditor-dev kcodecs-dev kcrash-dev knotifications-dev akonadi-dev kidentitymanagement-dev kldap-dev kmailtransport-dev pimcommon-dev libkdepim-dev libkleo-dev kimap-dev akonadi-mime-dev kross-dev knewstuff-dev gpgme-dev shared-mime-info"
+source="https://download.kde.org/stable/applications/$pkgver/src/$pkgname-$pkgver.tar.xz"
+subpackages="$pkgname-lang"
+
+build() {
+	cmake \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	make
+}
+
+check() {
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" make install
+}
+
+sha512sums="a7cb435bbaa5f4f27424761abc8c9a8eae078a8e09867f3e6974cf92ac977a8949741a60a2b094ebd6a68f7f2916733d722143f15a18c24e43fac96dee523343  kmail-account-wizard-19.08.0.tar.xz"

@@ -2,27 +2,27 @@
 # Maintainer:  Leonardo Arena <rnalrd@alpinelinux.org>
 pkgname=perl-compress-raw-zlib
 _realname=Compress-Raw-Zlib
-pkgver=2.084
+pkgver=2.087
 pkgrel=0
 pkgdesc="Perl low-level interface to zlib compression library"
-url="http://search.cpan.org/dist/Compress-Raw-Zlib/"
+url="https://metacpan.org/release/Compress-Raw-Zlib"
 arch="all"
-license="GPL PerlArtistic"
+license="GPL-1.0-or-later OR Artistic-1.0-Perl"
 depends="perl"
 makedepends="perl-dev"
-source="http://search.cpan.org/CPAN/authors/id/P/PM/PMQS/${_realname}-${pkgver}.tar.gz"
+source="http://search.cpan.org/CPAN/authors/id/P/PM/PMQS/$_realname-$pkgver.tar.gz"
 builddir="$srcdir/$_realname-$pkgver"
 
 build() {
 	cd $builddir
-	export CFLAGS=`perl -MConfig -E 'say $Config{ccflags}'`
+	export CFLAGS=$(perl -MConfig -E 'say $Config{ccflags}')
 	PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor
 	make
 }
 
 check() {
 	cd "$builddir"
-	export CFLAGS=`perl -MConfig -E 'say $Config{ccflags}'`
+	export CFLAGS=$(perl -MConfig -E 'say $Config{ccflags}')
 	make test
 }
 
@@ -35,4 +35,4 @@ package() {
 	rm -rf "$pkgdir"/usr/share/man
 }
 
-sha512sums="686b7f511d8017922dc9c96f47d21c2c10666e1aa975d1d32c19fd5af9cad61286c7dafd0948f73d4c34a8d5ddbf158c6780b6d07985b1bc059c20f05c685400  Compress-Raw-Zlib-2.084.tar.gz"
+sha512sums="3176ba1095c8532a9c39b70a3c95caed23a110b76ea01f3be505d396ae083fda8a1a1d032b85ce6d91ee927af557171e243ecd42d6556ad555032cbfbfee027d  Compress-Raw-Zlib-2.087.tar.gz"

@@ -3,12 +3,12 @@
 
 # when changing _ver we *must* bump _rel
 _name=zfs
-_ver=0.7.12
+_ver=0.8.1
 _rel=0
 
 _flavor=${FLAVOR:-vanilla}
 _kpkg=linux-$_flavor
-_kver=4.19.18
+_kver=4.19.68
 _krel=0
 
 _kpkgver="$_kver-r$_krel"
@@ -20,16 +20,16 @@ pkgrel=$(( $_krel + $_rel ))
 
 pkgdesc="ZFS for Linux"
 url="http://zfsonlinux.org"
-arch="x86 x86_64 aarch64"
+arch="x86 x86_64 aarch64 ppc64le"
 license="CDDL-1.0"
-depends="spl-$_flavor $_kpkg=$_kpkgver"
+provides="spl-vanilla" # Mitigate upgrade conflicts
+depends="$_kpkg=$_kpkgver"
 depends_dev="glib-dev e2fsprogs-dev util-linux-dev libtirpc-dev
-	$_kpkg-dev=$_kpkgver spl-$_flavor-dev"
+	$_kpkg-dev=$_kpkgver"
 makedepends="$depends_dev automake autoconf libtool linux-headers"
 install_if="zfs $_kpkg=$_kpkgver"
 subpackages="$pkgname-dev"
 source="https://github.com/zfsonlinux/zfs/releases/download/zfs-$_ver/zfs-$_ver.tar.gz"
-
 builddir="$srcdir/$_name-$_ver"
 
 prepare() {
@@ -56,8 +56,7 @@ build() {
 		--infodir=/usr/share/info \
 		--localstatedir=/var \
 		--with-config=kernel \
-		--with-linux=/usr/src/linux-headers-${_kabi} \
-		--with-spl=/usr/src/spl-${_ver}
+		--with-linux=/usr/src/linux-headers-${_kabi}
 
 	make
 }
@@ -73,4 +72,4 @@ dev() {
 	default_dev
 }
 
-sha512sums="278e411eac5fb2a91108671b64521c2bd5c08024d5829e1679d8f243dfc3c6317363ed9c79dabfddecf425acb6b3003eeaf4e7d991513cbcae4d2644f5d30bf2  zfs-0.7.12.tar.gz"
+sha512sums="1fb3957f65dbe94edaffcedb5b2694390dc14e472c11f7e63184a9ea6a774e79a43d47a2d789b7ced233fc67c76583bf7d5c1bda0692bb07929673e2a57f4667  zfs-0.8.1.tar.gz"

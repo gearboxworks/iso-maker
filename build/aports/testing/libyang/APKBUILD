@@ -1,0 +1,48 @@
+# Contributor: Sören Tempel <soeren+alpine@soeren-tempel.net>
+# Maintainer: Christian Franke <nobody@nowhere.ws>
+pkgname=libyang
+pkgver=1.0_p3
+_realver=${pkgver/_p/-r}
+pkgrel=1
+pkgdesc="YANG data modelling language parser and toolkit"
+url="https://github.com/CESNET/libyang"
+arch="all"
+license="BSD-3-Clause-Clear"
+depends=""
+makedepends="bison cmake cmocka-dev flex pcre-dev"
+install=""
+subpackages="$pkgname-dev $pkgname-doc"
+source="${pkgname}-${pkgver}.tar.gz::https://github.com/CESNET/$pkgname/archive/v$_realver.tar.gz"
+builddir="$srcdir/$pkgname-$_realver/build"
+
+prepare() {
+	mkdir -p "$builddir"
+	builddir="$builddir/.." default_prepare
+}
+
+build() {
+	if [ "$CBUILD" != "$CHOST" ]; then
+		CMAKE_CROSSOPTS="-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_HOST_SYSTEM_NAME=Linux"
+	fi
+	cmake \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_SHARED_LIBS=True \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_C_FLAGS="$CFLAGS" \
+		-DENABLE_BUILD_TESTS=ON \
+		-DENABLE_LYD_PRIV=ON \
+		${CMAKE_CROSSOPTS} \
+		..
+	make
+}
+
+check() {
+	make test
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="02573db0085c9d15b49f38d1f4eea311ea91c20b4c45c33194bbcd0e2e7f00a286dd7053919138a543744913387c8c47f5024740d70477f40d700ca9d3f5bbd6  libyang-1.0_p3.tar.gz"

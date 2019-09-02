@@ -1,0 +1,30 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=grantleetheme
+pkgver=19.08.0
+pkgrel=0
+pkgdesc="KDE PIM mail related libraries"
+arch="all"
+url="https://kontact.kde.org/"
+license="GPL-2.0-or-later AND LGPL-2.1-or-later"
+makedepends="extra-cmake-modules knewstuff-dev ki18n-dev grantlee-dev"
+checkdepends="xvfb-run"
+source="https://download.kde.org/stable/applications/$pkgver/src/$pkgname-$pkgver.tar.xz"
+subpackages="$pkgname-dev $pkgname-lang"
+
+build() {
+	cmake \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	make
+}
+
+check() {
+	CTEST_OUTPUT_ON_FAILURE=TRUE xvfb-run ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" make install
+}
+sha512sums="ac9c51710b37c8de54dfe9583e7e9e4a8a2b3f963b35dbc4798fae6b497ebc5e55a28f290e38adf6a87ab2e3b04cd5cd05305b3f179d3643a1aa09e9cd8291a2  grantleetheme-19.08.0.tar.xz"

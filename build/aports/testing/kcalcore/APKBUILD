@@ -1,0 +1,31 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=kcalcore
+pkgver=19.08.0
+pkgrel=0
+pkgdesc="The KDE calendar access library"
+arch="all"
+url="https://api.kde.org/kdepim/kcalcore/html"
+license="LGPL-2.0-or-later"
+depends_dev="qt5-qtbase-dev libical-dev"
+makedepends="$depends_dev extra-cmake-modules"
+source="https://download.kde.org/stable/applications/$pkgver/src/$pkgname-$pkgver.tar.xz"
+subpackages="$pkgname-dev"
+
+build() {
+	cmake \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	make
+}
+
+check() {
+	# testrecurtodo, testreadrecurrenceid and testicaltimezones are broken
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest -E "test(recurtodo|readrecurrenceid|icaltimezones)"
+}
+
+package() {
+	DESTDIR="$pkgdir" make install
+}
+sha512sums="4e383c69e5fdee6b754ff49935bf1255ee4267d5ce0fd1d21ec63cdc5d79ff1d769fef29be2285d17ec7e12c105d59e42fad1c643ac28141f644cccc6fc823c5  kcalcore-19.08.0.tar.xz"

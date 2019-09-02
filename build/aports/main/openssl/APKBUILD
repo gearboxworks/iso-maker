@@ -1,6 +1,6 @@
 # Maintainer: Timo Teras <timo.teras@iki.fi>
 pkgname=openssl
-pkgver=1.1.1a
+pkgver=1.1.1c
 _abiver=${pkgver%.*}
 pkgrel=1
 pkgdesc="Toolkit for Transport Layer Security (TLS)"
@@ -11,16 +11,18 @@ replaces="libressl"
 makedepends_build="perl"
 makedepends_host="linux-headers"
 makedepends="$makedepends_host $makedepends_build"
-subpackages="$pkgname-dbg $pkgname-dev $pkgname-doc libcrypto$_abiver:_libcrypto libssl$_abiver:_libssl"
+subpackages="$pkgname-dbg $pkgname-libs-static $pkgname-dev $pkgname-doc
+	libcrypto$_abiver:_libcrypto libssl$_abiver:_libssl"
 source="https://www.openssl.org/source/openssl-$pkgver.tar.gz"
 case "$CARCH" in
 s390x) options="$options !check";; # FIXME: test hangs
 esac
 
-builddir="$srcdir/openssl-$pkgver"
 
 # secfixes:
-#   1.1.a-r0:
+#   1.1.1b-r1:
+#     - CVE-2019-1543
+#   1.1.1a-r0:
 #     - CVE-2018-0734
 #     - CVE-2018-0735
 
@@ -49,7 +51,7 @@ build() {
 
 	# Configure assumes --options are for it, so can't use
 	# gcc's --sysroot fake this by overriding CC
-	[ -n "$CBUILDROOT" ] && CC="$CC --sysroot=${CBUILDROOT}"
+	[ -n "$CBUILDROOT" ] && CC="$CC --sysroot=$CBUILDROOT"
 
 	perl ./Configure $_target --prefix=/usr \
 		--libdir=lib \
@@ -101,4 +103,4 @@ _libssl() {
 	done
 }
 
-sha512sums="1523985ba90f38aa91aa6c2d57652f4e243cb2a095ce6336bf34b39b5a9b5b876804299a6825c758b65990e57948da532cca761aa12b10958c97478d04dd6d34  openssl-1.1.1a.tar.gz"
+sha512sums="8e2c5cc11c120efbb7d7850980cb6eaa782d29b4996b3f3378d37613c1679f852d7cc08a90d62e78fcec3439f06bdbee70064579a8c2adaffd91532a97f646ff  openssl-1.1.1c.tar.gz"

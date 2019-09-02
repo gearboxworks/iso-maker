@@ -1,0 +1,31 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=libkcddb
+pkgver=19.08.0
+pkgrel=0
+arch="all"
+url="https://www.kde.org/applications/multimedia/"
+pkgdesc="KDE CDDB library"
+license="LGPL-2.0-or-later AND GPL-2.0-or-later"
+makedepends="extra-cmake-modules qt5-qtbase-dev kconfig-dev kdoctools-dev kcodecs-dev ki18n-dev kio-dev kwidgetsaddons-dev libmusicbrainz-dev"
+source="https://download.kde.org/stable/applications/$pkgver/src/$pkgname-$pkgver.tar.xz"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-lang"
+
+build() {
+	cmake \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_TESTING=ON
+	make
+}
+
+check() {
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" make install
+}
+
+sha512sums="f4124398f26e14a0016ae9ec7d6971370277cebe8d6840e309cafe9aaffa50439d3177b9e880568cae5f4028f12011145ee519176ff37b4c018a813a86454c06  libkcddb-19.08.0.tar.xz"

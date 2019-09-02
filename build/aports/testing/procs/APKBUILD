@@ -1,0 +1,32 @@
+# Contributor: Chloe Kudryavtsev <toast@toastin.space>
+# Maintainer: Chloe Kudryavtsev <toast@toastin.space>
+pkgname=procs
+pkgver=0.8.8
+pkgrel=0
+pkgdesc="A modern replacement for ps written in Rust"
+url="https://github.com/dalance/procs"
+arch="x86_64 armhf armv7" # limited by rust/cargo
+license="MIT"
+options="net"
+makedepends="cargo"
+source="$pkgname-$pkgver.tar.gz::https://github.com/dalance/procs/archive/v$pkgver.tar.gz"
+
+export CARGO_HOME="$srcdir"/cargo
+
+build() {
+	cargo build \
+		--release \
+		--verbose
+}
+
+check() {
+	cargo test --all \
+		--release \
+		--verbose
+}
+
+package() {
+	install -Dm755 target/release/"$pkgname" "$pkgdir"/usr/bin/"$pkgname"
+}
+
+sha512sums="166ce8b954c8dd59de4398cc8903b77522629db315274050402c32046e48285d63a9904a2b5403ab235e8a4a728aa1438894a95353c896564d745531abbd0908  procs-0.8.8.tar.gz"

@@ -1,0 +1,36 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=gwenview
+pkgver=19.08.0
+pkgrel=1
+arch="all"
+url="https://kde.org/applications/graphics/org.kde.gwenview"
+pkgdesc="Fast and easy to use image viewer by KDE"
+license="GPL-2.0-only"
+makedepends="extra-cmake-modules qt5-qtbase-dev qt5-qtsvg-dev qt5-qtx11extras-dev
+	kio-dev kitemmodels-dev ki18n-dev kdoctools-dev kparts-dev kwindowsystem-dev
+	kiconthemes-dev knotifications-dev kactivities-dev libjpeg-turbo-dev
+	libpng-dev libkipi-dev lcms2-dev baloo-dev libkdcraw-dev purpose-dev"
+checkdepends="xvfb-run kinit"
+source="https://download.kde.org/stable/applications/$pkgver/src/gwenview-$pkgver.tar.xz"
+subpackages="$pkgname-doc $pkgname-lang"
+
+build() {
+	cmake \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	make
+}
+
+check() {
+	# urlutilstest is broken
+	# recursivedirmodeltest requires running DBus
+	CTEST_OUTPUT_ON_FAILURE=TRUE xvfb-run ctest -E "(urlutils|recursivedirmodel)test"
+}
+
+package() {
+	DESTDIR="$pkgdir" make install
+}
+
+sha512sums="4ca7b39d2e149ffe9bdb1234e264ea3bbeeaca0125462ffe7f79b1653448df44596bab69d4ad61df2d73d4ec8777cb61054da7c6d7badb11ee96560f8b105b49  gwenview-19.08.0.tar.xz"

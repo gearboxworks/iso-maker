@@ -3,23 +3,50 @@
 # Contributor: Jeremy Thomerson <jeremy@thomersonfamily.com>
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=wireshark
-pkgver=2.6.5
+pkgver=3.0.3
 pkgrel=0
-pkgdesc="A network protocol analyzer - GTK version"
+pkgdesc="A network protocol analyzer"
 url="https://www.wireshark.org"
 arch="all"
 license="GPL-2.0-or-later"
-depends=""
-makedepends="bison flex perl-dev glib glib-dev libpcap-dev libcap-dev
-	gtk+3.0-dev c-ares-dev pcre-dev gnutls-dev libgcrypt-dev
-	libnl3-dev qt5-qtbase-dev qt5-qttools-dev lua5.2-dev bash portaudio-dev"
-subpackages="$pkgname-dev $pkgname-doc $pkgname-gtk $pkgname-common tshark"
-source="https://www.wireshark.org/download/src/$pkgname-$pkgver.tar.xz
+makedepends="bash bison c-ares-dev cmake flex glib glib-dev gnutls-dev
+	libcap-dev libgcrypt-dev libnl3-dev libpcap-dev
+	lua5.2-dev pcre-dev perl-dev portaudio-dev qt5-qtbase-dev
+	qt5-qtmultimedia-dev qt5-qtsvg-dev qt5-qttools-dev"
+checkdepends="py3-pytest py3-pytest-xdist"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-common tshark"
+# Use mirror in the meantime
+# source="https://www.wireshark.org/download/src/wireshark-$pkgver.tar.xz
+source="https://1.as.dl.wireshark.org/src/wireshark-$pkgver.tar.xz
 	fix-udpdump.patch
-        "
-builddir="$srcdir"/$pkgname-$pkgver
+	"
 
 # secfixes:
+#   3.0.3-r0:
+#     - CVE-2019-13619
+#   3.0.2-r0:
+#     - CVE-2019-12295
+#   3.0.1-r0:
+#     - CVE-2019-10897
+#     - CVE-2019-10898
+#     - CVE-2019-10900
+#     - CVE-2019-10902
+#   2.6.8-r0:
+#     - CVE-2019-10894
+#     - CVE-2019-10895
+#     - CVE-2019-10896
+#     - CVE-2019-10899
+#     - CVE-2019-10901
+#     - CVE-2019-10903
+#   2.6.7-r0:
+#     - CVE-2019-9208
+#     - CVE-2019-9209
+#     - CVE-2019-9214
+#   2.6.6-r0:
+#     - CVE-2019-5717
+#     - CVE-2019-5718
+#     - CVE-2019-5719
+#     - CVE-2019-5721
 #   2.6.5-r0:
 #     - CVE-2018-19622
 #     - CVE-2018-19623
@@ -159,32 +186,34 @@ builddir="$srcdir"/$pkgname-$pkgver
 #     - CVE-2016-6513
 
 build() {
-	cd "$builddir"
-	# configure script searches for uic and uic-qt4 but not uic-qt5
-	# we set path so it finds 'uic'
-	export PATH="$PATH:/usr/lib/qt5/bin"
-	./configure \
-		--build=$CBUILD \
-		--host=$CHOST \
-		--prefix=/usr \
-		--sysconfdir=/etc \
-		--mandir=/usr/share/man \
-		--infodir=/usr/share/info \
-		--with-ssl \
-		--with-gnutls \
-		--with-qt=5 \
-		--with-gtk=3 \
-		--with-lua
+	cmake CMakeLists.txt \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DENABLE_GNUTLS=ON \
+		-DENABLE_LUA=ON
 	make
 }
 
 check() {
-	cd "$builddir"
-	make check
+	make test-programs
+	# Disabled tests 1, 2 fail on armhf
+	# See: https://bugs.wireshark.org/bugzilla/show_bug.cgi?id=15771
+	# Disabled tests 3-10 fail on s390x
+	# See: https://bugs.wireshark.org/bugzilla/show_bug.cgi?id=15772
+	pytest test/ \
+		--deselect test/suite_wslua.py::case_wslua::test_wslua_tvb_tree \
+		--deselect test/suite_wslua.py::case_wslua::test_wslua_tvb_no_tree \
+		--deselect test/suite_capture.py::case_dumpcap_pcapng_sections::test_dumpcap_pcapng_single_in_multi_out \
+		--deselect test/suite_capture.py::case_dumpcap_pcapng_sections::test_dumpcap_pcapng_single_in_single_out \
+		--deselect test/suite_capture.py::case_dumpcap_pcapng_sections::test_dumpcap_pcapng_multi_in_single_out \
+		--deselect test/suite_capture.py::case_dumpcap_pcapng_sections::test_dumpcap_pcapng_multi_in_multi_out \
+		--deselect test/suite_decryption.py::case_decrypt_smb2::test_smb311_bad_key \
+		--deselect test/suite_decryption.py::case_decrypt_smb2::test_smb300_aes128ccm \
+		--deselect test/suite_decryption.py::case_decrypt_smb2::test_smb300_bad_key \
+		--deselect test/suite_decryption.py::case_decrypt_smb2::test_smb311_aes128ccm
+
 }
 
 package() {
-	cd "$builddir"
 	make -j1 DESTDIR="$pkgdir" install
 }
 
@@ -194,11 +223,11 @@ common() {
 	mkdir -p "$subpkgdir"/usr/lib "$subpkgdir"/usr/share \
 		"$subpkgdir"/usr/bin
 	mv "$pkgdir"/usr/share/wireshark "$subpkgdir"/usr/share/
-	mv "$pkgdir"/usr/lib/* "$subpkgdir"/usr/lib/
+	mv "$pkgdir"/usr/lib*/* "$subpkgdir"/usr/lib/
 	# move all bins except wireshark
 	for i in "$pkgdir"/usr/bin/*; do
 		case "$i" in
-			*/tshark|*/wireshark|*-gtk) continue;;
+			*/tshark|*/wireshark) continue;;
 		esac
 		mv "$i" "$subpkgdir"/usr/bin/
 	done
@@ -210,11 +239,6 @@ tshark() {
 	mv "$pkgdir"/usr/bin/tshark "$subpkgdir"/usr/bin/tshark
 }
 
-gtk() {
-	pkgdesc="wireshark - GTK GUI"
-	install -d "$subpkgdir"/usr/bin
-	mv "$pkgdir"/usr/bin/wireshark-gtk "$subpkgdir"/usr/bin/
-}
 
-sha512sums="fed2d08bb0ba06496c22a5d45946faf2ff4ca19c59faf758c668c583193faeec3c4379b64750478469fede91562891e9b6991591a09a3da8d2193cb64718d02f  wireshark-2.6.5.tar.xz
-951677dd125b1e36b351cc87a98e8b8d0391d184c7695594dd4270334d86ada1dff5f14cd960da9c5d5d26fc801c42f0219b2db6269f3c526c841c7940d2f369  fix-udpdump.patch"
+sha512sums="78d4aa68e47a72b641cb2a694028de743c195a41c42fb58f510402581a213c1239f63cad1f9163b13d64608fcedf64c7367a4888021b80613cb7e9a6ddbf8750  wireshark-3.0.3.tar.xz
+287159576be76fc8afbce450a53f969bbd519321e038c812b96857ca08c352052dbbfaa9208d54ed30d7a0c9ca4192b83c8865de60562c4490d99d75c61ede0b  fix-udpdump.patch"

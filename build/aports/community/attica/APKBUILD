@@ -1,17 +1,16 @@
-# Contributor: William Pitcock <nenolod@dereferenced.org>
+# Contributor:
 # Maintainer: Francesco Colista <fcolista@alpinelinux.org>
 pkgname=attica
-pkgver=0.4.2
+pkgver=5.61.0
 pkgrel=0
 pkgdesc="Freedesktop OCS binding for Qt"
 url="http://www.kde.org/"
 arch="all"
 license="LGPL-2.0-or-later"
-makedepends="qt-dev cmake automoc4"
-subpackages="$pkgname-dev"
-source="http://download.kde.org/stable/attica/attica-$pkgver.tar.bz2"
+makedepends="qt5-qttools-dev extra-cmake-modules doxygen"
+subpackages="$pkgname-dev $pkgname-doc"
+source="https://download.kde.org/stable/frameworks/${pkgver%.*}/$pkgname-$pkgver.tar.xz"
 
-builddir="$srcdir"/$pkgname-$pkgver
 prepare() {
 	default_prepare
 	mkdir -p "$builddir"/build
@@ -19,12 +18,19 @@ prepare() {
 
 build() {
 	cd "$builddir"/build
-	cmake -DCMAKE_INSTALL_PREFIX=/usr \
-	      -DCMAKE_BUILD_TYPE=Release \
-	      -DQT4_BUILD=ON \
-	      -Wno-dev \
-	      "$builddir"
+	cmake \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-Wno-dev \
+		-DBUILD_QCH=ON \
+		"$builddir"
 	make
+}
+
+check() {
+	cd "$builddir"/build
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
 }
 
 package() {
@@ -32,4 +38,4 @@ package() {
 	make DESTDIR="$pkgdir" install
 }
 
-sha512sums="cef5d5c4bf01ed45ed8b59db354a4ac7949de435a45e4f753c847cadc15855e25997dedf1ff20c7bc4a2724d2cdba15139c54f0682df7d8cc8750de5be6f716e  attica-0.4.2.tar.bz2"
+sha512sums="33bf7feced1d792b4f0b2b05642ac58e651fae68adee9eff33d2542e528a003d51682e1af27db3e9cef96545989f957e543dce64cf07a685efdf5b5056ba6bdd  attica-5.61.0.tar.xz"

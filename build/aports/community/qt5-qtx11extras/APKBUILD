@@ -2,13 +2,13 @@
 # Maintainer: Francesco Colista <fcolista@alpinelinux.org>
 pkgname=qt5-qtx11extras
 _pkgname=qtx11extras-everywhere-src
-pkgver=5.12.0
+pkgver=5.12.4
 _ver=${pkgver/_p/-}
 _ver=${_ver/_/-}
 _ver=${_ver/beta0/beta}
 _ver=${_ver/rc0/rc}
 _V=${_ver/rc/RC}
-pkgrel=1
+pkgrel=0
 pkgdesc="Provides platform-specific APIs for X11"
 url="http://qt-project.org/"
 arch="all"
@@ -47,4 +47,4 @@ package() {
 	make INSTALL_ROOT="$pkgdir" install
 }
 
-sha512sums="7504692f638bcd6603f61b165d58b2853ac5c260cb231754fd1ddc0b8473063c561c72825081d4f1c1563c330e68b3cef37e9fb146c88feabb48f846ea94e9b9  qtx11extras-everywhere-src-5.12.0.tar.xz"
+sha512sums="a6d30a20a94d3c79470dabaecb7f262128d7517911f59baf0cf9e8fad18bcfb318a606ddbe291683a4c2f195e638ee114f67b6fb796031e67193324c6df1511d  qtx11extras-everywhere-src-5.12.4.tar.xz"

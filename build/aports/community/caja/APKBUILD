@@ -1,23 +1,23 @@
 # Contributor: Alan Lacerda <alacerda@alpinelinux.org>
 # Maintainer: Alan Lacerda <alacerda@alpinelinux.org>
 pkgname=caja
-pkgver=1.21.3
+pkgver=1.22.1
 pkgrel=0
 pkgdesc="The file manager for the MATE desktop"
 url="https://github.com/mate-desktop/caja"
 arch="all"
 license="GPL-2.0-or-later LGPL-2.0-or-later"
 depends="mate-common mate-desktop"
-options="!check"
 makedepends="$depends_dev intltool libtool dconf-dev gtk+3.0-dev libunique3-dev
 	libsm-dev libnotify-dev mate-desktop-dev libxml2-dev gobject-introspection-dev
 	gtk-doc"
+checkdepends="xvfb-run"
 subpackages="$pkgname-dev $pkgname-doc $pkgname-lang"
 source="https://pub.mate-desktop.org/releases/${pkgver%.*}/$pkgname-$pkgver.tar.xz"
+options="!check" # (caja:744): GLib-GIO-ERROR **: 12:12:20.291: Settings schema 'org.mate.caja.preferences' is not installed
 builddir="$srcdir/$pkgname-$pkgver"
 
 build() {
-	cd "$builddir"
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
@@ -28,9 +28,12 @@ build() {
 	make
 }
 
+#check() {
+#	xvfb-run make check
+#}
+
 package() {
-	cd "$builddir"
 	make DESTDIR="${pkgdir}" install
 }
 
-sha512sums="a44ec94117abeb856f955fecd4fd464c532169fad61b3b377ffad3f18b41e66982a167f3e8add6517daa4669435281be07421846d362661893d72d8f51802150  caja-1.21.3.tar.xz"
+sha512sums="dea2e9cac7802df5335a716a1a7df149b637014525202600f4bf3eab293eff29bf2df66df22203aa036898149cb26ba1d05491234dc75203480925cce0333a17  caja-1.22.1.tar.xz"

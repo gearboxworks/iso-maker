@@ -1,0 +1,32 @@
+# Contributor: Robert Sacks <robert@sacks.email>
+# Maintainer: Robert Sacks <robert@sacks.email>
+pkgname=wl-clipboard
+pkgver=1.0.0_git20181211
+_commit=139a34057525cb3f366b95c6f471bb2fc1bb8e90
+pkgrel=0
+pkgdesc="Command-line copy/paste utilities for Wayland"
+url="https://github.com/bugaevc/wl-clipboard"
+arch="all"
+license="GPL-3.0-or-later"
+options="!check" # No test suite
+makedepends="meson ninja wayland-dev wayland-protocols"
+subpackages="$pkgname-doc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/bugaevc/$pkgname/archive/$_commit.tar.gz"
+builddir="$srcdir/$pkgname-$_commit"
+
+build() {
+	meson \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--localstatedir=/var \
+		--buildtype=release \
+		. build
+	ninja -C build
+}
+
+package() {
+	DESTDIR="$pkgdir" ninja -C build install
+}
+
+sha512sums="d4783598e35b98ec423452282f942f0fc92ec19dac9b9569105de49aaf6c7f8a08a63daa1a8b47c2bca81dbdb8c3b3ed2014e1e201cf0c9580aa515bec39e447  wl-clipboard-1.0.0_git20181211.tar.gz"

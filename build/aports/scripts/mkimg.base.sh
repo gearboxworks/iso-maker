@@ -2,9 +2,8 @@ build_kernel() {
 	local _flavor="$2" _modloopsign=
 	shift 3
 	local _pkgs="$@"
-	[ "$modloop_sign" = "yes" ] && _modloopsign=""
-	set -x
-	update-kernel -v \
+	[ "$modloop_sign" = "yes" ] && _modloopsign="--modloopsign"
+	update-kernel \
 		$_hostkeys \
 		${_abuild_pubkey:+--apk-pubkey $_abuild_pubkey} \
 		$_modloopsign \
@@ -13,15 +12,15 @@ build_kernel() {
 		--arch "$ARCH" \
 		--package "$_pkgs" \
 		--feature "$initfs_features" \
+		--modloopfw "$modloopfw" \
 		--repositories-file "$APKROOT/etc/apk/repositories" \
 		"$DESTDIR"
-	set +x
 }
 
 section_kernels() {
 	local _f _a _pkgs
 	for _f in $kernel_flavors; do
-		_pkgs="linux-$_f linux-firmware"
+		_pkgs="linux-$_f linux-firmware wireless-regdb $modloop_addons"
 		for _a in $kernel_addons; do
 			_pkgs="$_pkgs $_a-$_f"
 		done
@@ -200,8 +199,6 @@ section_grubieee1275() {
 
 section_grub_efi() {
 	[ -n "$grub_mod" ] || return 0
-	[ "$output_format" = "iso" ] || return 0
-
 	local _format _efi
 	case "$ARCH" in
 	aarch64)_format="arm64-efi";  _efi="bootaa64.efi" ;;
@@ -296,8 +293,11 @@ profile_base() {
 	initfs_cmdline="modules=loop,squashfs,sd-mod,usb-storage quiet"
 	initfs_features="ata base bootchart cdrom squashfs ext4 mmc raid scsi usb virtio"
 	modloop_sign=yes
-	grub_mod="disk part_gpt part_msdos linux multiboot2 normal configfile search search_label efi_uga efi_gop fat iso9660 cat echo ls test true help gzio"
-	apks="alpine-base alpine-mirrors busybox kbd-bkeymaps chrony e2fsprogs network-extras libressl openssh tzdata"
+	grub_mod="all_video disk part_gpt part_msdos linux normal configfile search search_label efi_gop fat iso9660 cat echo ls test true help gzio"
+	case "$ARCH" in
+	x86*) grub_mod="$grub_mod multiboot2 efi_uga";;
+	esac
+	apks="alpine-base alpine-mirrors busybox kbd-bkeymaps chrony e2fsprogs haveged network-extras openssl openssh tzdata"
 	apkovl=
 	hostname="alpine"
 }

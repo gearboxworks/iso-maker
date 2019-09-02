@@ -1,0 +1,31 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=lokalize
+pkgver=19.08.0
+pkgrel=0
+arch="all"
+url="https://kde.org/applications/office/org.kde.lokalize"
+pkgdesc="Computer-Aided Translation System"
+license="(GPL-2.0-only OR GPL-3.0-only) AND GFDL-1.2-only"
+makedepends="extra-cmake-modules qt5-qtbase-dev ki18n-dev kio-dev kxmlgui-dev knotifications-dev kconfig-dev kcoreaddons-dev kdoctools-dev kross-dev sonnet-dev kdbusaddons-dev kcrash-dev hunspell-dev"
+source="https://download.kde.org/stable/applications/$pkgver/src/$pkgname-$pkgver.tar.xz"
+subpackages="$pkgname-doc $pkgname-lang"
+options="!check" # No tests
+
+build() {
+	cmake \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	make
+}
+
+check() {
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" make install
+}
+
+sha512sums="6ece687c13d615c540035f7d02e1d9e983b8e452ff5a4970d5942ffe326bbb0c658c6f746b58ddc49853a25d6aef5b6836d3c89c72713d0185a599471f842216  lokalize-19.08.0.tar.xz"

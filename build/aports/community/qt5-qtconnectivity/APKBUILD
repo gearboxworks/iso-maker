@@ -2,7 +2,7 @@
 # Maintainer: Francesco Colista <fcolista@alpinelinux.org>
 pkgname=qt5-qtconnectivity
 _pkgname=${pkgname/qt5-//}-everywhere-src
-pkgver=5.12.0
+pkgver=5.12.4
 _ver=${pkgver/_/-}
 _ver=${_ver/beta0/beta}
 _ver=${_ver/rc0/rc}
@@ -40,4 +40,4 @@ package() {
 	cd "$builddir"/build
 	make INSTALL_ROOT="$pkgdir" install
 }
-sha512sums="7e6b98cbfc1fcf5545b3f0be513a34f5ba67cc284e3101ebfbbc178b1bccf8cf77ccd7f03dab5fc2fa46aaa61faf7f1adb3f47e98d0c19ea248189f44f030faf  qtconnectivity-everywhere-src-5.12.0.tar.xz"
+sha512sums="e1076c5883f29cb394d9929a52c3bfce97952cef11b1f82d1fcca59440354d1a29ab19d628f6359ca02f3318fb526b3ca78d691af6dc0f4c06741b2306c8e571  qtconnectivity-everywhere-src-5.12.4.tar.xz"

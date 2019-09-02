@@ -1,0 +1,30 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=kcron
+pkgver=19.08.0
+pkgrel=0
+arch="all"
+url="https://kde.org/applications/system/"
+pkgdesc="Configure and schedule tasks"
+license="GPL-2.0-or-later"
+makedepends="extra-cmake-modules qt5-qtbase-dev kconfigwidgets-dev kdoctools-dev ki18n-dev kiconthemes-dev kio-dev"
+source="https://download.kde.org/stable/applications/$pkgver/src/$pkgname-$pkgver.tar.xz"
+subpackages="$pkgname-doc $pkgname-lang"
+
+build() {
+	cmake \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	make
+}
+
+check() {
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" make install
+}
+
+sha512sums="2b3607b208fc6ed0778f5458c0051a7035ca3de2cd0e8ba5b9e44e012e7457195f7fb0424c25f5a577fb7cd88f6d19f783ab724231bbc43e320c41342b982139  kcron-19.08.0.tar.xz"

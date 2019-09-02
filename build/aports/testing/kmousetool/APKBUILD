@@ -1,0 +1,30 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=kmousetool
+pkgver=19.08.0
+pkgrel=0
+arch="all"
+url="https://kde.org/applications/utilities/org.kde.kmousetool"
+pkgdesc="A program that clicks the mouse for you"
+license="GPL-2.0-or-later AND GFDL-1.2-only"
+makedepends="extra-cmake-modules qt5-qtbase-dev kdbusaddons-dev kdoctools-dev ki18n-dev kiconthemes-dev knotifications-dev kxmlgui-dev phonon-dev libxt-dev libxtst-dev"
+source="https://download.kde.org/stable/applications/$pkgver/src/$pkgname-$pkgver.tar.xz"
+subpackages="$pkgname-doc $pkgname-lang"
+
+build() {
+	cmake \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	make
+}
+
+check() {
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" make install
+}
+
+sha512sums="5bbb2a0894f8c4921c4b1cb13c0007adb4baa8dc6afa0411016aa993ec567b7610138eb0ec2a93e702a7de2009cf2e8e9ed173bd5a75c5dd79ddbc3c3e256212  kmousetool-19.08.0.tar.xz"

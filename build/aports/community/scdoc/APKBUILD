@@ -2,7 +2,7 @@
 # Contributor: Drew DeVault <sir@cmpwn.com>
 # Maintainer: Henrik Riomar <henrik.riomar@gmail.com>
 pkgname=scdoc
-pkgver="1.6.0"
+pkgver="1.9.7"
 pkgrel=0
 pkgdesc="simple man page generator written for POSIX systems written in C99"
 url="https://git.sr.ht/~sircmpwn/scdoc"
@@ -20,12 +20,12 @@ check() {
 
 build() {
 	cd "$builddir"
-	make
+	make PREFIX="/usr"
 }
 
 package() {
 	cd "$builddir"
-	make PREFIX="$pkgdir/usr" install
+	make DESTDIR="$pkgdir" PREFIX="/usr" install
 }
 
-sha512sums="18dade6bb27dbe6d112478bbbc08239b384c2334f37418b94d5f5b25713697d9d854ebb08cc62ed6e68b55a01326ea207614e4f79976536ec800029cc55f8b4b  scdoc-1.6.0.tar.gz"
+sha512sums="6da49bd5dae1b795ac728c20c7c24d5242a9ee76c36e3319acfd0a85dd5b0179a9b95aa0804872d37d7bbd608d580060f27d7dcebae85fe8f66d76b1bbe941a2  scdoc-1.9.7.tar.gz"

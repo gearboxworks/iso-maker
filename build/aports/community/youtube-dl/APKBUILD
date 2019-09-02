@@ -3,14 +3,15 @@
 # Contributor: Timo Teräs <timo.teras@iki.fi>
 # Maintainer: Timo Teräs <timo.teras@iki.fi>
 pkgname=youtube-dl
-pkgver=2019.01.17
+pkgver=2019.09.01
 pkgrel=0
 pkgdesc="Command-line program to download videos from YouTube"
-url="https://youtube-dl.org"
+url="https://youtube-dl.org/"
 arch="noarch"
 license="Unlicense"
-depends="ffmpeg python3 py3-setuptools"
-options="!check"  # FIXME: run provided tests
+depends="python3"
+makedepends="py3-setuptools"
+checkdepends="py3-flake8 py3-nose"
 subpackages="$pkgname-doc
 	$pkgname-zsh-completion:zshcomp
 	$pkgname-bash-completion:bashcomp
@@ -26,14 +27,20 @@ prepare() {
 		"$builddir"/setup.py
 }
 
+build() {
+	python3 setup.py build
+}
+
+check() {
+	PYTHON=/usr/bin/python3 make offlinetest
+}
+
 package() {
-	cd "$builddir"
-	python3 setup.py install --root="$pkgdir/" --optimize=1
+	python3 setup.py install --prefix=/usr --root="$pkgdir"
 }
 
 zshcomp() {
 	pkgdesc="Zsh completions for $pkgname"
-	depends=""
 	install_if="$pkgname=$pkgver-r$pkgrel zsh"
 
 	install -Dm644 "$builddir"/$pkgname.zsh \
@@ -42,7 +49,6 @@ zshcomp() {
 
 bashcomp() {
 	pkgdesc="Bash completions for $pkgname"
-	depends=""
 	install_if="$pkgname=$pkgver-r$pkgrel bash-completion"
 
 	mkdir -p "$subpkgdir"/usr/share/bash-completion/completions/
@@ -52,7 +58,6 @@ bashcomp() {
 
 fishcomp() {
 	pkgdesc="Fish completions for $pkgname"
-	depends=""
 	install_if="$pkgname=$pkgver-r$pkgrel fish"
 
 	mkdir -p "$subpkgdir"/usr/share/fish/completions/
@@ -60,4 +65,4 @@ fishcomp() {
 		"$subpkgdir"/usr/share/fish/completions/
 }
 
-sha512sums="b8e81c2b2ec284033a5a92f49a965375d681d92435bc0402bb891b443f94d1321716a15717fe4e3c1fbc54ec610445282c52c18c046e140dd53731560230bd3f  youtube-dl-2019.01.17.tar.gz"
+sha512sums="327ef44180e2048045884d79de20541f81a4dbcee415c3fa15bcf333674f2b6e6c6663efa532b64e4f7078449af946479c98464ff9b54642e886f8c792f0b82f  youtube-dl-2019.09.01.tar.gz"

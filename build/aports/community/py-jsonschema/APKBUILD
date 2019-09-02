@@ -2,14 +2,16 @@
 # Maintainer: Francesco Colista <fcolista@alpinelinux.org>
 pkgname=py-jsonschema
 _pkgname=jsonschema
-pkgver=2.6.0
+pkgver=3.0.2
 pkgrel=0
 pkgdesc="An implementation of JSON Schema validation for Python"
 url="https://github.com/Julian/jsonschema"
 arch="noarch"
 license="MIT"
+depends="py3-pyrsistent py-attrs"
 makedepends="python3-dev python2-dev py-setuptools"
 subpackages="py2-${pkgname#py-}:_py2 py3-${pkgname#py-}:_py3"
+options="!check" # py3-twisted missing
 source="https://files.pythonhosted.org/packages/source/${_pkgname:0:1}/$_pkgname/$_pkgname-$pkgver.tar.gz"
 builddir="$srcdir"/$_pkgname-$pkgver
 
@@ -26,10 +28,12 @@ package() {
 
 _py2() {
 	replaces="$pkgname"
+	depends="${depends/py-/py2-}"
 	_py python2
 }
 
 _py3() {
+	depends="${depends/py-/py3-}"
 	_py python3
 }
 
@@ -49,4 +53,4 @@ _py() {
 	done
 }
 
-sha512sums="03f916abd023b32fbe60f91718d6f2f94d8834bd1bd8ec85ab02f591a145161275c2cde25b037c4d2e94703b870159feb776d3556f011e4c394d2e20ab897b0b  jsonschema-2.6.0.tar.gz"
+sha512sums="13b65f318e1e2dc4a1d61399d517d39e53b0da71fbb5ec116e3b4ee274694300c6e2b3545058cd9f15129633fd093fa2d0c21ef1cce5356ca78e74187e7045c3  jsonschema-3.0.2.tar.gz"

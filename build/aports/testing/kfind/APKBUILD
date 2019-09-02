@@ -1,0 +1,31 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=kfind
+pkgver=19.08.0
+pkgrel=0
+arch="all"
+url="https://www.kde.org/applications/utilities/kfind"
+pkgdesc="Find Files/Folders"
+license="GPL-2.0-or-later AND GFDL-1.2-only"
+makedepends="extra-cmake-modules karchive-dev kcoreaddons-dev kdoctools-dev kfilemetadata-dev ki18n-dev kio-dev ktextwidgets-dev kwidgetsaddons-dev"
+source="https://download.kde.org/stable/applications/$pkgver/src/$pkgname-$pkgver.tar.xz"
+subpackages="$pkgname-doc $pkgname-lang"
+options="!check" # No tests
+
+build() {
+	cmake \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	make
+}
+
+check() {
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" make install
+}
+
+sha512sums="8df128f61af4066b5d2bd78731e37d160faa321f1b5823d04d84ecf8af35e02959273ba3af2591c064c440fcb364d9368ac372bcda704996cb37fd6a168b43a8  kfind-19.08.0.tar.xz"

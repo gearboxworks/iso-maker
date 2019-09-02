@@ -2,15 +2,13 @@
 # Maintainer: Fabian Affolter <fabian@affolter-engineering.ch>
 pkgname=py-tz
 _pkgname=pytz
-pkgver=2018.9
+pkgver=2019.2
 pkgrel=0
 pkgdesc="A Python definitions of world timezone"
 url="http://pytz.sourceforge.net/"
 arch="noarch"
 license="MIT"
-options="!check"
-depends=""
-makedepends="python2-dev python3-dev py-setuptools"
+makedepends="py-setuptools py3-setuptools"
 subpackages="py2-${pkgname#py-}:_py2 py3-${pkgname#py-}:_py3"
 source="https://pypi.io/packages/source/${_pkgname:0:1}/$_pkgname/$_pkgname-$pkgver.tar.gz"
 builddir="$srcdir/$_pkgname-$pkgver"
@@ -19,6 +17,12 @@ build() {
 	cd "$builddir"
 	python2 setup.py build
 	python3 setup.py build
+}
+
+check() {
+	cd "$builddir"/pytz/tests
+	python2 test_tzinfo.py
+	python3 test_tzinfo.py
 }
 
 package() {
@@ -44,4 +48,4 @@ _py() {
 	$python setup.py install --prefix=/usr --root="$subpkgdir"
 }
 
-sha512sums="c3dabe61d04539245761a5c4e3bfb614df1c3b8ccc2ffa1cf320c5ad642242c29b3321fe7855d32a2ae55c739acbbe8c0e1813df5b3c757b8f56fff910fee159  pytz-2018.9.tar.gz"
+sha512sums="86d8b600373274f66200e5e9426303d5855221c85488415ad9270059fc7853c6f5f9399b11aad41f6522fbccc0878b9caf896c9bba16fde9857e412620151beb  pytz-2019.2.tar.gz"

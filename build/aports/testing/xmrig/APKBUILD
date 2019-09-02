@@ -2,36 +2,34 @@
 # Maintainer: Oleg Titov <oleg.titov@gmail.com>
 
 pkgname=xmrig
-pkgver=2.10.0
+pkgver=3.1.1
 pkgrel=0
 pkgdesc="XMRig is a high performance Monero (XMR) miner"
 url="https://github.com/xmrig/xmrig"
-arch="x86_64 x86"
-license="GPL-3.0"
-makedepends="cmake libmicrohttpd-dev libuv-dev openssl-dev"
+arch="all !s390x !ppc64le"
+license="GPL-3.0-or-later"
+options="!check" # No test suite from upstream
+makedepends="cmake libmicrohttpd-dev libuv-dev openssl-dev hwloc-dev"
 subpackages="$pkgname-doc"
 source="$pkgname-$pkgver.tar.gz::https://github.com/xmrig/xmrig/archive/v$pkgver.tar.gz"
-builddir="$srcdir/$pkgname-$pkgver"
+
+case "$CARCH" in
+	aarch64*) CMAKE_CROSSOPTS="-DARM_TARGET=8"; makedepends="$makedepends linux-headers" ;;
+	armv7*)   CMAKE_CROSSOPTS="-DARM_TARGET=7"; makedepends="$makedepends linux-headers" ;;
+	armhf*)   CMAKE_CROSSOPTS="-DARM_TARGET=7"; makedepends="$makedepends linux-headers" ;;
+esac
 
 build() {
-	cd "$builddir"
 	mkdir build
 	cd build
-	cmake ..
+	cmake .. ${CMAKE_CROSSOPTS}
 	make
-}
-
-check() {
-	cd "$builddir"
-	# xmrig -V returns 2
-	build/xmrig -V || test $? = 2
 }
 
 package() {
 	install -Dm 755 build/xmrig $pkgdir/usr/bin/xmrig
 
-	install -Dm 644 -t "$pkgdir"/usr/share/licenses/$pkgname/ LICENSE
 	install -Dm 644 -t "$pkgdir"/usr/share/doc/$pkgname/ README.md
 }
 
-sha512sums="ff43ed858ee921c912bd42c3af51193e07797c17378f400e90ddb8dc562b19800742634ae556f834f197ca887f1c808f91d0d7fd05c142a3b3b5387cb6fa5abc  xmrig-2.10.0.tar.gz"
+sha512sums="d1b27dea8082f2d295b8d97d52ca5ec07205674666e96efedac8c5a17a5696d81e82f5fabd7f90ac5e1be5b696b1eb4a5b5472c6546e68f59bdee997dc855e52  xmrig-3.1.1.tar.gz"

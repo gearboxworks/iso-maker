@@ -1,0 +1,31 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=knotes
+pkgver=19.08.0
+pkgrel=0
+arch="all"
+url="https://kontact.kde.org/"
+pkgdesc="Popup notes"
+license="GPL-2.0-or-later AND LGPL-2.0-or-later AND GFDL-1.2-only"
+makedepends="extra-cmake-modules qt5-qtbase-dev qt5-qtx11extras-dev grantlee-dev kcompletion-dev kconfig-dev kconfigwidgets-dev kcoreaddons-dev kcrash-dev kdbusaddons-dev kdnssd-dev kdoctools-dev kglobalaccel-dev kiconthemes-dev kitemmodels-dev kitemviews-dev kcmutils-dev knewstuff-dev knotifications-dev knotifyconfig-dev kparts-dev ktextwidgets-dev kwidgetsaddons-dev kwindowsystem-dev kxmlgui-dev knotifications-dev kdelibs4support-dev akonadi-dev akonadi-notes-dev kcalutils-dev kontactinterface-dev libkdepim-dev kmime-dev pimcommon-dev kpimtextedit-dev grantleetheme-dev akonadi-search-dev libxslt-dev"
+checkdepends="xvfb-run"
+source="https://download.kde.org/stable/applications/$pkgver/src/$pkgname-$pkgver.tar.xz"
+subpackages="$pkgname-doc $pkgname-lang"
+
+build() {
+	cmake \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	make
+}
+
+check() {
+	CTEST_OUTPUT_ON_FAILURE=TRUE xvfb-run ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" make install
+}
+
+sha512sums="b7b2acec0bfe911210f4c6f7873aa0d09cfe2a83b44744378b36c53216046c2286ebc2a289b8d693cd346e442f94a399bdcc199691f7810c5e8c2514ed761f28  knotes-19.08.0.tar.xz"

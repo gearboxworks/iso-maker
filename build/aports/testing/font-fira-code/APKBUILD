@@ -2,9 +2,9 @@
 # Maintainer:
 pkgname=font-fira-code
 _pkgname=firacode
-pkgver=1.205
+pkgver=1.207
 pkgrel=0
-pkgdesc="monospaced font with programming ligatures"
+pkgdesc="Monospaced font with programming ligatures"
 url="https://github.com/tonsky/FiraCode"
 arch="noarch"
 license="OFL-1.1"
@@ -14,9 +14,8 @@ source="https://github.com/tonsky/FiraCode/releases/download/$pkgver/FiraCode_$p
 builddir="$srcdir"
 
 package() {
-	cd "$builddir"
 	install -d "$pkgdir/usr/share/fonts/$_pkgname"
 	install -t "$pkgdir"/usr/share/fonts/$_pkgname otf/*.otf
 }
 
-sha512sums="6128c56b1b14a3bc20f72cfbd3f5ef12a96fca257f70e79e24b9ca01d51bab845115f24c30a1b5b8c10d6636e222498fcdec2d5ff18c94dc370522751d57c189  FiraCode_1.205.zip"
+sha512sums="29615bba3b70641e8f78ca865f8325a3d8dbeb7a8c72288d1e520d4c82e749118f30980b847d35d3fd120914cf4ca1a9c4f57725c8791ba6291a13e8c52dd1d0  FiraCode_1.207.zip"

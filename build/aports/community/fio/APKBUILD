@@ -1,0 +1,34 @@
+# Contributor: wener <wenermail@gmail.com>
+# Maintainer: wener <wenermail@gmail.com>
+pkgname=fio
+pkgver=3.15
+pkgrel=0
+pkgdesc="Flexible I/O Tester"
+url="https://github.com/axboe/fio"
+arch="all"
+license="GPL-2.0"
+makedepends="linux-headers zlib-dev coreutils libaio-dev"
+subpackages="$pkgname-doc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/axboe/fio/archive/fio-$pkgver.tar.gz"
+builddir="$srcdir/fio-$pkgname-$pkgver"
+
+case "$CARCH" in
+	arm*) ;; # no numactl-dev for arm
+	*) makedepends="$makedepends numactl-dev" ;;
+esac
+
+build() {
+	./configure --prefix=/usr
+	make
+}
+
+check() {
+	make test
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+	mv "$pkgdir"/usr/man "$pkgdir"/usr/share
+}
+
+sha512sums="2a0c91247fb89a1b23b60ddfa9a4d283fe8434e919292fb02a56cb1a0303f0794e7c1af450ba2180669956bd1f338715f0b34d2bb80c304e6bc773ab48666baa  fio-3.15.tar.gz"

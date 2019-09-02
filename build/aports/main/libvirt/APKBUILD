@@ -1,28 +1,28 @@
 # Maintainer: Francesco Colista <fcolista@alpinelinux.org>
 pkgname=libvirt
-pkgver=4.10.0
+pkgver=5.6.0
 _ver="${pkgver/_rc/-rc}"
-pkgrel=1
+pkgrel=0
 pkgdesc="A virtualization API for several hypervisor and container systems"
-url="http://libvirt.org/"
+url="https://libvirt.org/"
 arch="all"
-license="LGPL"
-_daemon_deps="bridge-utils dmidecode dnsmasq ebtables ip6tables iptables"
+license="LGPL-2.1-or-later"
+_daemon_deps="bridge-utils dmidecode dnsmasq ip6tables iptables"
 _client_deps="pm-utils gnutls-utils netcat-openbsd"
 depends="lvm2"
 depends_dev="libtirpc-dev"
-makedepends="augeas-dev bridge-utils cyrus-sasl-dev device-mapper
+makedepends="augeas-dev cyrus-sasl-dev device-mapper
 	e2fsprogs-dev gnutls-dev libcap-ng-dev libgpg-error-dev
 	netcf-dev libnl3-dev libxml2-dev libxslt-dev libtasn1-dev
-	lvm2-dev lxc-dev gnutls-dev libgcrypt-dev parted-dev perl pkgconfig
+	lvm2-dev lxc-dev libgcrypt-dev parted-dev perl pkgconfig
 	eudev-dev zlib-dev yajl-dev libpcap-dev curl-dev libpciaccess-dev
-	polkit-dev readline-dev dnsmasq linux-headers libssh2-dev jansson-dev
-	$depends_dev
+	polkit-dev readline-dev linux-headers libssh2-dev jansson-dev
+	$depends_dev perl-xml-xpath
 	fuse-dev util-linux libxml2-utils bash-completion $_daemon_deps $_client_deps
 	"
 install="$pkgname.post-install"
 subpackages="$pkgname-static $pkgname-libs $pkgname-dev $pkgname-doc $pkgname-client $pkgname-daemon
-	$pkgname-lang $pkgname-lxc $pkgname-qemu $pkgname-uml $pkgname-vbox
+	$pkgname-lang $pkgname-lxc $pkgname-qemu $pkgname-uml::noarch $pkgname-vbox
 	$pkgname-bash-completion:bashcomp:noarch"
 source="https://libvirt.org/sources/$pkgname-$pkgver.tar.xz
 	libvirt.confd
@@ -30,21 +30,27 @@ source="https://libvirt.org/sources/$pkgname-$pkgver.tar.xz
 	virtlogd.initd
 	virtlockd.initd
 	musl-fix-includes.patch
+	stderr-fix.patch
 	"
-
 if [ "$CARCH" = "x86_64" ]; then
 	subpackages="$subpackages $pkgname-xen"
-	makedepends="$makedepends xen-dev"
+	makedepends="$makedepends xen-dev zfs"
 fi
 subpackages="$subpackages $pkgname-common-drivers:_common_drivers"
 
-builddir="$srcdir"/$pkgname-$pkgver
+# secfixes:
+#   5.5.0-r0:
+#     - CVE-2019-10168
+#     - CVE-2019-10167
+#     - CVE-2019-10166
+#     - CVE-2019-10161
 
 build() {
 	cd "$builddir"
 	# qemu sets libexec dir to /usr/lib/qemu
 	export ac_cv_path_QEMU_BRIDGE_HELPER="/usr/lib/qemu/qemu-bridge-helper"
 	[ "$CARCH" = x86_64 ] && local _xen_opt="--with-libxl"
+	[ "$CARCH" = x86_64 ] && local _zfs_opt="--with-storage-zfs"
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
@@ -54,11 +60,12 @@ build() {
 		--infodir=/usr/share/info \
 		--libexec=/usr/lib/"$pkgname" \
 		$_xen_opt \
+		$_zfs_opt \
 		--with-polkit \
 		--with-storage-fs \
 		--with-storage-lvm \
 		--enable-static \
-		--with-qemu \
+		--with-qemu
 	make
 }
 
@@ -122,12 +129,12 @@ static() {
 }
 
 bashcomp() {
-    depends=""
-    pkgdesc="Bash completions for $pkgname"
-    install_if="$pkgname=$pkgver-r$pkgrel bash-completion"
-    mkdir -p "$subpkgdir"/usr/share/
-    mv "$pkgdir"/usr/share/bash-completion \
-        "$subpkgdir"/usr/share/
+	depends=""
+	pkgdesc="Bash completions for $pkgname"
+	install_if="$pkgname=$pkgver-r$pkgrel bash-completion"
+	mkdir -p "$subpkgdir"/usr/share/
+	mv "$pkgdir"/usr/share/bash-completion \
+		"$subpkgdir"/usr/share/
 }
 
 _mv_driver() {
@@ -172,9 +179,10 @@ _common_drivers() {
 		"$subpkgdir"/etc/libvirt/
 }
 
-sha512sums="a4f97aed6299c7954518ab88738ab781cee0755bfd64094a44468f77f99cac5eb2bc74ecd6aec90177317606ebd073292f5b5d0056054d1d94973fa938589fbd  libvirt-4.10.0.tar.xz
+sha512sums="95fe931394fb31288faf73349bb298f08f63cf062f851b9935303145f8166f69128be9360757f0e1845256c14f4d7672843dba0dc6c086b1c3c8bfc035cc8986  libvirt-5.6.0.tar.xz
 9aba6ab73219a635c64a340ee8887356e644445c9128734cbce73f5d54778378da2f10a190365ad88a7db8bc95b1fb17f0c6ca41fc41bb786c09e1afe84d65dc  libvirt.confd
 734afb83b7a4703dd238f1d89dbc853a8c73bcf1994af648c41ab01ae4088e5c7a423f0cb91e5e31f2ae5e60c66d08a6e1583a1e3b88bb5554e0f9fd15ecc15c  libvirt.initd
 36b85f473d292be8df415256d01a562131d8ae61450ba3893658090a12d589ca32215382f56f286a830b4e59ffd98fbe1d92004f2ce14ca0834451b943cd8f2f  virtlogd.initd
 a4c4d26e4111931acbe7594451bf963a36c8db33c64b1bc447ab4758bb92803510bebee0511d6bc16ba80c289ab6f87e74377d47bf560412f9adb9c161a206d9  virtlockd.initd
-dfe042c596028125bf8548115de2922683829c4716f6b0efb8efc38518670e3e848481661b9714bb0664c1022b87e8f3c0773611fe10187b0bc588e2336ada0c  musl-fix-includes.patch"
+dfe042c596028125bf8548115de2922683829c4716f6b0efb8efc38518670e3e848481661b9714bb0664c1022b87e8f3c0773611fe10187b0bc588e2336ada0c  musl-fix-includes.patch
+d32551d56eae2c33bab7571964f76421336967918c293cd1d18fc66626a7ead3551b5672a9e3fc3d8b7bca82cc0abb17e428ee8271d04d73bc06fd16309918b3  stderr-fix.patch"

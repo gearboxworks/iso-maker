@@ -1,7 +1,7 @@
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=qt5-qtgraphicaleffects
 _pkgname=${pkgname/qt5-//}-everywhere-src
-pkgver=5.12.0
+pkgver=5.12.4
 _ver=${pkgver/_/-}
 _ver=${_ver/beta0/beta}
 _ver=${_ver/rc0/rc}
@@ -37,4 +37,4 @@ package() {
 	make install INSTALL_ROOT="$pkgdir"
 }
 
-sha512sums="88545f9f11d5f97aa70b293539aa10b4e87bbf1f585ba57cbf337c0300b2cdad52ab9d25867a663714ae345c21006d10f567fdbb839df235a9faf7f7674a5835  qtgraphicaleffects-everywhere-src-5.12.0.tar.xz"
+sha512sums="fe78cb01cfbe00226709a7faa2e754abb8e41bd677d15611221fbb9e53bf876e60d244eb6660b6b03403d31be2d9155a763ad34e4c4d2d1490fa6810f54bad0c  qtgraphicaleffects-everywhere-src-5.12.4.tar.xz"

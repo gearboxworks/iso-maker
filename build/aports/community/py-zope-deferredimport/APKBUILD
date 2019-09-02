@@ -2,55 +2,53 @@
 # Maintainer: Carlo Landmeter <clandmeter@alpinelinux.org>
 pkgname=py-zope-deferredimport
 _pkgname=zope.deferredimport
-pkgver=4.3
+pkgver=4.3.1
 pkgrel=0
 pkgdesc="Defer imports until used by code"
 url="https://github.com/zopefoundation/$_pkgname"
 arch="noarch"
-license="ZPL"
+license="ZPL-2.1"
 depends="py-setuptools py-zope-proxy"
-makedepends="python2-dev python3-dev py-setuptools"
+makedepends="python2-dev python3-dev"
 subpackages="py2-${pkgname#py-}:_py2 py3-${pkgname#py-}:_py3"
 source="$_pkgname-$pkgver.tar.gz::https://github.com/zopefoundation/$_pkgname/archive/$pkgver.tar.gz"
 
 builddir="$srcdir"/$_pkgname-$pkgver
 
 build() {
-    cd "$builddir"
-    python2 setup.py build
-    python3 setup.py build
+	python2 setup.py build
+	python3 setup.py build
 }
 
 check() {
-    cd "$builddir"
-    python2 setup.py test
-    python3 setup.py test
+	python2 setup.py test
+	python3 setup.py test
 }
 
 package() {
-    mkdir -p "$pkgdir"
+	mkdir -p "$pkgdir"
 }
 
 _py2() {
-    replaces="$pkgname"
-    depends="${depends//py-/py2-}"
-    _py python2
+	replaces="$pkgname"
+	depends="${depends//py-/py2-}"
+	_py python2
 }
 
 _py3() {
-    depends="${depends//py-/py3-}"
-    _py python3
+	depends="${depends//py-/py3-}"
+	_py python3
 }
 
 _py() {
-    local python="$1"
-    pkgdesc="$pkgdesc (for $python)"
-    depends="$depends $python"
-    install_if="$pkgname=$pkgver-r$pkgrel $python"
+	local python="$1"
+	pkgdesc="$pkgdesc (for $python)"
+	depends="$depends $python"
+	install_if="$pkgname=$pkgver-r$pkgrel $python"
 
-    cd "$builddir"
-    $python setup.py install --prefix=/usr --root="$subpkgdir"
+	cd "$builddir"
+	$python setup.py install --prefix=/usr --root="$subpkgdir"
 }
 
 
-sha512sums="0b62cf6caa7709dbb6b0ae85bf9c5e24909c79af57da8e3d081e69ff9f73fc60fbe5a83cdfe795551eeee3c045d3783a09cb3e6eb3964a44e6fbbea149ca3f8a  zope.deferredimport-4.3.tar.gz"
+sha512sums="1c367def232ec79ad10a9d8f1e068598d2fdb49b067c2c3f44c9ad25c198afbbf2d52659c3795aad76f8c82d212e49086b81ab1c1dcc6aac2e3ce66c35ff5750  zope.deferredimport-4.3.1.tar.gz"

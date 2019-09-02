@@ -1,0 +1,31 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=syntax-highlighting
+pkgver=5.61.0
+pkgrel=0
+pkgdesc="Syntax highlighting engine for structured text and code"
+arch="all"
+url="https://community.kde.org/Frameworks"
+license="MIT"
+depends_dev="qt5-qtbase-dev"
+makedepends="$depends_dev extra-cmake-modules qt5-qttools-dev doxygen"
+source="https://download.kde.org/stable/frameworks/${pkgver%.*}/${pkgname}-${pkgver}.tar.xz"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-lang"
+
+build() {
+	cmake \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_QCH=ON
+	make
+}
+
+check() {
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" make install
+}
+sha512sums="7949116ab4167016dc1ba68f0485351fcb26b1b8397ff94a77d90afe63046aa106ac7b3fec131d0a133edce326002598218dd2cffe773fbf6244d2d04354acc4  syntax-highlighting-5.61.0.tar.xz"

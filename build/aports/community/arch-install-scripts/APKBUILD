@@ -1,27 +1,51 @@
 # Contributor: Bartłomiej Piotrowski <bpiotrowski@alpinelinux.org>
 # Maintainer: André Klitzing <aklitzing@gmail.com>
-
 pkgname=arch-install-scripts
-pkgver=20
+pkgver=22
 pkgrel=0
-pkgdesc='Scripts to aid in installing Arch Linux'
-arch=noarch
-url='https://projects.archlinux.org/arch-install-scripts.git'
-license='GPL'
-depends='bash coreutils pacman util-linux'
-makedepends='m4'
+pkgdesc="Scripts to aid in installing Arch Linux"
+arch="noarch"
+url="https://projects.archlinux.org/arch-install-scripts.git"
+license="GPL-2.0-only"
+depends="bash coreutils pacman util-linux"
+makedepends="m4 asciidoc"
+subpackages="
+	$pkgname-doc
+	$pkgname-zsh-completion:zshcomp:noarch
+	$pkgname-bash-completion:bashcomp:noarch
+	"
 source="https://git.archlinux.org/arch-install-scripts.git/snapshot/arch-install-scripts-$pkgver.tar.gz"
 
 build() {
-	make -C "$srcdir"/$pkgname-$pkgver
+	make
 }
 
 check() {
-	make -C "$srcdir"/$pkgname-$pkgver check
+	make check
 }
 
 package() {
-	make -C "$srcdir"/$pkgname-$pkgver PREFIX=/usr DESTDIR="$pkgdir" install
+	make PREFIX=/usr DESTDIR="$pkgdir" install
 }
 
-sha512sums="90637d4b322ad3fe2f18febf08fcb7f816689718f7dfb17dae068ccee7c3434669d71dae2f39a0df25347aabb8e92bbee7658a56ed172c9d6cbcb3883bdc1d1f  arch-install-scripts-20.tar.gz"
+bashcomp() {
+	depends=""
+	pkgdesc="Bash completions for $pkgname"
+	install_if="$pkgname=$pkgver-r$pkgrel bash-completion"
+
+	mkdir -p "$subpkgdir"/usr/share/bash-completion
+	mv "$pkgdir"/usr/share/bash-completion/completions \
+		"$subpkgdir"/usr/share/bash-completion
+}
+
+zshcomp() {
+	depends=""
+	pkgdesc="Zsh compltions for $pkgname"
+	install_if="$pkgname=$pkgver-r$pkgrel zsh"
+
+	mkdir -p "$subpkgdir"/usr/share/zsh
+	mv "$pkgdir"/usr/share/zsh/site-functions \
+		"$subpkgdir"/usr/share/zsh
+}
+
+sha512sums="c1279ae88fb611e150e3372dd910e30b9717eb492443a13392985d0c282d31cbcf207933a274f9befc46b479525ebfccb38ab1ea20a36ef209b7bd0af170250b  arch-install-scripts-22.tar.gz"
