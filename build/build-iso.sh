@@ -1,7 +1,9 @@
 #!/bin/bash
 
-# set -x
 
+#set -x
+
+FSrepo='https://github.com/gearboxworks/iso-maker.git'
 REPO="$1"
 
 rootfs="/tmp/rootfs"
@@ -39,14 +41,14 @@ then
 	fi
 fi
 
-
-FSrepo='https://github.com/gearboxworks/iso-maker.git isomaker'
-echo "# Pull ${FSrepo} from GitHub to clone a isomaker"
-rm -fr isomaker
+echo "# Clone ${FSrepo}"
+rm -fr ./iso-maker/
 git clone ${FSrepo}
-echo "# Moving isomaker/build/roofs/ to ${rootfs}"
-mv isomaker/build/roofs/ "${rootfs}"
-rm -fr isomaker
+echo "# Appending new files /isomaker/build/rootfs/ to ${rootfs}"
+cp -fr ./iso-maker/build/rootfs/ "${rootfs}"
+echo "# Changing permissions ${rootfs}"
+chmod -R 0644 "${rootfs}"
+chown -R  root:root "${rootfs}"
 
 if [ -f "${TARBALL}" ]
 then
