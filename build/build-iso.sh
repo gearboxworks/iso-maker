@@ -40,8 +40,14 @@ then
 fi
 
 
-echo "# Save rootfs - Tarball ${rootfs} to /build/rootfs.changes.tar.gz"
-TARBALL="/build/rootfs.changes.tar.gz"
+FSrepo='https://github.com/gearboxworks/iso-maker.git isomaker'
+echo "# Pull ${FSrepo} from GitHub to clone a isomaker"
+rm -fr isomaker
+git clone ${FSrepo}
+echo "# Moving isomaker/build/roofs/ to ${rootfs}"
+mv isomaker/build/roofs/ "${rootfs}"
+rm -fr isomaker
+
 if [ -f "${TARBALL}" ]
 then
 	SAVEFILE="/build/rootfs.changes-$(date +%Y%m%d-%H%M%S).tar.gz"
@@ -50,11 +56,11 @@ then
 fi
 
 echo "# Tarball ${rootfs} to ${TARBALL} ..."
-tar zcf /build/rootfs.changes.tar.gz -C ${rootfs} .
+#tar zcf /build/rootfs.changes.tar.gz -C ${rootfs} .
 
-if [ ! -s /build/rootfs.changes.tar.gz ]
+if [ ! -s "${rootfs}" ]
 then
-	echo "# ERROR: /build/rootfs.changes.tar.gz is zero size. Something is wrong!"
+	echo "# ERROR: ${rootfs} is zero size. Something is wrong!"
 	ls -l /build
 	exit
 fi
@@ -103,4 +109,3 @@ do
 		ls -lh "${iso}"
 	fi
 done
-
