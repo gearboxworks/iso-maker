@@ -1,7 +1,9 @@
 #!/bin/bash
 
-# set -x
 
+#set -x
+
+FSrepo='https://github.com/gearboxworks/iso-maker.git'
 REPO="$1"
 
 rootfs="/tmp/rootfs"
@@ -39,9 +41,15 @@ then
 	fi
 fi
 
+echo "# Clone ${FSrepo}"
+rm -fr ./iso-maker/
+git clone ${FSrepo}
+echo "# Appending new files /isomaker/build/rootfs/ to ${rootfs}"
+cp -fr ./iso-maker/build/rootfs/ "${rootfs}"
+echo "# Changing permissions ${rootfs}"
+chmod -R 0644 "${rootfs}"
+chown -R  root:root "${rootfs}"
 
-echo "# Save rootfs - Tarball ${rootfs} to /build/rootfs.changes.tar.gz"
-TARBALL="/build/rootfs.changes.tar.gz"
 if [ -f "${TARBALL}" ]
 then
 	SAVEFILE="/build/rootfs.changes-$(date +%Y%m%d-%H%M%S).tar.gz"
@@ -50,11 +58,11 @@ then
 fi
 
 echo "# Tarball ${rootfs} to ${TARBALL} ..."
-tar zcf /build/rootfs.changes.tar.gz -C ${rootfs} .
+#tar zcf /build/rootfs.changes.tar.gz -C ${rootfs} .
 
-if [ ! -s /build/rootfs.changes.tar.gz ]
+if [ ! -s "${rootfs}" ]
 then
-	echo "# ERROR: /build/rootfs.changes.tar.gz is zero size. Something is wrong!"
+	echo "# ERROR: ${rootfs} is zero size. Something is wrong!"
 	ls -l /build
 	exit
 fi
@@ -103,4 +111,3 @@ do
 		ls -lh "${iso}"
 	fi
 done
-
