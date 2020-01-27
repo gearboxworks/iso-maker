@@ -1,5 +1,5 @@
-![Latest Stable Version](https://img.shields.io/badge/stable-0.5.0-blue.svg)
-![Latest Testing Version](https://img.shields.io/badge/testing-0.5.1-red.svg)
+![Latest Stable Version](https://img.shields.io/badge/stable-0.5.1-blue.svg)
+![Latest Testing Version](https://img.shields.io/badge/testing-0.5.2-red.svg)
 
 
 
