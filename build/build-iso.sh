@@ -33,6 +33,8 @@ git clone https://github.com/gearboxworks/box-scripts "${FALLBACK}/opt/gearbox"
 rm -f "${FALLBACK}/opt/gearbox/.cloned"
 rsync -HvaxP --delete "${FALLBACK}/opt/gearbox/etc/images" "${FALLBACK}/opt/gearbox/etc/repositories.json" "${FALLBACK}/etc/gearbox/"
 
+chown -fhR gearbox:gearbox ${FALLBACK}
+
 
 ################################################################################
 if [ "${REPO}" != "" ]
@@ -58,6 +60,7 @@ then
 	ls -l /build
 	exit
 fi
+chown -fhR gearbox:gearbox ${FALLBACK} /opt/gearbox /home/gearbox
 
 
 ################################################################################
