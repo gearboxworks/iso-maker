@@ -1,0 +1,51 @@
+#!/bin/bash
+
+exit 0
+# Not used for now...
+
+# A hook script called by "git commit" with no arguments. The hook should
+# exit with non-zero status after issuing an appropriate message if it wants
+# to stop the commit.
+
+SELF_DIR="$(git rev-parse --show-toplevel)"
+DATABASE=$SELF_DIR/.permissions
+TMP="/tmp/p.$$"
+
+# Clear the permissions database file
+#echo "" > ${DATABASE}
+
+echo -n "Backing-up permissions..."
+
+FILES="$(git ls-files --full-name)"
+IFS_OLD=$IFS; IFS=$'\n'
+for FILE in ${FILES}
+do
+	# Save the permissions of all the files in the index
+	echo "${FILE};$(stat -c "%a;%U;%G" ${FILE})" >> ${TMP}
+done
+
+DIRS="$(git ls-files --full-name | xargs -n 1 dirname | sort -u)"
+for DIR in ${DIRS}
+do
+	# Save the permissions of all the directories in the index
+	echo "${DIR};$(stat -c "%a;%U;%G" ${DIR})" >> ${TMP}
+done
+IFS=$IFS_OLD
+
+# Add the permissions database file to the index
+if [ -f "${DATABASE}" ]
+then
+	diff ${TMP} ${DATABASE}
+	UPDATED="$?"
+else
+	UPDATED="1"
+fi
+
+if [ "${UPDATED}" == "1" ]
+then
+	cp ${TMP} ${DATABASE}
+	git add ${DATABASE} -f
+fi
+rm -f ${TMP}
+
+echo "OK"
