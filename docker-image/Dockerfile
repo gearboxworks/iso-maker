@@ -16,7 +16,7 @@ LABEL maintainer="Mick Hellstrom, mick@newclarity.net" \
     org.label-schema.schema-version="0.5.0-rc1"
 
 
-COPY docker_files/build /build
+COPY build /build
 
 WORKDIR /build
 ENV PROFILENAME base

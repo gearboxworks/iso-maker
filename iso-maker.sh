@@ -1,5 +1,10 @@
 #!/bin/bash
 
+echo "################################################################################"
+echo "# No longer used."
+echo "# Please use 'make'."
+echo "################################################################################"
+exit 1
 
 check_container() {
 	CONTAINER="$(docker image ls -q gearboxworks/iso-maker)"
@@ -10,6 +15,7 @@ create_container() {
 	if [ -z "${CONTAINER}" ]
 	then
 		echo "# Create Docker container to build a Gearbox ISO."
+		cd docker-image
 		docker build --rm -t gearboxworks/iso-maker .
 	else
 		echo "# ISO Docker container already created. You should remove first."

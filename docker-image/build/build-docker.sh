@@ -14,8 +14,13 @@ rm -rf /var/cache/apk/*
 rsync -HvaxP /build/rootfs/ /
 mv /etc/profile.d/color_prompt /etc/profile.d/color_prompt.sh
 
+addgroup gearbox
+adduser -h /home/gearbox -D gearbox -G gearbox
+
+# addgroup abuild
 adduser -h /build -D build -G abuild
 echo 'build ALL=(ALL) NOPASSWD: ALL' | tee -a /etc/sudoers
+
 addgroup root abuild
 addgroup build abuild
 
