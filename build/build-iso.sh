@@ -3,6 +3,12 @@
 
 
 REPO="$1"
+VERSION="$(cat /build/VERSION)"
+if [ "${VERSION}" == "" ]
+then
+	echo "No version defined in /build/VERSION"
+	exit 1
+fi
 
 rootfs="/build/rootfs"
 if [ ! -d ${rootfs} ]
@@ -65,7 +71,7 @@ fi
 ################################################################################
 echo "# Creating ISO..."
 cd /build/aports/scripts
-./mkimage.sh --tag 0.5.1 \
+./mkimage.sh --tag "${VERSION}" \
 	--outdir /build/iso \
 	--arch x86_64 \
 	--repository https://mirror.aarnet.edu.au/pub/alpine/v3.8/main \
