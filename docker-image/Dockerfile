@@ -13,7 +13,7 @@ LABEL maintainer="Mick Hellstrom, mick@newclarity.net" \
     org.label-schema.build-date=$BUILD_DATE \
     org.label-schema.vcs-ref=$VCS_REF \
     org.label-schema.vcs-url="https://github.com/gearbox/iso-maker" \
-    org.label-schema.schema-version="0.5.0-rc1"
+    org.label-schema.schema-version="0.5.2"
 
 
 COPY build /build
