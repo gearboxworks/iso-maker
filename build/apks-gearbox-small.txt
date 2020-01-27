@@ -11,8 +11,6 @@ docker-registry
 e2fsprogs
 fuse
 git
-go
-go-tools
 grub
 grub-efi
 jq
